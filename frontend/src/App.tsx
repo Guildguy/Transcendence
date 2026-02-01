@@ -20,7 +20,8 @@ function App() {
         element={
           <AppShell
             sidebar={null}
-            header={<Header />}
+            header={<Header isAuthenticated={false} />
+}
             footer={<Footer />}
           />
         }
@@ -35,7 +36,7 @@ function App() {
         element={
           <AppShell
             sidebar={<Sidebar />}
-            header={<Header />}
+            header={<Header isAuthenticated={false} />}
             footer={<Footer />}
           />
         }
