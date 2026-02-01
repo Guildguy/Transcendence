@@ -13,39 +13,40 @@ import Home from './pages/Home'
 function App() {
   return (
     <Routes>
+
       {/* =====================
-         AUTH ROUTES (AppShell sem Sidebar)
+         PUBLIC ROUTES
       ===================== */}
       <Route
         element={
           <AppShell
             sidebar={null}
-            header={<Header isAuthenticated={false} />
-}
-            footer={<Footer />}
-          />
-        }
-      >
-        <Route path="/login" element={<AuthPage />} />
-      </Route>
-
-      {/* =====================
-         APP ROUTES (Com Sidebar)
-      ===================== */}
-      <Route
-        element={
-          <AppShell
-            sidebar={<Sidebar />}
             header={<Header isAuthenticated={false} />}
             footer={<Footer />}
           />
         }
       >
-        <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<AuthPage />} />
       </Route>
 
       {/* =====================
-         INSTITUCIONAL 
+         PRIVATE ROUTES
+      ===================== */}
+      <Route
+        element={
+          <AppShell
+            sidebar={<Sidebar />}
+            header={<Header isAuthenticated={true} />}
+            footer={<Footer />}
+          />
+        }
+      >
+        {/* rotas futuras */}
+      </Route>
+
+      {/* =====================
+         INSTITUCIONAL
       ===================== */}
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
@@ -53,7 +54,8 @@ function App() {
       {/* =====================
          FALLBACK
       ===================== */}
-      <Route path="*" element={<Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/" />} />
+
     </Routes>
   )
 }
