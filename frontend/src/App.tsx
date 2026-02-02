@@ -21,7 +21,7 @@ function App() {
         element={
           <AppShell
             sidebar={null}
-            header={<Header isAuthenticated={false} />}
+            header={<Header isAuthenticated={true} />}
             footer={<Footer />}
           />
         }
