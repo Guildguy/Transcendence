@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import './Header.css'
-import logo from '../../images/logo.jpg'
+import logo from '../../images/jpg/logo.jpg'
 
 interface HeaderProps {
   isAuthenticated?: boolean
@@ -17,8 +17,8 @@ function Header({ isAuthenticated = false }: HeaderProps) {
           {!isAuthenticated ? (
             <>
               <Link to="/about">Quem somos</Link>
-              <Link to="/mentor">Seja Mentor</Link>
-              <Link to="/mentorado">Seja Mentorado</Link>
+              <Link to="/register">Seja Mentor</Link>
+              <Link to="/register">Seja Mentorado</Link>
             </>
           ) : (
             <>

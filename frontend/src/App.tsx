@@ -4,24 +4,25 @@ import AppShell from './components/layout/AppShell/AppShell'
 import Header from './components/layout/Header/Header'
 import Footer from './components/layout/Footer/Footer'
 import Sidebar from './components/layout/Sidebar/Sidebar'
-
 import AuthPage from './pages/auth/AuthPage'
 import TermsPage from './pages/legal/TermsPage'
 import PrivacyPage from './pages/legal/PrivacyPage'
 import Home from './pages/Home'
+import RegisterPage from './pages/register/RegisterPage'
+import RegisterSidebar from './components/layout/Sidebar/RegisterSidebar'
+
 
 function App() {
   return (
     <Routes>
-
       {/* =====================
-         PUBLIC ROUTES
+         HOME / LOGIN (SEM SIDEBAR)
       ===================== */}
       <Route
         element={
           <AppShell
             sidebar={null}
-            header={<Header isAuthenticated={true} />}
+            header={<Header isAuthenticated={false} />}
             footer={<Footer />}
           />
         }
@@ -31,22 +32,22 @@ function App() {
       </Route>
 
       {/* =====================
-         PRIVATE ROUTES
+         REGISTER (COM SIDEBAR ESPECÍFICA)
       ===================== */}
       <Route
         element={
           <AppShell
-            sidebar={<Sidebar />}
-            header={<Header isAuthenticated={true} />}
+            sidebar={<RegisterSidebar />}
+            header={<Header isAuthenticated={false} />}
             footer={<Footer />}
           />
         }
       >
-        {/* rotas futuras */}
+        <Route path="/register" element={<RegisterPage />} />
       </Route>
 
       {/* =====================
-         INSTITUCIONAL
+         INSTITUCIONAL (FORA DO APPSHELL)
       ===================== */}
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
@@ -55,7 +56,6 @@ function App() {
          FALLBACK
       ===================== */}
       <Route path="*" element={<Navigate to="/" />} />
-
     </Routes>
   )
 }
