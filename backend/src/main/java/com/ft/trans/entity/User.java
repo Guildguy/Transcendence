@@ -11,8 +11,6 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "users")
 public class User {
-	// uu_id
-    // password
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long	id;
@@ -25,6 +23,7 @@ public class User {
 	private Date	last_update_at;
 	private String	last_update_by;
 	private String	phone_number;
+	private String	password;
 
 	public Long		getId() {
 		return id;
@@ -106,5 +105,14 @@ public class User {
 		this.phone_number = phone_number;
 	}
 
+	public String	getPassword()
+	{
+		return this.password;
+	}
+
+	public void		setPassword(String pass)
+	{
+		this.password = pass;
+	}
 	
 }
