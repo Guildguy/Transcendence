@@ -91,7 +91,7 @@ public class User {
 
 	public boolean	isValidToBeCreated()
 	{
-		return true;
+		return (isNameValid() && isPhoneValid() && isEmailValid() && isPasswordValid());
 	}
 
 	public Long		getId() {
