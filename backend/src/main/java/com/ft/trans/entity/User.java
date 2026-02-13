@@ -30,7 +30,6 @@ public class User {
 	private String	name;
 	@Column(unique = true, nullable = false)
 	private String	username;
-	// private String	role;
 	private String	status;
 	private Date	created_at;
 	private String	created_by;
