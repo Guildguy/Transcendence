@@ -16,7 +16,7 @@ public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long	id;
-    private String	email;
+  private String	email;
 	private String	username;
 	private String	role;
 	private String	status;
@@ -25,6 +25,7 @@ public class User {
 	private Date	last_update_at;
 	private String	last_update_by;
 	private String	phone_number;
+	private String	password;
 
 	public Long		getId() {
 		return id;
