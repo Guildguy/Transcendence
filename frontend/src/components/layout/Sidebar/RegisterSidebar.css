@@ -48,6 +48,11 @@
   overflow-y: auto;
 }
 
+.register-illustration {
+  width: 100vw;
+  height: 100vh;
+}
+
 .register-form {
   width: 100%;
   max-width: 420px;
