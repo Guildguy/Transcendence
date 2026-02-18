@@ -1,0 +1,14 @@
+# Framework Web para criar a API
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+
+# Driver do MongoDB
+pymongo==4.10.1
+motor==3.6.0
+
+# Validação de dados
+pydantic==2.9.2
+pydantic-settings==2.6.0
+
+# Utilitários
+python-dotenv==1.0.1
