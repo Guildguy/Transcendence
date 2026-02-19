@@ -1,18 +1,33 @@
+import { useNavigate } from 'react-router-dom'
+import './RegisterForm.css'
+
 function RegisterForm() {
+  const navigate = useNavigate()
+
   return (
-    <form className="auth-form">
-      <p className="auth-description">
-        Crie sua conta para começar
+    <div className="register-options">
+      <p className="register-subtitle">
+        Selecione uma opção para se cadastrar
       </p>
 
-      <input type="text" placeholder="Nome completo" required />
-      <input type="email" placeholder="E-mail" required />
-      <input type="password" placeholder="Senha" required />
-
-      <button type="submit" className="auth-submit">
-        Cadastrar
+      <button
+        type="button"
+        className="register-option"
+        onClick={() => navigate('/register?type=mentorado')}
+      >
+        <span>Mentorado</span>
+        <div className="arrow">→</div>
       </button>
-    </form>
+
+      <button
+        type="button"
+        className="register-option"
+        onClick={() => navigate('/register?type=mentor')}
+      >
+        <span>Mentor</span>
+        <div className="arrow">→</div>
+      </button>
+    </div>
   )
 }
 
