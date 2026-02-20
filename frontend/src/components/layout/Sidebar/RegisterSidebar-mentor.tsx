@@ -1,5 +1,5 @@
-import './RegisterSidebar.css'
-import illustration from '../../images/svg/cuate.svg'
+import './RegisterSidebar-mentor.css'
+import illustration from '../../images/svg/mentor.svg'
 
 function RegisterSidebar() {
   return (
@@ -8,7 +8,7 @@ function RegisterSidebar() {
         Complete os campos<br />
         ao lado para iniciar<br />
         sua jornada como<br />
-        <strong>Mentorado</strong>
+        <strong>Mentor</strong>
       </h2>
 
       <img
