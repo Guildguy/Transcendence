@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import './RegisterPage.css'
+import logo_42 from '../../components/images/jpg/logo-42.png'
+import logo_google from '../../components/images/jpg/logo-google.png'
 
 type Errors = {
   name?: string
@@ -111,10 +113,17 @@ function RegisterPage() {
         {errors.phone && <span className="input-error">{errors.phone}</span>}
 
         <div className="social-buttons">
-          <button type="button">Continuar com Google</button>
-          <button type="button">Continuar com a 42</button>
-        </div>
+        <button type="button" className="social-btn">
+          <img src={logo_google} alt="Google" />
+          <span>Continuar com Google</span>
+        </button>
 
+        <button type="button" className="social-btn">
+          <img src={logo_42} alt="42" />
+          <span>Continuar com a 42</span>
+        </button>
+        </div>
+        
         <input
           type="email"
           placeholder="E-mail"
