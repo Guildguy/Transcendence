@@ -85,7 +85,6 @@ public class User {
 			new CharacterRule(EnglishCharacterData.Special, 1),
 			new WhitespaceRule()
 		);
-
 		return validator.validate(new PasswordData(this.password)).isValid();
 	}
 
