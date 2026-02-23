@@ -47,6 +47,14 @@ docker run -d \
   	test-python-service
 sleep 2
 
+docker run -d \
+  --name test-mongo-ui \
+  --network test-net \
+  -p 8081:8081 \
+  -e ME_CONFIG_MONGODB_URL=mongodb://test-mongo:27017 \
+  mongo-express
+#http://localhost:8081
+
 # 4. Testa endpoints
 echo ""
 echo "=== Testando endpoints ==="
