@@ -19,13 +19,16 @@ DOCKER_COMPOSE		:= $(shell \
 		echo 'docker-compose'; \
 	fi) --project-directory $(PROJECT_DIRECTORY)
 
-VOLUMES				:= db
+VOLUMES				:= postgres_data \
+						mongo_data
 
 VOLUMES_DIRECTORY   := $(VOLUMES:%=./data/%)
 
 SERVICES			:= api \
 					   db \
-					   frontend
+					   frontend \
+					   python-service \
+					   mongodb
 
 ifdef SERVICE
 	SERVICES 		:= $(SERVICE)
@@ -33,6 +36,7 @@ endif
 
 all:
 	@mkdir -p $(VOLUMES_DIRECTORY)
+	@chmod -R 777 ./data
 	@make up SERVICES="$(SERVICES)" --no-print-directory
 
 up:
