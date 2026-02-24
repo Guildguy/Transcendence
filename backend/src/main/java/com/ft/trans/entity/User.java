@@ -25,19 +25,19 @@ public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long	id;
-	@Column(unique = true, nullable = false)
+	// @Column(unique = true, nullable = false)
     private String	email;
 	private String	name;
-	@Column(unique = true, nullable = false)
+	// @Column(unique = true, nullable = false)
 	private String	username;
 	private String	status;
 	private Date	created_at;
 	private String	created_by;
 	private Date	last_update_at;
 	private String	last_update_by;
-	@Column(unique = true, nullable = false)
+	// @Column(unique = true, nullable = false)
 	private String	phone_number;
-	@Column(nullable = false)
+	// @Column(nullable = false)
 	private String	password;
 
 	private boolean isNameValid()
@@ -85,7 +85,6 @@ public class User {
 			new CharacterRule(EnglishCharacterData.Special, 1),
 			new WhitespaceRule()
 		);
-
 		return validator.validate(new PasswordData(this.password)).isValid();
 	}
 

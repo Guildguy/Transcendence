@@ -35,6 +35,7 @@ services:
       retries: 5
     networks:
       - app-network
+
   frontend:
     container_name: react-frontend
     build:
@@ -84,8 +85,18 @@ services:
       - app-network
 
 volumes:
-  postgres_data:
   mongo_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/data/mongo_data
+      o: bind
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/data/postgres_data
+      o: bind
 
 networks:
   app-network:
