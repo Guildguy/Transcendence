@@ -40,15 +40,32 @@ public class UserService {
 		return (result.isEmpty());
     }
 
-    private Result		_persistUser(User user)
+    private Result _persistUser(User user)
 	{
-        User				savedUser = null;
-        ValidationResult	result = user.validate();
+	    User savedUser = null;
+	    ValidationResult result = user.validate();
 
-		user.status = true;
-		if (!result.hasErrors())
-            savedUser = this.userRepository.save(user);
-        return (new Result(savedUser, result));
+	    if (!result.hasErrors()) {
+	        try {
+	            user.status = true;
+	            user.encodePassword();
+	            savedUser = this.userRepository.save(user);
+	        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+	            String errorMsg = e.getMostSpecificCause().getMessage();
+			
+	            if (errorMsg.contains("email"))
+	                result.addError("email", "Este e-mail já está sendo utilizado.");
+	            else if (errorMsg.contains("phone_number"))
+	                result.addError("phone_number", "Este telefone já está sendo utilizado.");
+				else if (errorMsg.contains("username"))
+					result.addError("username", "Este username já está sendo utilziado.");
+	        	else
+	                result.addError("global", "Erro de integridade: um registro duplicado foi detectado.");
+	        } catch (Exception e) {
+	            result.addError("global", "Ocorreu um erro interno ao salvar o usuário.");
+	        }
+    	}
+    	return new Result(savedUser, result);
 	}
 
     public record		Result(
