@@ -41,8 +41,6 @@ public class User {
 	@Column(nullable = false)
 	private String	password;
 
-	private
-
 	private void isNameValid(ValidationResult result)
 	{
 		this.name = this.name != null ? this.name.trim() : "";
@@ -90,7 +88,7 @@ public class User {
 			result.addError("password", "Senha não segue a politica de senhas.");
 	}
 
-	public ValidationResult	isValidToBeCreated()
+	public ValidationResult	validate()
 	{
 		ValidationResult	result = new ValidationResult();
 

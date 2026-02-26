@@ -10,9 +10,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 import com.ft.trans.entity.User;
 import com.ft.trans.service.UserService;
+import com.ft.trans.validation.ValidationResult;
+
 
 @RestController
 @RequestMapping("/users")
@@ -25,9 +29,19 @@ public class UserController {
     }
 
 	@PostMapping
-    public User		create(@RequestBody User user)
+    public ResponseEntity<?>	create(@RequestBody User user)
 	{
-		return (this.userService.create(user));
+		UserService.Result result = this.userService.create(user);
+
+		if (result.validationResult().hasErrors())
+		{
+			return ResponseEntity
+				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.body(result.validationResult().getErrors());
+		}
+		return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(result.user());
 	}
 
 	@GetMapping
