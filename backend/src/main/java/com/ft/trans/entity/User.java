@@ -9,6 +9,7 @@ import org.passay.PasswordData;
 import org.passay.PasswordValidator;
 import org.passay.WhitespaceRule;
 
+import com.ft.trans.service.PasswordService;
 import com.ft.trans.utils.StringUtils;
 import com.ft.trans.validation.ValidationResult;
 
@@ -18,25 +19,30 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {
+    @UniqueConstraint(name = "email", columnNames = "email"),
+    @UniqueConstraint(name = "phone_number", columnNames = "phone_number"),
+	@UniqueConstraint(name = "username", columnNames = "username")
+})
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long		id;
-	@Column(unique = true, nullable = false)
+	@Column(nullable = false)
     public String	email;
 	public String	name;
-	@Column(unique = true, nullable = false)
+	@Column(nullable = false)
 	public String	username;
 	public Boolean	status;
 	public Date		created_at;
 	public String	created_by;
 	public Date		last_update_at;
 	public String	last_update_by;
-	@Column(unique = true, nullable = false)
+	@Column(nullable = false)
 	public String	phone_number;
 	@Column(nullable = false)
 	public String	password;
@@ -97,5 +103,10 @@ public class User {
 		isPasswordValid(result);
 
 		return result;
+	}
+
+	public void				encodePassword()
+	{
+		this.password = new PasswordService().hashPassword(this.password);
 	}
 }
