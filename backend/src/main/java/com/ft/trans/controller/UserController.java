@@ -15,8 +15,6 @@ import org.springframework.http.HttpStatus;
 
 import com.ft.trans.entity.User;
 import com.ft.trans.service.UserService;
-import com.ft.trans.validation.ValidationResult;
-
 
 @RestController
 @RequestMapping("/users")
@@ -36,7 +34,7 @@ public class UserController {
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity
@@ -51,9 +49,19 @@ public class UserController {
 	}
 
 	@PutMapping
-    public User		update(@RequestBody User user)
+    public ResponseEntity<?>		update(@RequestBody User user)
 	{
-		return (this.userService.update(user));
+		UserService.Result result = this.userService.update(user);
+
+		if (result.validationResult().hasErrors())
+		{
+			return ResponseEntity
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
+				.body(result.validationResult().getErrors());
+		}
+		return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(result.user());
 	}
 
 	@DeleteMapping("{id}")

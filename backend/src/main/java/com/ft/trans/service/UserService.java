@@ -36,19 +36,18 @@ public class UserService {
     public Boolean		delete(Long id)
     {
         this.userRepository.deleteById(id);
-		Optional<User> result = this.userRepository.findById(id);
+		Optional<User>	result = this.userRepository.findById(id);
 		return (result.isEmpty());
     }
 
     private Result		_persistUser(User user)
 	{
-        ValidationResult result = user.validate();
-		if (!result.hasErrors())
-            this.userRepository.save(user);
+        User				savedUser = null;
+        ValidationResult	result = user.validate();
 
-        User	savedUser = this.userRepository.findByEmail(user.getEmail())
-			.orElseThrow(() -> new RuntimeException("Failed to update user"));
-		
+		user.status = true;
+		if (!result.hasErrors())
+            savedUser = this.userRepository.save(user);
         return (new Result(savedUser, result));
 	}
 
