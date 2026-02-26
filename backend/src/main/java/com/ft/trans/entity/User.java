@@ -10,6 +10,7 @@ import org.passay.PasswordValidator;
 import org.passay.WhitespaceRule;
 
 import com.ft.trans.utils.StringUtils;
+import com.ft.trans.validation.ValidationResult;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,45 +38,45 @@ public class User {
 	private String	last_update_by;
 	// @Column(unique = true, nullable = false)
 	private String	phone_number;
-	// @Column(nullable = false)
+	@Column(nullable = false)
 	private String	password;
 
-	private boolean isNameValid()
+	private
+
+	private void isNameValid(ValidationResult result)
 	{
 		this.name = this.name != null ? this.name.trim() : "";
 
 		if (this.name.isBlank())
-			return false;
+			result.addError("name", "Nome em branco.");
 		if (this.name.length() < 3 || this.name.length() > 100)
-			return false;
+			result.addError("name", "Nome muito pequeno ou muito grande.");
 		if (!StringUtils.isAlphaOnly(this.name))
-			return false;
-		return true;
+			result.addError("name", "O nome deve conter apenas caracteres alfabeticos e espaços.");
 	}
 
-	private boolean	isPhoneValid()
+	private boolean	isPhoneValid(ValidationResult result)
 	{
 		this.phone_number = this.phone_number != null ? this.phone_number.trim().replaceAll("\\D", "") : "";
 
 		if (this.phone_number.isBlank())
-			return false;
+			result.addError("phone_number", "Numero em branco.");
 		if (!this.phone_number.matches("^\\d{10,11}$"))
-			return false;
-		return true;
+			result.addError("phone_number", "Numero inválido.");
 	}
 
-	private boolean	isEmailValid()
+	private boolean	isEmailValid(ValidationResult result)
 	{
 		this.email = this.email != null ? this.email.trim() : "";
 
 		if (this.email.isBlank())
-			return false;
+			result.addError("email", "Email em branco.");
 		if (!this.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$"))
-			return false;
+			result.addError("email", "Email invalido.");
 		return true;
 	}
 
-	private boolean isPasswordValid()
+	private boolean isPasswordValid(ValidationResult result)
 	{
 		PasswordValidator validator = new PasswordValidator(
 			new LengthRule(8, 30),
@@ -85,12 +86,20 @@ public class User {
 			new CharacterRule(EnglishCharacterData.Special, 1),
 			new WhitespaceRule()
 		);
-		return validator.validate(new PasswordData(this.password)).isValid();
+		if (!validator.validate(new PasswordData(this.password)).isValid())
+			result.addError("password", "Senha não segue a politica de senhas.");
 	}
 
-	public boolean	isValidToBeCreated()
+	public ValidationResult	isValidToBeCreated()
 	{
-		return (isNameValid() && isPhoneValid() && isEmailValid() && isPasswordValid());
+		ValidationResult	result = new ValidationResult();
+
+		isNameValid(result);
+		isPhoneValid(result);
+		isEmailValid(result);
+		isPasswordValid(result);
+
+		return result;
 	}
 
 	public Long		getId() {

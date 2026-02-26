@@ -41,7 +41,7 @@ public class UserService {
 
     private User		_persistUser(User user)
 	{
-		// if (user.isValidToBeCreated())
+		if (user.isValidToBeCreated())
             this.userRepository.save(user);
 
         User	savedUser = this.userRepository.findByEmail(user.getEmail())
