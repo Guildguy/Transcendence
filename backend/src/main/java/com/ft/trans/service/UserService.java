@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
+import com.ft.trans.validation.ValidationResult;
 
 @Service
 public class UserService {
@@ -17,7 +18,7 @@ public class UserService {
         this.userRepository = ur;
     }
 
-    public User			create(User user)
+    public Result		create(User user)
     {
         return (_persistUser(user));
     }
@@ -27,7 +28,7 @@ public class UserService {
         return (this.userRepository.findAll());
     }
 
-    public User			update(User user)
+    public Result		update(User user)
     {
         return (_persistUser(user));
     }
@@ -39,13 +40,20 @@ public class UserService {
 		return (result.isEmpty());
     }
 
-    private User		_persistUser(User user)
+    private Result		_persistUser(User user)
 	{
-		if (user.isValidToBeCreated())
+        ValidationResult result = user.validate();
+		if (!result.hasErrors())
             this.userRepository.save(user);
 
         User	savedUser = this.userRepository.findByEmail(user.getEmail())
 			.orElseThrow(() -> new RuntimeException("Failed to update user"));
-        return (savedUser);
+		
+        return (new Result(savedUser, result));
 	}
+
+    public record		Result(
+		User 				user,
+		ValidationResult	validationResult
+	){};
 }

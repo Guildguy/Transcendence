@@ -2,11 +2,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public record DomainError(String field, String message) {}
-
-
 public class	ValidationResult
 {
+	public record DomainError(String field, String message) {}
+
 	private List<DomainError>	errors = new ArrayList<>();
 
 	public void					addError(String field, String erroMsg)
@@ -14,7 +13,7 @@ public class	ValidationResult
 		this.errors.add(new DomainError(field, erroMsg));
 	}
 
-	public Boolean				hasErros()
+	public Boolean				hasErrors()
 	{
 		return !this.errors.isEmpty();
 	}
