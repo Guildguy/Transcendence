@@ -20,7 +20,7 @@ public class UserService {
 
     public Result		create(User user)
     {
-        return (_persistUser(user));
+        return (_persistUser(user, false));
     }
 
     public List<User>	list()
@@ -36,7 +36,7 @@ public class UserService {
 			result.addError("id", "Não foi possível alterar o usuário. Campo id está faltando");
 			return new Result(user, result);
 		}
-        return (_persistUser(user));
+        return (_persistUser(user, true));
     }
 
     public Boolean		delete(Long id)
@@ -46,7 +46,7 @@ public class UserService {
 		return (result.isEmpty());
     }
 
-    private Result _persistUser(User user)
+    private Result _persistUser(User user, Boolean isUpdate)
 	{
 	    User savedUser = null;
 	    ValidationResult result = user.validate();
@@ -54,7 +54,8 @@ public class UserService {
 	    if (!result.hasErrors()) {
 	        try {
 	            user.status = true;
-	            user.encodePassword();
+				if (!isUpdate)
+	            	user.encodePassword();
 	            savedUser = this.userRepository.save(user);
 	        } catch (org.springframework.dao.DataIntegrityViolationException e) {
 	            String errorMsg = e.getMostSpecificCause().getMessage();
