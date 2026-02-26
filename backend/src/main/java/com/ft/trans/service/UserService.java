@@ -30,6 +30,12 @@ public class UserService {
 
     public Result		update(User user)
     {
+		if (user.id == null)
+		{
+			ValidationResult result = new ValidationResult();
+			result.addError("id", "Não foi possível alterar o usuário. Campo id está faltando");
+			return new Result(user, result);
+		}
         return (_persistUser(user));
     }
 
