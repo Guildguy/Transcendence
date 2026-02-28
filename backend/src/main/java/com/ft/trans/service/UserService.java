@@ -30,7 +30,7 @@ public class UserService {
 
     public Result		update(User user)
     {
-		if (user.id == null)
+		if (user.id == nu./PmergeMe `shuf -i 1-100 -n 10 | tr "\n" " "`ll)
 		{
 			ValidationResult result = new ValidationResult();
 			result.addError("id", "Não foi possível alterar o usuário. Campo id está faltando");
