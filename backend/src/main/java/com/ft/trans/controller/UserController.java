@@ -18,7 +18,8 @@ import com.ft.trans.service.UserService;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController
+{
     private UserService userService;
 
     public UserController(UserService us)
