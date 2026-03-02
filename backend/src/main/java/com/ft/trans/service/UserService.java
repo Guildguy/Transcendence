@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
+import com.ft.trans.validation.ValidationResult;
 
 @Service
 public class UserService {
@@ -17,9 +18,9 @@ public class UserService {
         this.userRepository = ur;
     }
 
-    public User			create(User user)
+    public Result		create(User user)
     {
-        return (_persistUser(user));
+        return (_persistUser(user, false));
     }
 
     public List<User>	list()
@@ -27,25 +28,55 @@ public class UserService {
         return (this.userRepository.findAll());
     }
 
-    public User			update(User user)
+    public Result		update(User user)
     {
-        return (_persistUser(user));
+		if (user.id == null)
+		{
+			ValidationResult result = new ValidationResult();
+			result.addError("id", "Não foi possível alterar o usuário. Campo id está faltando");
+			return new Result(user, result);
+		}
+        return (_persistUser(user, true));
     }
 
     public Boolean		delete(Long id)
     {
         this.userRepository.deleteById(id);
-		Optional<User> result = this.userRepository.findById(id);
+		Optional<User>	result = this.userRepository.findById(id);
 		return (result.isEmpty());
     }
 
-    private User		_persistUser(User user)
+    private Result _persistUser(User user, Boolean isUpdate)
 	{
-		// if (user.isValidToBeCreated())
-            this.userRepository.save(user);
+	    User savedUser = null;
+	    ValidationResult result = user.validate();
 
-        User	savedUser = this.userRepository.findByEmail(user.getEmail())
-			.orElseThrow(() -> new RuntimeException("Failed to update user"));
-        return (savedUser);
+	    if (!result.hasErrors()) {
+	        try {
+	            user.status = true;
+				if (!isUpdate)
+	            	user.encodePassword();
+	            savedUser = this.userRepository.save(user);
+	        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+	            String errorMsg = e.getMostSpecificCause().getMessage();
+			
+	            if (errorMsg.contains("email"))
+	                result.addError("email", "Este e-mail já está sendo utilizado.");
+	            else if (errorMsg.contains("phone_number"))
+	                result.addError("phone_number", "Este telefone já está sendo utilizado.");
+				// else if (errorMsg.contains("username"))
+				// 	result.addError("username", "Este username já está sendo utilziado.");
+	        	else
+	                result.addError("global", "Erro de integridade: um registro duplicado foi detectado.");
+	        } catch (Exception e) {
+	            result.addError("global", "Ocorreu um erro interno ao salvar o usuário.");
+	        }
+    	}
+    	return new Result(savedUser, result);
 	}
+
+    public record		Result(
+		User 				user,
+		ValidationResult	validationResult
+	){};
 }
