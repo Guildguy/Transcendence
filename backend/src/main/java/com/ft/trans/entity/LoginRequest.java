@@ -1,1 +1,2 @@
-package com.ft.trans.
+package com.ft.trans.entity;
+

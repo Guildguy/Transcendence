@@ -35,8 +35,8 @@ public class User {
 	@Column(nullable = false)
     public String	email;
 	public String	name;
-	@Column(nullable = false)
-	public String	username;
+	// @Column(nullable = false)
+	// public String	username;
 	public Boolean	status;
 	public Date		created_at;
 	public String	created_by;

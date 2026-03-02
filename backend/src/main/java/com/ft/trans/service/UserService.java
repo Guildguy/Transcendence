@@ -30,7 +30,7 @@ public class UserService {
 
     public Result		update(User user)
     {
-		if (user.id == nu./PmergeMe `shuf -i 1-100 -n 10 | tr "\n" " "`ll)
+		if (user.id == null)
 		{
 			ValidationResult result = new ValidationResult();
 			result.addError("id", "Não foi possível alterar o usuário. Campo id está faltando");
@@ -64,8 +64,8 @@ public class UserService {
 	                result.addError("email", "Este e-mail já está sendo utilizado.");
 	            else if (errorMsg.contains("phone_number"))
 	                result.addError("phone_number", "Este telefone já está sendo utilizado.");
-				else if (errorMsg.contains("username"))
-					result.addError("username", "Este username já está sendo utilziado.");
+				// else if (errorMsg.contains("username"))
+				// 	result.addError("username", "Este username já está sendo utilziado.");
 	        	else
 	                result.addError("global", "Erro de integridade: um registro duplicado foi detectado.");
 	        } catch (Exception e) {
