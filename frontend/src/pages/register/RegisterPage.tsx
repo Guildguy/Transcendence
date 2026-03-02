@@ -16,7 +16,7 @@ type Errors = {
 
 function RegisterPage() {
   const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
+  const [phone_number, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [confirmEmail, setConfirmEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,9 +46,9 @@ function RegisterPage() {
 
     if (!name) newErrors.name = 'Nome completo é obrigatório.'
 
-    if (!phone) {
+    if (!phone_number) {
       newErrors.phone = 'Celular é obrigatório.'
-    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phone)) {
+    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phone_number)) {
       newErrors.phone = 'Use o formato (xx) xxxxx-xxxx.'
     }
 
@@ -76,19 +76,61 @@ function RegisterPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  // function handleSubmit(e: React.FormEvent) {
+  //   e.preventDefault()
 
-    if (!validate()) return
+  //   if (!validate()) return
+
+  //   const payload = {
+  //     name,
+  //     phone_phone: phone_number,
+  //     email,
+  //     password,
+  //     status: 1
+  //   }
+
+  //   console.log('JSON enviado para o backend:', payload)
+  // }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!validate()) return;
 
     const payload = {
       name,
-      phone,
+      phone_number, // Ajustado para bater com o campo da sua entidade/DTO
       email,
       password,
-    }
+      status: true // No Java definimos como boolean
+    };
 
-    console.log('JSON enviado para o backend:', payload)
+    try {
+      const response = await fetch('http://localhost:8080/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Aqui capturamos os erros do objeto Result/ValidationResult que criamos no Java
+        if (data.result && data.result.errors) {
+            console.error('Erros de validação:', data.result.errors);
+            // Exemplo: alert(data.result.errors.email);
+        }
+        throw new Error('Falha ao cadastrar usuário');
+      }
+
+      console.log('Usuário cadastrado com sucesso:', data);
+      // Redirecionar ou limpar formulário aqui
+      
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+    }
   }
 
   return (
@@ -106,7 +148,7 @@ function RegisterPage() {
         <input
           type="tel"
           placeholder="Celular"
-          value={phone}
+          value={phone_number}
           onChange={handlePhoneChange}
           className={errors.phone ? 'error' : ''}
         />
