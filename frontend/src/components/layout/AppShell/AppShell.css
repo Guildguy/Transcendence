@@ -35,6 +35,7 @@
 
   /* 🔑 ESSENCIAL PARA EVITAR BUG DE ALTURA */
   min-height: 0;
+  overflow-y: auto;
 }
 
 .app-shell > .footer {
