@@ -1,0 +1,168 @@
+/* ===== CONTAINER PRINCIPAL ===== */
+
+.profile-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* impede scroll no body */
+}
+
+.profile-inner {
+  flex: 1;
+  overflow-y: auto; /* scroll acontece aqui */
+/*  padding: 40px 32px 120px 32px;/* espaço extra para não ficar atrás do footer */
+  box-sizing: border-box;
+}
+
+
+/* ===== HEADER ===== */
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #d9d9d9;
+}
+
+.profile-level {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.level-pill {
+  background: #e0e0e0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+
+/* ===== TABS ===== */
+
+.profile-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.profile-tabs button {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.profile-tabs button.active {
+  background: #8c7ae6;
+  color: white;
+}
+
+
+/* ===== CARD ===== */
+
+.profile-card {
+  width: 100%;
+  margin: 0 auto;
+
+  background: #9c8fd4;
+  border-radius: 24px;
+  padding: 48px;
+
+  box-sizing: border-box;
+}
+
+
+/* ===== GRID INTERNA ===== */
+
+.profile-grid {
+  display: flex;
+  gap: 80px; /* mais respiro entre colunas */
+  width: 100%;
+}
+
+.col-left,
+.col-right,
+.password-box {
+  flex: 1; /* força colunas do mesmo tamanho */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+/* ===== BADGE ===== */
+
+.badge {
+  background: #6c5ce7;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+
+/* ===== INPUTS ===== */
+
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+
+/* ===== SKILLS ===== */
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.skill {
+  background: white;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+
+/* ===== BOTÃO ===== */
+
+.primary-btn {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #6c5ce7;
+  color: white;
+  cursor: pointer;
+}
+
+
+/* ===== RESPONSIVO ===== */
+
+@media (max-width: 900px) {
+  .profile-grid {
+    flex-direction: column;
+  }
+}
