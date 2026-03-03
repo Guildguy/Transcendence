@@ -1,20 +1,3 @@
-/* ============================================================
-   HomeLogged.css — Mentor Dashboard
-   Color palette matches the purple/lavender design in the mockup
-   ============================================================ */
-
-:root {
-  --purple-primary: #5b4fcf;
-  --purple-light: #e8e6f8;
-  --purple-bg: #ebebf8;
-  --white: #ffffff;
-  --text-dark: #1a1a2e;
-  --text-medium: #4a4a6a;
-  --border-color: #d8d6f0;
-  --badge-bg: #5b4fcf;
-  --badge-text: #ffffff;
-}
-
 /* ---- Outer wrapper ---- */
 .home-logged {
   background-color: var(--purple-bg);
@@ -115,7 +98,7 @@
 
 /* ---- Left Panel ---- */
 .left-panel {
-  /* display: flex; */
+  display: flex;
   flex-direction: column;
   gap: 0;
 }
