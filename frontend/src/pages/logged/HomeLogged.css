@@ -115,7 +115,7 @@
 
 /* ---- Left Panel ---- */
 .left-panel {
-  display: flex;
+  /* display: flex; */
   flex-direction: column;
   gap: 0;
 }
@@ -154,6 +154,7 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(91, 79, 207, 0.08);
+  min-width: 600px;
 }
 
 .request-card {
