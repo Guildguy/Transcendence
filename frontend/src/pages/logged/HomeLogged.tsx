@@ -6,6 +6,18 @@ import Footer from '../../components/layout/Footer/Footer'
 import Avatar from '../../components/common/Avatar'
 import './HomeLogged.css'
 
+//PARA REUNIAO:
+// - Como fazer para receber as imagens de avatar dos usuários? (Pasta pública?)
+// - Como fazer para diferenciar o avatar entre usuários?
+// - Como fazer para atualizar a lista de solicitações pendentes e notificações? (Polling? Websockets?)
+// - Criar modal com calendário/agenda para marcar e remarcar mentorias
+// - Criar contador de dias
+// - Criar sistema de conquistas (Ex: 10 mentorias realizadas, 30 dias ensinando, etc)
+// - Plugar a API para buscar os dados reais do usuário, solicitações, agenda e conquistas
+// - Plugar API para aceitar ou recusar solicitações de mentoria
+// - Plugar API para iniciar video-chamada ??? 
+// - Criar e plugar sistema de trackeamento de eventos/métricas (Grafana e Prometeus)
+
 interface PendingRequest {
   id: number
   name: string
