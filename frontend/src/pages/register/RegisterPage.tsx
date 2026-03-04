@@ -16,7 +16,7 @@ type Errors = {
 
 function RegisterPage() {
   const [name, setName] = useState('')
-  const [phone_number, setPhone] = useState('')
+  const [phoneNumber, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [confirmEmail, setConfirmEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,9 +46,9 @@ function RegisterPage() {
 
     if (!name) newErrors.name = 'Nome completo é obrigatório.'
 
-    if (!phone_number) {
+    if (!phoneNumber) {
       newErrors.phone = 'Celular é obrigatório.'
-    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phone_number)) {
+    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phoneNumber)) {
       newErrors.phone = 'Use o formato (xx) xxxxx-xxxx.'
     }
 
@@ -99,7 +99,7 @@ function RegisterPage() {
 
     const payload = {
       name,
-      phone_number, // Ajustado para bater com o campo da sua entidade/DTO
+      phoneNumber, // Ajustado para bater com o campo da sua entidade/DTO
       email,
       password,
       status: true // No Java definimos como boolean
@@ -148,7 +148,7 @@ function RegisterPage() {
         <input
           type="tel"
           placeholder="Celular"
-          value={phone_number}
+          value={phoneNumber}
           onChange={handlePhoneChange}
           className={errors.phone ? 'error' : ''}
         />
