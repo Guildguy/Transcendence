@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.ft.trans.entity.LoginRequest;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
 import com.ft.trans.validation.ValidationResult;
@@ -23,10 +24,20 @@ public class UserService {
         return (_persistUser(user, false));
     }
 
-    public List<User>	list()
+	public List<User>	list()
     {
         return (this.userRepository.findAll());
     }
+
+	public User			findLogin(LoginRequest login)
+	{
+		User	userFound = null;
+		if (login.email.isEmpty())
+			userFound = userRepository.findByPhoneNumber(login.phoneNumber).orElse(null);
+		else
+			userFound = userRepository.findByEmail(login.email).orElse(null);
+		return userFound;
+	}
 
     public Result		update(User user)
     {
@@ -62,10 +73,8 @@ public class UserService {
 			
 	            if (errorMsg.contains("email"))
 	                result.addError("email", "Este e-mail já está sendo utilizado.");
-	            else if (errorMsg.contains("phone_number"))
-	                result.addError("phone_number", "Este telefone já está sendo utilizado.");
-				// else if (errorMsg.contains("username"))
-				// 	result.addError("username", "Este username já está sendo utilziado.");
+	            else if (errorMsg.contains("phoneNumber"))
+	                result.addError("phoneNumber", "Este telefone já está sendo utilizado.");
 	        	else
 	                result.addError("global", "Erro de integridade: um registro duplicado foi detectado.");
 	        } catch (Exception e) {
