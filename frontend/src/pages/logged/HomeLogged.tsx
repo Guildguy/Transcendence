@@ -3,6 +3,7 @@ import { Outlet, useSearchParams } from 'react-router-dom'
 import AppShell from '../../components/layout/AppShell/AppShell'
 import Header from '../../components/layout/Header/Header'
 import Footer from '../../components/layout/Footer/Footer'
+import Avatar from '../../components/common/Avatar'
 import './HomeLogged.css'
 
 interface PendingRequest {
@@ -56,14 +57,7 @@ function HomeLogged() {
         {/* Profile Section */}
         <section className="profile-section">
           <div className="profile-left">
-            <div className="avatar-wrapper">
-              <div className="avatar-circle">
-                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="40" cy="30" r="16" fill="#555" />
-                  <ellipse cx="40" cy="65" rx="26" ry="18" fill="#555" />
-                </svg>
-              </div>
-            </div>
+            <Avatar />
             <span className="mentor-badge">Pessoa Mentora</span>
           </div>
 
@@ -98,13 +92,10 @@ function HomeLogged() {
               {activeTab === 'pending' && mockRequests.map((req) => (
                 <div key={req.id} className="request-card">
                   <div className="request-avatar">
-                    <svg viewBox="0 0 40 40" fill="none">
-                      <circle cx="20" cy="15" r="8" fill="#555" />
-                      <ellipse cx="20" cy="32" rx="13" ry="9" fill="#555" />
-                    </svg>
-                  </div>
+                    <Avatar />
+                  </div>                  
                   <p className="request-text">
-                    <strong>{req.name}</strong> solicitou realizar mentoria com você, aceita o match?
+                    <strong>{req.name}</strong> solicitou realizar mentoria com você, aceita?
                   </p>
                   <div className="request-actions">
                     <button className="action-btn accept" aria-label="Aceitar">✔</button>
