@@ -1,8 +1,7 @@
 /* ---- Outer wrapper ---- */
 .home-logged {
   background-color: var(--purple-bg);
-  height: 100%;
-  padding: 32px 24px 48px;
+  padding: 40px 24px 4px 24px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-dark);
 }
@@ -14,7 +13,8 @@
   display: flex;
   align-items: flex-start;
   gap: 40px;
-  margin-bottom: 32px;
+  padding-top: 4px;
+  padding-bottom: 40px;
 }
 
 .profile-left {
@@ -72,7 +72,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 /* ---- Left Panel ---- */
@@ -80,6 +80,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: 400px;
 }
 
 .tab-bar {
@@ -116,7 +117,6 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(91, 79, 207, 0.08);
-  min-width: 200px;
 }
 
 .request-card {
@@ -167,7 +167,6 @@
   border: none;
   cursor: pointer;
   font-size: 18px;
-  padding: 0;
   line-height: 1;
 }
 
@@ -184,6 +183,7 @@
   text-align: center;
   color: var(--text-medium);
   font-size: 14px;
+  width: 400px;
 }
 
 /* ---- Right Panel ---- */
@@ -191,6 +191,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: 400px;
 }
 
 .panel-title {
@@ -207,7 +208,6 @@
   gap: 0;
   background-color: var(--white);
   border-radius: 12px;
-  overflow: hidden;
   box-shadow: 0 2px 8px rgba(91, 79, 207, 0.08);
 }
 
@@ -228,27 +228,11 @@
   color: var(--text-dark);
 }
 
-.remarcar-btn {
-  background-color: var(--purple-primary);
-  color: var(--white);
-  border: none;
-  border-radius: 20px;
-  padding: 6px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.remarcar-btn:hover {
-  background-color: #4a3fb8;
-}
-
 /* ============================================================
    ACHIEVEMENTS SECTION
    ============================================================ */
 .achievements-section {
-  margin-top: 8px;
+  margin-top: 20px;
 }
 
 .achievements-title {
@@ -266,6 +250,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-top: 20px;
+  padding-bottom: 20px;
 }
 
 .achievement-card {

@@ -3,20 +3,9 @@ import { Outlet, useSearchParams } from 'react-router-dom'
 import AppShell from '../../components/layout/AppShell/AppShell'
 import Header from '../../components/layout/Header/Header'
 import Footer from '../../components/layout/Footer/Footer'
-import Avatar from '../../components/common/Avatar'
+import Avatar from '../../components/common/Avatar/Avatar'
+import Button from '../../components/common/Button/Button'
 import './HomeLogged.css'
-
-//PARA REUNIAO:
-// - Como fazer para receber as imagens de avatar dos usuários? (Pasta pública?)
-// - Como fazer para diferenciar o avatar entre usuários?
-// - Como fazer para atualizar a lista de solicitações pendentes e notificações? (Polling? Websockets?)
-// - Criar modal com calendário/agenda para marcar e remarcar mentorias
-// - Criar contador de dias
-// - Criar sistema de conquistas (Ex: 10 mentorias realizadas, 30 dias ensinando, etc)
-// - Plugar a API para buscar os dados reais do usuário, solicitações, agenda e conquistas
-// - Plugar API para aceitar ou recusar solicitações de mentoria
-// - Plugar API para iniciar video-chamada ??? 
-// - Criar e plugar sistema de trackeamento de eventos/métricas (Grafana e Prometeus)
 
 interface PendingRequest {
   id: number
@@ -130,7 +119,15 @@ function HomeLogged() {
                   <span className="schedule-time">
                     <strong>{item.time}</strong> - {item.mentee}
                   </span>
-                  <button className="remarcar-btn">Remarcar</button>
+                    <Button 
+                    style={{ 
+                      backgroundColor: '#E8E6F8', 
+                      color: '#5B4FCF',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Remarcar
+                  </Button>
                 </div>
               ))}
             </div>
@@ -149,7 +146,7 @@ function HomeLogged() {
         </section>
 
       </div>
-      <Outlet />
+      {/* <Outlet /> */}
     </AppShell>
   )
 }
