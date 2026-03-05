@@ -1,168 +1,321 @@
-/* ===== CONTAINER PRINCIPAL ===== */
+:root {
+  --cor-fundo-aba: #cdd0f8;
+  --cor-roxo-principal: #6b62d8;
+  --cor-roxo-hover: #5a52ba;
+  --cor-roxo-claro: #9c94dc;
+  --cor-cinza-fundo: #e5e7eb;
+  --cor-cinza-texto: #4b5563;
+  --cor-texto-escuro: #1f2937;
+  --borda-raio-padrao: 8px;
+  --borda-raio-redondo: 9999px;
+}
 
-.profile-wrapper {
-  height: 100%;
+.perfil-container {
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+/* Cabeçalho do Perfil */
+.perfil-header {
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* impede scroll no body */
-}
-
-.profile-inner {
-  flex: 1;
-  overflow-y: auto; /* scroll acontece aqui */
-/*  padding: 40px 32px 120px 32px;/* espaço extra para não ficar atrás do footer */
-  box-sizing: border-box;
-}
-
-
-/* ===== HEADER ===== */
-
-.profile-header {
-  display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
-.avatar {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: #d9d9d9;
+@media (min-width: 640px) {
+  .perfil-header {
+    flex-direction: row;
+  }
 }
 
-.profile-level {
+.perfil-avatar {
+  width: 128px;
+  height: 128px;
+  background-color: black;
+  border: 8px solid #f3f4f6;
+  border-radius: var(--borda-raio-redondo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.perfil-badges {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
-.level-pill {
-  background: #e0e0e0;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-size: 14px;
+.perfil-badge {
+  background-color: var(--cor-cinza-fundo);
+  color: var(--cor-cinza-texto);
+  padding: 0.5rem 1.5rem;
+  border-radius: var(--borda-raio-redondo);
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: 12rem;
+  text-align: center;
 }
 
-
-/* ===== TABS ===== */
-
-.profile-tabs {
+/* Navegação das Abas */
+.perfil-tabs-nav {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 0.25rem;
 }
 
-.profile-tabs button {
-  padding: 10px 18px;
-  border-radius: 12px;
+.perfil-tab-btn {
+  padding: 0.5rem 1.5rem;
+  border-radius: 12px 12px 0 0;
+  font-weight: 500;
+  font-size: 0.875rem;
   border: none;
-  background: #ddd;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.profile-tabs button.active {
-  background: #8c7ae6;
-  color: white;
+.perfil-tab-btn.ativa {
+  background-color: var(--cor-fundo-aba);
+  color: black;
 }
 
-
-/* ===== CARD ===== */
-
-.profile-card {
-  width: 100%;
-  margin: 0 auto;
-
-  background: #9c8fd4;
-  border-radius: 24px;
-  padding: 48px;
-
-  box-sizing: border-box;
+.perfil-tab-btn.inativa {
+  background-color: var(--cor-cinza-fundo);
+  color: var(--cor-cinza-texto);
 }
 
-
-/* ===== GRID INTERNA ===== */
-
-.profile-grid {
-  display: flex;
-  gap: 80px; /* mais respiro entre colunas */
-  width: 100%;
+.perfil-tab-btn.inativa:hover {
+  background-color: #d1d5db;
 }
 
-.col-left,
-.col-right,
-.password-box {
-  flex: 1; /* força colunas do mesmo tamanho */
+/* Conteúdo das Abas */
+.perfil-conteudo {
+  background-color: var(--cor-fundo-aba);
+  padding: 1.5rem;
+  border-radius: 0 12px 12px 12px;
+  min-height: 500px;
+}
+
+@media (min-width: 768px) {
+  .perfil-conteudo {
+    padding: 2.5rem;
+  }
+}
+
+.perfil-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+
+@media (min-width: 768px) {
+  .perfil-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.perfil-coluna {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
 }
 
+/* Elementos de Formulário e Tags */
+.perfil-titulo-secao {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
 
-/* ===== BADGE ===== */
-
-.badge {
-  background: #6c5ce7;
+.perfil-tag-titulo {
+  background-color: var(--cor-roxo-principal);
   color: white;
-  padding: 8px 16px;
-  border-radius: 999px;
-  width: fit-content;
+  padding: 0.375rem 1.5rem;
+  border-radius: var(--borda-raio-redondo);
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
+.perfil-icone-editar {
+  color: var(--cor-roxo-principal);
+  cursor: pointer;
+}
 
-/* ===== INPUTS ===== */
-
-input,
-textarea {
+.perfil-input {
   width: 100%;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 0.625rem 1rem;
+  border-radius: var(--borda-raio-redondo);
   border: none;
   outline: none;
+  font-size: 0.875rem;
   box-sizing: border-box;
 }
 
-textarea {
-  min-height: 120px;
-  resize: vertical;
+.perfil-textarea {
+  width: 100%;
+  height: 8rem;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  resize: none;
+  box-sizing: border-box;
 }
 
+.perfil-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cor-texto-escuro);
+  padding: 0 0.5rem;
+  margin-bottom: -0.5rem;
+}
 
-/* ===== SKILLS ===== */
+.perfil-input-curto {
+  width: 8rem;
+}
 
-.skills {
+/* Seção de Habilidades */
+.perfil-habilidades {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2rem;
+}
+
+.perfil-habilidades-titulo {
+  font-weight: 600;
+  color: var(--cor-texto-escuro);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.perfil-habilidades-lista {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 10px;
+  justify-content: center;
+  gap: 0.75rem;
+  max-width: 24rem;
 }
 
-.skill {
-  background: white;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 14px;
+.perfil-habilidade-tag {
+  background-color: white;
+  padding: 0.375rem 1.25rem;
+  border-radius: var(--borda-raio-redondo);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cor-texto-escuro);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+/* Caixa de Alterar Senha */
+.perfil-caixa-senha {
+  background-color: var(--cor-roxo-claro);
+  padding: 2rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
 
-/* ===== BOTÃO ===== */
+.perfil-caixa-senha h3 {
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
 
-.primary-btn {
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #6c5ce7;
+.perfil-botao-salvar {
+  background-color: var(--cor-roxo-principal);
   color: white;
+  font-weight: 500;
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--borda-raio-redondo);
+  font-size: 0.875rem;
+  border: none;
   cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: center;
+  margin-top: 0.5rem;
 }
 
+.perfil-botao-salvar:hover {
+  background-color: var(--cor-roxo-hover);
+}
 
-/* ===== RESPONSIVO ===== */
+/* --- Ajustes Globais de Responsividade --- */
 
-@media (max-width: 900px) {
-  .profile-grid {
-    flex-direction: column;
+/* 1. Ajuste do Header (Foto e Badges) */
+@media (max-width: 640px) {
+  .perfil-header {
+    align-items: center; /* Centraliza a foto e as badges no celular */
+    text-align: center;
   }
+  
+  .perfil-badges {
+    width: 100%;
+    align-items: center;
+  }
+
+  .perfil-badge {
+    width: 100%; /* Badges ocupam a largura total disponível no mobile */
+    max-width: 250px;
+  }
+}
+
+/* 2. Ajuste das Abas (Navegação) */
+@media (max-width: 480px) {
+  .perfil-tabs-nav {
+    flex-direction: row; /* Mantém lado a lado, mas reduz a fonte */
+  }
+  
+  .perfil-tab-btn {
+    flex: 1; /* Faz as duas abas dividirem o espaço 50/50 */
+    padding: 10px 5px;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+}
+
+/* 3. Grid de Conteúdo */
+.perfil-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Padrão: 1 coluna (Mobile) */
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .perfil-grid {
+    grid-template-columns: 1fr 1fr; /* Desktop: 2 colunas */
+    gap: 3rem;
+  }
+}
+
+/* 4. Ajuste da Seção de Habilidades e Senha */
+@media (max-width: 768px) {
+  .perfil-habilidades {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0,0,0,0.1); /* Linha sutil para separar seções no mobile */
+  }
+
+  .perfil-caixa-senha {
+    margin-top: 1rem;
+    padding: 1.5rem; /* Reduz padding interno no mobile */
+  }
+}
+
+/* 5. Inputs amigáveis ao toque */
+.perfil-input, .perfil-textarea {
+  font-size: 16px !important; /* Evita o zoom automático do iOS ao focar no input */
+  min-height: 44px; /* Tamanho mínimo recomendado pela Apple/Google para toque */
 }

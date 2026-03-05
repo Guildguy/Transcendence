@@ -1,121 +1,108 @@
-import { useState } from 'react'
-import './ProfilePage.css'
+import React, { useState } from 'react';
+import { Pencil, User } from 'lucide-react';
+import './ProfilePage.css';
 
-function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<'gerais' | 'pessoais'>('gerais')
-
-  const [formData, setFormData] = useState({
-    nome: '',
-    cargo: '',
-    bio: '',
-    experiencia: '',
-    github: '',
-    linkedin: '',
-    instagram: '',
-    email: '',
-    telefone: '',
-    senhaAtual: '',
-    novaSenha: '',
-  })
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
+const ProfilePage = () => {
+  const [abaAtiva, setAbaAtiva] = useState('gerais');
 
   return (
-    <div className="profile-wrapper">
-      <div className="profile-inner">
+    <div className="perfil-container">
+      {/* Seção Superior - Foto e Níveis */}
+      <div className="perfil-header">
+        <div className="perfil-avatar">
+          <User size={64} color="#e5e7eb" />
+        </div>
+        
+        <div className="perfil-badges">
+          <div className="perfil-badge">Level de Mentoria</div>
+          <div className="perfil-badge">XP</div>
+        </div>
+      </div>
 
-        {/* HEADER */}
-        <div className="profile-header">
-          <div className="avatar" />
-          <div className="profile-level">
-            <div className="level-pill">Level de Mentoria</div>
-            <div className="level-pill">XP</div>
+      {/* Navegação das Abas */}
+      <div className="perfil-tabs-nav">
+        <button
+          onClick={() => setAbaAtiva('gerais')}
+          className={`perfil-tab-btn ${abaAtiva === 'gerais' ? 'ativa' : 'inativa'}`}
+        >
+          Dados Gerais
+        </button>
+        <button
+          onClick={() => setAbaAtiva('pessoais')}
+          className={`perfil-tab-btn ${abaAtiva === 'pessoais' ? 'ativa' : 'inativa'}`}
+        >
+          Dados Pessoais
+        </button>
+      </div>
+
+      {/* Área de Conteúdo das Abas */}
+      <div className="perfil-conteudo">
+        
+        {/* CONTEÚDO: DADOS GERAIS */}
+        {abaAtiva === 'gerais' && (
+          <div className="perfil-grid">
+            <div className="perfil-coluna">
+              <div className="perfil-titulo-secao">
+                <span className="perfil-tag-titulo">Pessoa Mentora</span>
+                <Pencil size={18} className="perfil-icone-editar" />
+              </div>
+
+              <input type="text" placeholder="Nome Completo" className="perfil-input" />
+              <input type="text" placeholder="Cargo" className="perfil-input" />
+
+              <label className="perfil-label">Carta apresentação:</label>
+              <textarea className="perfil-textarea"></textarea>
+
+              <label className="perfil-label">Quantidade de anos de experiência</label>
+              <input type="text" className="perfil-input perfil-input-curto" />
+            </div>
+
+            <div className="perfil-habilidades">
+              <h3 className="perfil-habilidades-titulo">
+                Habilidades apresentadas para<br />mentorar
+              </h3>
+              <div className="perfil-habilidades-lista">
+                {['React', 'Banco de dados', 'UX', 'Typescript', 'Teste A/B', 'CSS', 'HTML', 'Figma'].map((skill) => (
+                  <span key={skill} className="perfil-habilidade-tag">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* TABS */}
-        <div className="profile-tabs">
-          <button
-            className={activeTab === 'gerais' ? 'active' : ''}
-            onClick={() => setActiveTab('gerais')}
-            type="button"
-          >
-            Dados Gerais
-          </button>
-
-          <button
-            className={activeTab === 'pessoais' ? 'active' : ''}
-            onClick={() => setActiveTab('pessoais')}
-            type="button"
-          >
-            Dados Pessoais
-          </button>
-        </div>
-
-        {/* CARD */}
-        <div className="profile-card">
-          {activeTab === 'gerais' && (
-            <div className="profile-grid">
-              <div className="col-left">
-                <h3 className="badge">Pessoa Mentora</h3>
-
-                <input name="nome" placeholder="Nome Completo" onChange={handleChange} />
-                <input name="cargo" placeholder="Cargo" onChange={handleChange} />
-
-                <label>Carta apresentação:</label>
-                <textarea name="bio" onChange={handleChange} />
-
-                <label>Quantidade de anos de experiência</label>
-                <input type="number" name="experiencia" onChange={handleChange} />
+        {/* CONTEÚDO: DADOS PESSOAIS */}
+        {abaAtiva === 'pessoais' && (
+          <div className="perfil-grid">
+            <div className="perfil-coluna">
+              <div className="perfil-titulo-secao">
+                <span className="perfil-tag-titulo">Dados de contato</span>
+                <Pencil size={18} className="perfil-icone-editar" />
               </div>
 
-              <div className="col-right">
-                <h3>Habilidades apresentadas para mentorar</h3>
-                <div className="skills">
-                  {['React','Banco de dados','UX','Typescript','Teste A/B','CSS','HTML','Figma']
-                    .map(skill => (
-                      <span key={skill} className="skill">{skill}</span>
-                  ))}
-                </div>
+              <input type="text" placeholder="Github" className="perfil-input" />
+              <input type="text" placeholder="Linkedin" className="perfil-input" />
+              <input type="text" placeholder="Instagram" className="perfil-input" />
+              <input type="email" placeholder="E-mail" className="perfil-input" />
+              <input type="tel" placeholder="Telefone de contato" className="perfil-input" />
+            </div>
+
+            <div className="perfil-coluna">
+              <div className="perfil-caixa-senha">
+                <h3>Alterar a Senha:</h3>
+                <input type="password" placeholder="Senha Atual" className="perfil-input" />
+                <input type="password" placeholder="Nova Senha" className="perfil-input" />
+                <button className="perfil-botao-salvar">
+                  Salvar Nova Senha
+                </button>
               </div>
             </div>
-          )}
-
-          {activeTab === 'pessoais' && (
-            <div className="profile-grid">
-              <div className="col-left">
-                <h3 className="badge">Dados de contato</h3>
-
-                <input name="github" placeholder="Github" onChange={handleChange} />
-                <input name="linkedin" placeholder="Linkedin" onChange={handleChange} />
-                <input name="instagram" placeholder="Instagram" onChange={handleChange} />
-                <input name="email" placeholder="E-mail" onChange={handleChange} />
-                <input name="telefone" placeholder="Telefone de contato" onChange={handleChange} />
-              </div>
-
-              <div className="password-box">
-                <h4>Alterar a Senha</h4>
-
-                <input type="password" name="senhaAtual" placeholder="Senha Atual" onChange={handleChange} />
-                <input type="password" name="novaSenha" placeholder="Nova Senha" onChange={handleChange} />
-
-                <button className="primary-btn">Salvar Nova Senha</button>
-              </div>
-            </div>
-          )}
-        </div>
-
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProfilePage
+export default ProfilePage;
