@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import './AppShell.css'
 
-function AppShell({ sidebar, header, footer }) {
+function AppShell({ sidebar, header, footer, children }) {
   const hasAuth = !sidebar
 
   return (
@@ -17,7 +17,7 @@ function AppShell({ sidebar, header, footer }) {
       </header>
 
       <main>
-        <Outlet />
+        {children || <Outlet />}
       </main>
 
       <footer className="footer">

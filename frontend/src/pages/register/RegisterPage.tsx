@@ -89,8 +89,8 @@ function RegisterPage() {
     }
 
     console.log('JSON enviado para o backend:', payload)
-  }
-
+    
+  
   return (
     <main className="register-form-wrapper">
       <form className="register-form" onSubmit={handleSubmit}>
@@ -196,6 +196,7 @@ function RegisterPage() {
       </form>
     </main>
   )
+}
 }
 
 export default RegisterPage
