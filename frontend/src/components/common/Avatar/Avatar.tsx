@@ -1,5 +1,5 @@
 import './Avatar.css'
-import UserImage from '../images/jpg/User.jpg'
+import UserImage from '../../images/jpg/User.jpg'
 
 export default function Avatar() {
   return (
