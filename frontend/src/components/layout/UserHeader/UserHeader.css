@@ -10,7 +10,7 @@
 
 .profile-section {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 40px;
   max-width: 1000px;
   margin: 0 auto;
@@ -55,22 +55,25 @@
 
 .stat-pill.level {
   min-width: 120px;
+  margin-left: 20px;
 }
 
 .stat-pill.xp {
   min-width: 160px;
+  margin-left: 40px;
 }
 
 .stat-pill.days {
   min-width: 200px;
+  margin-left: 60px;
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
-  .profile-section {
-    flex-direction: column;
-    align-items: center;
-  }
+    .profile-section {
+        align-items: center;
+        gap: 10px;
+    }
 }

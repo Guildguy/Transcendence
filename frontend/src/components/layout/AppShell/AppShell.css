@@ -1,14 +1,65 @@
+
+/* OLD BACKUP!!!
+    /* ===========================
+      BASE LAYOUT (STRUCTURAL)
+    =========================== */
+
+    /* .app-shell {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: 64px 1fr 48px;
+      height: 100vh;
+    } */
+
+    /* ===========================
+      DESKTOP - LOGADO
+    =========================== */
+    /* 
+    .app-shell > .sidebar {
+      grid-column: 1 / 2;
+      grid-row: 1 / 4;
+    } */
+
+    /* Header padrão (logado) */
+    /* .app-shell > .header {
+      grid-column: 2 / 3;
+      grid-row: 1 / 2;
+    } */
+
+    /* Header ocupa tudo no auth (sem sidebar) */
+    /* .app-shell.auth > .header {
+      grid-column: 1 / 2;
+    }
+
+    .app-shell > main {
+      grid-column: 2 / 3;
+      grid-row: 2 / 3; */
+
+      /* 🔑 ESSENCIAL PARA EVITAR BUG DE ALTURA */
+      /* min-height: 0;
+      overflow-y: auto;
+    }
+
+    .app-shell > .footer {
+      grid-column: 1 / 3;
+      grid-row: 3 / 4;
+    } */
+
+
 /* ===========================
    BASE LAYOUT (STRUCTURAL)
 =========================== */
 
 .app-shell {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  grid-template-rows: 64px 1fr 48px;
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Mudado de height para min-height */
+  background-color: var(--white);
 }
 
+.app-shell > footer {
+  flex-shrink: 0;
+}
 /* ===========================
    DESKTOP - LOGADO
 =========================== */
@@ -19,9 +70,8 @@
 }
 
 /* Header padrão (logado) */
-.app-shell > .header {
-  grid-column: 2 / 3;
-  grid-row: 1 / 2;
+.app-shell > header {
+  flex-shrink: 0;
 }
 
 /* Header ocupa tudo no auth (sem sidebar) */
@@ -30,9 +80,9 @@
 }
 
 .app-shell > main {
-  grid-column: 2 / 3;
-  grid-row: 2 / 3;
-
+  flex: 1;
+  overflow-y: visible; /* Mudado de auto para visible */
+  background-color: var(--white);
   /* 🔑 ESSENCIAL PARA EVITAR BUG DE ALTURA */
   min-height: 0;
   overflow-y: auto;
