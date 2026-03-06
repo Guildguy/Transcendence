@@ -3,6 +3,7 @@ import { Outlet, useSearchParams } from 'react-router-dom'
 import AppShell from '../../components/layout/AppShell/AppShell'
 import Header from '../../components/layout/Header/Header'
 import Footer from '../../components/layout/Footer/Footer'
+import UserHeader from '../../components/layout/UserHeader/UserHeader'
 import Avatar from '../../components/common/Avatar/Avatar'
 import Button from '../../components/common/Button/Button'
 import './HomeLogged.css'
@@ -54,20 +55,8 @@ function HomeLogged() {
       footer={<Footer />}
     >
       <div className="home-logged">
-
-        {/* Profile Section */}
-        <section className="profile-section">
-          <div className="profile-left">
-            <Avatar />
-            <span className="mentor-badge">Pessoa Mentora</span>
-          </div>
-
-          <div className="profile-stats">
-            <div className="stat-pill level">Nível XX</div>
-            <div className="stat-pill xp">XX &nbsp; XP</div>
-            <div className="stat-pill days">XX &nbsp; Dias ensinando &nbsp; 🔥</div>
-          </div>
-        </section>
+        
+        <UserHeader />
 
         {/* Main Content */}
         <section className="main-content">
