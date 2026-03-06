@@ -36,7 +36,7 @@ endif
 
 all:
 	@mkdir -p $(VOLUMES_DIRECTORY)
-	@chmod -R 777 ./data
+# 	@chmod -R 777 ./data
 	@make up SERVICES="$(SERVICES)" --no-print-directory
 
 up:

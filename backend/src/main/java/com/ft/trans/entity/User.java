@@ -25,8 +25,7 @@ import jakarta.persistence.UniqueConstraint;
 @Entity
 @Table(name = "users", uniqueConstraints = {
     @UniqueConstraint(name = "email", columnNames = "email"),
-    @UniqueConstraint(name = "phone_number", columnNames = "phone_number"),
-	@UniqueConstraint(name = "username", columnNames = "username")
+    @UniqueConstraint(name = "phoneNumber", columnNames = "phoneNumber")
 })
 public class User {
 	@Id
@@ -35,15 +34,13 @@ public class User {
 	@Column(nullable = false)
     public String	email;
 	public String	name;
-	// @Column(nullable = false)
-	// public String	username;
 	public Boolean	status;
 	public Date		created_at;
 	public String	created_by;
 	public Date		last_update_at;
 	public String	last_update_by;
 	@Column(nullable = false)
-	public String	phone_number;
+	public String	phoneNumber;
 	@Column(nullable = false)
 	public String	password;
 
@@ -61,12 +58,12 @@ public class User {
 
 	private void	isPhoneValid(ValidationResult result)
 	{
-		this.phone_number = this.phone_number != null ? this.phone_number.trim().replaceAll("\\D", "") : "";
+		this.phoneNumber = this.phoneNumber != null ? this.phoneNumber.trim().replaceAll("\\D", "") : "";
 
-		if (this.phone_number.isBlank())
-			result.addError("phone_number", "Numero em branco.");
-		if (!this.phone_number.matches("^\\d{10,11}$"))
-			result.addError("phone_number", "Numero inválido.");
+		if (this.phoneNumber.isBlank())
+			result.addError("phoneNumber", "Numero em branco.");
+		if (!this.phoneNumber.matches("^\\d{10,11}$"))
+			result.addError("phoneNumber", "Numero inválido.");
 	}
 
 	private void	isEmailValid(ValidationResult result)

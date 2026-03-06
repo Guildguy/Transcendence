@@ -22,7 +22,7 @@ public class UserController
 {
     private UserService userService;
 
-    public UserController(UserService us)
+    UserController(UserService us)
     {
         this.userService = us;
     }
