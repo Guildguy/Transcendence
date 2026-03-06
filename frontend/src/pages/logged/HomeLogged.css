@@ -1,68 +1,9 @@
 /* ---- Outer wrapper ---- */
 .home-logged {
   background-color: var(--purple-bg);
-  padding: 40px 24px 4px 24px;
+  width: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-dark);
-}
-
-/* ============================================================
-   PROFILE SECTION
-   ============================================================ */
-.profile-section {
-  display: flex;
-  align-items: flex-start;
-  gap: 40px;
-  padding-top: 4px;
-  padding-bottom: 40px;
-}
-
-.profile-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.mentor-badge {
-  background-color: var(--badge-bg);
-  color: var(--badge-text);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 5px 18px;
-  border-radius: 20px;
-  white-space: nowrap;
-}
-
-/* Stats pills */
-.profile-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  justify-content: flex-start;
-  padding-top: 8px;
-}
-
-.stat-pill {
-  background-color: #d8d6f0;
-  border-radius: 20px;
-  padding: 8px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-dark);
-  width: fit-content;
-}
-
-.stat-pill.level {
-  min-width: 120px;
-}
-
-.stat-pill.xp {
-  min-width: 160px;
-}
-
-.stat-pill.days {
-  min-width: 200px;
 }
 
 /* ============================================================
@@ -72,7 +13,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-bottom: 20px;
+  max-width: 1000px;
+  margin: 0 auto 20px auto;
+  padding: 20px 20px;
 }
 
 /* ---- Left Panel ---- */
@@ -80,7 +23,6 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 400px;
 }
 
 .tab-bar {
@@ -183,7 +125,6 @@
   text-align: center;
   color: var(--text-medium);
   font-size: 14px;
-  width: 400px;
 }
 
 /* ---- Right Panel ---- */
@@ -191,7 +132,6 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 400px;
 }
 
 .panel-title {
@@ -232,7 +172,9 @@
    ACHIEVEMENTS SECTION
    ============================================================ */
 .achievements-section {
-  margin-top: 20px;
+  max-width: 1000px;
+  margin: 20px auto 0 auto;
+  padding: 0 20px;
 }
 
 .achievements-title {
@@ -264,11 +206,6 @@
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
-  .profile-section {
-    flex-direction: column;
-    align-items: center;
-  }
-
   .main-content {
     grid-template-columns: 1fr;
   }
