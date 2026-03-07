@@ -131,8 +131,10 @@ function RegisterPage() {
     } catch (error) {
       console.error('Erro na requisição:', error);
     }
-  }
 
+    console.log('JSON enviado para o backend:', payload)
+    
+  
   return (
     <main className="register-form-wrapper">
       <form className="register-form" onSubmit={handleSubmit}>
@@ -238,6 +240,7 @@ function RegisterPage() {
       </form>
     </main>
   )
+}
 }
 
 export default RegisterPage

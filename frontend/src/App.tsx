@@ -9,6 +9,7 @@ import PrivacyPage from './pages/legal/PrivacyPage'
 import Home from './pages/Home'
 import RegisterPage from './pages/register/RegisterPage'
 import RegisterLayout from './pages/register/RegisterLayout'
+import HomeLogged from './pages/logged/HomeLogged'
 
 
 function App() {
@@ -35,6 +36,11 @@ function App() {
       <Route element={<RegisterLayout />}>
         <Route path="/register" element={<RegisterPage />} />
       </Route>
+
+      {/* =====================
+         HOME LOGGED
+      ===================== */}
+      <Route path="/home-logged" element={<HomeLogged />} />
 
       {/* =====================
          INSTITUCIONAL (FORA DO APPSHELL)
