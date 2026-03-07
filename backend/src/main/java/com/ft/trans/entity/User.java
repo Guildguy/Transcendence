@@ -35,10 +35,10 @@ public class User {
     public String	email;
 	public String	name;
 	public Boolean	status;
-	public Date		created_at;
-	public String	created_by;
-	public Date		last_update_at;
-	public String	last_update_by;
+	public Date		createdAt;
+	public Long		createdBy;
+	public Date		lastUpdateAt;
+	public Long		lastUpdateBy;
 	@Column(nullable = false)
 	public String	phoneNumber;
 	@Column(nullable = false)
