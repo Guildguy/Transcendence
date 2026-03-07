@@ -29,7 +29,6 @@ function LoginForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Tratamento de erro baseado no seu padrão Java Result/ValidationResult
         if (data.result && data.result.errors) {
             console.error('Erros de validação:', data.result.errors);
         }
@@ -37,7 +36,6 @@ function LoginForm() {
       }
 
       console.log('Login realizado com sucesso:', data);
-      // Aqui você geralmente salva o Token/JWT e redireciona o usuário
       
     } catch (error) {
       console.error('Erro na requisição:', error);
