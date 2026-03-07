@@ -2,9 +2,7 @@ package com.ft.trans.entity;
 
 import java.sql.Date;
 
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.query.common.FetchClauseType;
-
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,23 +29,23 @@ public class Profile
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public Long		id;
-	@ManyToAny(fetch = FetchType.LAZY)
+	public Long			id;
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
-	public User		user;
-	public String	avatarUrl;
+	public User			user;
+	public String		avatarUrl;
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	public String	position;
-	public String	bio;
-	public String	role;
-	public Long		xp;
-	public Integer	level;
-	public String	linkedin;
-	public String	github;
-	public String	instagram;
-	public Date		createdAt;
-	public Long		createdBy;
-	public Date		lastUpdateAt;
-	public Long		lastUpdateBy;
+	public ProfileType	position;
+	public String		bio;
+	public String		role;
+	public Long			xp;
+	public Integer		level;
+	public String		linkedin;
+	public String		github;
+	public String		instagram;
+	public Date			createdAt;
+	public Long			createdBy;
+	public Date			lastUpdateAt;
+	public Long			lastUpdateBy;
 }
