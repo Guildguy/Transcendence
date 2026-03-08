@@ -22,9 +22,9 @@ function Header({ isAuthenticated = false }: HeaderProps) {
             </>
           ) : (
             <>
-              <Link to="/home">Home</Link>
+              <Link to="/home-logged">Home</Link>
               <Link to="/mentorias">Mentoria</Link>
-              <Link to="/perfil">Perfil</Link>
+              <Link to="/profile">Perfil</Link>
             </>
           )}
         </nav>
