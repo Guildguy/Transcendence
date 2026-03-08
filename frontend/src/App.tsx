@@ -10,6 +10,7 @@ import Home from './pages/Home'
 import RegisterPage from './pages/register/RegisterPage'
 import RegisterLayout from './pages/register/RegisterLayout'
 import ProfilePage from './pages/profile/ProfilePage'
+import HomeLogged from './pages/logged/HomeLogged'
 
 
 function App() {
@@ -49,6 +50,14 @@ function App() {
       </Route>
 
       {/* INSTITUCIONAL */}
+      {/* =====================
+         HOME LOGGED
+      ===================== */}
+      <Route path="/home-logged" element={<HomeLogged />} />
+
+      {/* =====================
+         INSTITUCIONAL (FORA DO APPSHELL)
+      ===================== */}
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
 
