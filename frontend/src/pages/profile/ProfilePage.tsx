@@ -50,7 +50,7 @@ const ProfilePage = () => {
               <input type="text" placeholder="Nome Completo" className="perfil-input" />
               <input type="text" placeholder="Cargo" className="perfil-input" />
 
-              <label className="perfil-label">Carta apresentação:</label>
+              <label className="perfil-label">Carta de apresentação:</label>
               <textarea className="perfil-textarea"></textarea>
 
               <label className="perfil-label">Quantidade de anos de experiência</label>
