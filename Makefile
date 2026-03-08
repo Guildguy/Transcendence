@@ -36,7 +36,7 @@ endif
 
 all:
 	@mkdir -p $(VOLUMES_DIRECTORY)
-	@chmod -R 777 ./data
+# 	@chmod -R 777 ./data
 	@make up SERVICES="$(SERVICES)" --no-print-directory
 
 up:
@@ -72,20 +72,11 @@ shell-%:
 	fi
 
 clean:
-	@if docker image ls | grep $(COMPOSE_PROJECT_NAME) $(QUIET); \
-	then \
-		$(DOCKER_COMPOSE) down --timeout 1 --rmi local; \
-	fi
-	@if docker network ls | grep $(COMPOSE_PROJECT_NAME) $(QUIET); \
-	then \
-		$(DOCKER_COMPOSE) down --timeout 1 --rmi local; \
-	fi
+	@$(DOCKER_COMPOSE) down --timeout 1 --rmi local 2>/dev/null || true
 
 fclean: clean
-	@if docker volume ls | grep $(COMPOSE_PROJECT_NAME) $(QUIET); \
-	then \
-		$(DOCKER_COMPOSE) down --timeout 1 --volumes;\
-	fi
+	@$(DOCKER_COMPOSE) down --timeout 1 --volumes 2>/dev/null || true
+	@docker volume prune -f $(QUIET) || true
 
 re: fclean all
 
