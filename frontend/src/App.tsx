@@ -9,15 +9,15 @@ import PrivacyPage from './pages/legal/PrivacyPage'
 import Home from './pages/Home'
 import RegisterPage from './pages/register/RegisterPage'
 import RegisterLayout from './pages/register/RegisterLayout'
+import ProfilePage from './pages/profile/ProfilePage'
 import HomeLogged from './pages/logged/HomeLogged'
 
 
 function App() {
   return (
     <Routes>
-      {/* =====================
-         HOME / LOGIN (SEM SIDEBAR)
-      ===================== */}
+
+      {/* HOME / LOGIN */}
       <Route
         element={
           <AppShell
@@ -31,12 +31,25 @@ function App() {
         <Route path="/login" element={<AuthPage />} />
       </Route>
 
-
-      {/* REGISTER (SIDEBAR DINÂMICA) */}
+      {/* REGISTER */}
       <Route element={<RegisterLayout />}>
         <Route path="/register" element={<RegisterPage />} />
       </Route>
 
+      {/* 🔥 ÁREA LOGADA */}
+      <Route
+        element={
+          <AppShell
+            sidebar={null}
+            header={<Header isAuthenticated={true} />}
+            footer={<Footer />}
+          />
+        }
+      >
+        <Route path="/profile" element={<ProfilePage />} />
+      </Route>
+
+      {/* INSTITUCIONAL */}
       {/* =====================
          HOME LOGGED
       ===================== */}
@@ -48,10 +61,9 @@ function App() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
 
-      {/* =====================
-         FALLBACK
-      ===================== */}
+      {/* FALLBACK */}
       <Route path="*" element={<Navigate to="/" />} />
+
     </Routes>
   )
 }
