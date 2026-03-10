@@ -17,7 +17,7 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "profiles", uniqueConstraints = {
-	@UniqueConstraint(columnNames = {"user_id", "position"})
+	@UniqueConstraint(columnNames = {"user_id", "role"})
 })
 public class Profile
 {
@@ -34,11 +34,11 @@ public class Profile
 	@JoinColumn(name = "user_id", nullable = false)
 	public User			user;
 	public String		avatarUrl;
+	public String		position;
+	public String		bio;
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	public ProfileType	position;
-	public String		bio;
-	public String		role;
+	public ProfileType	role;
 	public Long			xp;
 	public Integer		level;
 	public String		linkedin;
@@ -48,4 +48,9 @@ public class Profile
 	public Long			createdBy;
 	public Date			lastUpdateAt;
 	public Long			lastUpdateBy;
+
+	public void			setRole(String profileType)
+	{
+		this.role = ProfileType.valueOf(profileType);
+	}
 }

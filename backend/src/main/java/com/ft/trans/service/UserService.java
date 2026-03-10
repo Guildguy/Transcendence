@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.ft.trans.dto.UserDTO;
 import com.ft.trans.entity.LoginRequest;
+import com.ft.trans.entity.Profile;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
 import com.ft.trans.validation.ValidationResult;
@@ -19,9 +21,18 @@ public class UserService {
         this.userRepository = ur;
     }
 
-    public Result		create(User user)
+    public Result		create(UserDTO userDTO)
     {
-        return (_persistUser(user, false));
+		User	user = userDTO.toUser();
+		Result	result = _persistUser(user, false);
+		if (result.validationResult().hasErrors())
+			return result;
+		Profile	profile = new Profile();
+		profile.user = user;
+		profile.setRole(userDTO.profileType);
+
+		result.consume(_persistProfile(profile));
+        return (result);
     }
 
 	public List<User>	list()
@@ -87,5 +98,17 @@ public class UserService {
     public record		Result(
 		User 				user,
 		ValidationResult	validationResult
-	){};
+	){
+
+		public void	consume(Result other)
+		{
+			if (other.validationResult().hasErrors())
+			{
+				for (ValidationResult.DomainError error : other.validationResult().getErrors())
+				{
+					this.validationResult.addError(error.field(), error.message());
+				}
+			}
+		}
+	};
 }
