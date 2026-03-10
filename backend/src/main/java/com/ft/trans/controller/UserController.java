@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import com.ft.trans.entity.User;
+import com.ft.trans.dto.UserDTO;
 import com.ft.trans.service.UserService;
 
 @RestController
@@ -28,9 +29,9 @@ public class UserController
     }
 
 	@PostMapping
-    public ResponseEntity<?>	create(@RequestBody User user)
+    public ResponseEntity<?>	create(@RequestBody UserDTO userDTO)
 	{
-		UserService.Result result = this.userService.create(user);
+		UserService.Result result = this.userService.create(userDTO);
 
 		if (result.validationResult().hasErrors())
 		{
