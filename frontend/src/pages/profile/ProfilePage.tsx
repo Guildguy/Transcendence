@@ -1,67 +1,161 @@
 import React, { useState, useEffect } from "react";
-import { Pencil, User } from "lucide-react";
+import { Pencil, User, Save, Trash2 } from "lucide-react";
 import "./ProfilePage.css";
-import PresentationText from "../../components/common/PresentationText/PresentationText";
+import InputGroup from "../../components/common/InputGroup/InputGroup";
 
-// Interface para tipar o usuário vindo do backend
+// Interface alinhada com o banco de dados
 interface UserData {
-  id: number;
+  id?: string;
+  nome: string;
   email: string;
-  presentationText?: string;
-  // Adicione outros campos conforme sua Entity Java
+  cargo: string;
+  presentationText: string;
+  anosExperiencia: string;
+  github: string;
+  linkedin: string;
+  instagram: string;
+  telefone: string;
 }
+
 const ProfilePage = () => {
   const [abaAtiva, setAbaAtiva] = useState("gerais");
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
-  // habilitar qnd conectar com o backend e tirar o fake
-  /*useEffect(() => {
-    const loadUserData = async () => {
+  // 1. Estado inicial com strings vazias para evitar erros de "null" e permitir placeholders
+  const [userData, setUserData] = useState<UserData>({
+    nome: "",
+    email: "",
+    cargo: "",
+    presentationText: "",
+    anosExperiencia: "",
+    github: "",
+    linkedin: "",
+    instagram: "",
+    telefone: "",
+  });
+
+  // Estado para restaurar os dados caso o usuário clique no (X) cancelar
+  const [backupData, setBackupData] = useState<UserData | null>(null);
+
+  // Lógica de Carregamento
+  useEffect(() => {
+    const loadFullProfile = async () => {
       try {
-        const response = await fetch("http://localhost:8080/users");
-        const data = await response.json();
-        // Pegando o primeiro usuário da lista conforme seu UserController
-        if (data && data.length > 0) {
-          setUserData(data[0]);
+        const [resUser, resProfile] = await Promise.all([
+          fetch("http://localhost:8080/users/1"),
+          fetch("http://localhost:8080/profile/1"),
+        ]);
+
+        if (resUser.ok && resProfile.ok) {
+          const dataUser = await resUser.json();
+          const dataProfile = await resProfile.json();
+
+          const unifiedData: UserData = {
+            ...dataUser,
+            ...dataProfile,
+          };
+
+          setUserData(unifiedData);
+          setBackupData(unifiedData);
+        } else {
+          throw new Error("Dados não encontrados no servidor");
         }
       } catch (error) {
-        console.error("Erro ao carregar dados do perfil:", error);
+        console.warn(
+          "Backend offline ou vazio, carregando Mock para testes...",
+        );
+
+        // Mantenha o mock aqui para testes visuais; apague este bloco quando o backend estiver 100%
+        const mockUser: UserData = {
+          id: "1",
+          nome: "Beyoncé Knowles",
+          cargo: "Queen B",
+          email: "Beyonce@RocNation.com",
+          presentationText:
+            "Beyoncé Giselle Knowles-Carter é uma figura cultural proeminente...",
+          anosExperiencia: "30",
+          github: "github.com/beyonce",
+          linkedin: "linkedin.com/in/beyonce",
+          instagram: "@beyonce",
+          telefone: "11999999999",
+        };
+
+        setUserData(mockUser);
+        setBackupData(mockUser);
       }
     };
 
-    loadUserData();
-  }, []);*/
-
-  useEffect(() => {
-    // Simulação de dados enquanto o backend está offline
-    const mockUser: UserData = {
-      id: 1,
-      email: "desenvolvedora@teste.com",
-      presentationText:
-        "Beyoncé Giselle Knowles-Carter,é uma cantora, compositora, atriz e empresária norte-americana. Referida como Queen Bey, ela é amplamente reconhecida por seu talento artístico, voz e apresentações ao vivo. Suas contribuições para a música e a mídia visual, bem como suas apresentações em concertos a converteram em uma figura cultural proeminente do século XXI.",
-    };
-
-    // Simulando um pequeno atraso de rede (opcional)
-    setTimeout(() => {
-      setUserData(mockUser);
-    }, 500);
+    loadFullProfile();
   }, []);
+
+  // função de save modo mock
+  const handleSaveAll = async () => {
+    if (!userData) return;
+
+    console.log("Dados salvos no Mock:", userData);
+
+    setBackupData(userData);
+
+    setIsEditing(false);
+  };
+
+  // Função de Salvar backend funcionado
+  /*const handleSaveAll = async () => {
+    try {
+      const userPayload = { nome: userData.nome, email: userData.email };
+      const profilePayload = {
+        cargo: userData.cargo,
+        presentationText: userData.presentationText,
+        anosExperiencia: userData.anosExperiencia,
+        github: userData.github,
+        linkedin: userData.linkedin,
+        instagram: userData.instagram,
+        telefone: userData.telefone,
+      };
+
+      // Chamadas PUT com headers de JSON
+      await Promise.all([
+        fetch(`http://localhost:8080/users/${userData.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userPayload),
+        }),
+        fetch(`http://localhost:8080/profile/${userData.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profilePayload),
+        })
+      ]);
+
+      setBackupData(userData);
+      setIsEditing(false);
+      alert("Alterações salvas com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      console.log("Erro ao conectar com o servidor.");
+    }
+  };*/
+
+  // Função de Cancelar
+  const handleCancel = () => {
+    if (backupData) {
+      setUserData(backupData);
+    }
+    setIsEditing(false);
+  };
 
   return (
     <div className="perfil-container">
-      {/* Seção Superior - Foto e Níveis */}
       <div className="perfil-header">
         <div className="perfil-avatar">
           <User size={64} color="#e5e7eb" />
         </div>
-
         <div className="perfil-badges">
           <div className="perfil-badge">Level de Mentoria</div>
           <div className="perfil-badge">XP</div>
         </div>
       </div>
 
-      {/* Navegação das Abas */}
       <div className="perfil-tabs-nav">
         <button
           onClick={() => setAbaAtiva("gerais")}
@@ -77,95 +171,130 @@ const ProfilePage = () => {
         </button>
       </div>
 
-      {/* Área de Conteúdo das Abas */}
       <div className="perfil-conteudo">
-        {/* CONTEÚDO: DADOS GERAIS */}
-        {abaAtiva === "gerais" && (
-          <div className="perfil-grid">
-            <div className="perfil-coluna">
-              <div className="perfil-titulo-secao">
-                <span className="perfil-tag-titulo">Pessoa Mentora</span>
-                <Pencil size={18} className="perfil-icone-editar" />
-              </div>
+        <div className="perfil-grid">
+          <div className="perfil-coluna">
+            <div className="perfil-titulo-secao">
+              <span className="perfil-tag-titulo">
+                {abaAtiva === "gerais" ? "Pessoa Mentora" : "Dados de contato"}
+              </span>
 
-              <input
-                type="text"
-                placeholder="Nome Completo"
-                className="perfil-input"
-              />
-              <input type="text" placeholder="Cargo" className="perfil-input" />
-
-              <PresentationText initialUser={userData} isEditable={true} />
-
-              <label className="perfil-label">
-                Quantidade de anos de experiência
-              </label>
-              <input type="text" className="perfil-input perfil-input-curto" />
+              {isEditing ? (
+                <div className="botoes-edicao-topo">
+                  <Save
+                    size={22}
+                    className="perfil-icone-salvar"
+                    onClick={handleSaveAll}
+                    title="Salvar"
+                  />
+                  <Trash2
+                    size={22}
+                    className="perfil-icone-cancelar"
+                    onClick={handleCancel}
+                    title="Descartar alterações"
+                  />
+                </div>
+              ) : (
+                <Pencil
+                  size={18}
+                  className="perfil-icone-editar"
+                  onClick={() => setIsEditing(true)}
+                  title="Editar"
+                />
+              )}
             </div>
 
-            <div className="perfil-habilidades">
-              <h3 className="perfil-habilidades-titulo">
-                Habilidades apresentadas para
-                <br />
-                mentorar
-              </h3>
-              <div className="perfil-habilidades-lista">
-                {[
-                  "React",
-                  "Banco de dados",
-                  "UX",
-                  "Typescript",
-                  "Teste A/B",
-                  "CSS",
-                  "HTML",
-                  "Figma",
-                ].map((skill) => (
-                  <span key={skill} className="perfil-habilidade-tag">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
+            {abaAtiva === "gerais" ? (
+              <>
+                <InputGroup
+                  placeholder="Nome Completo"
+                  value={userData.nome}
+                  isEditing={isEditing}
+                  onChange={(val) => setUserData({ ...userData, nome: val })}
+                />
+                <InputGroup
+                  placeholder="Cargo"
+                  value={userData.cargo}
+                  isEditing={isEditing}
+                  onChange={(val) => setUserData({ ...userData, cargo: val })}
+                />
+                <InputGroup
+                  label="Carta apresentação:"
+                  value={userData.presentationText}
+                  isEditing={isEditing}
+                  isTextArea={true}
+                  onChange={(val) =>
+                    setUserData({ ...userData, presentationText: val })
+                  }
+                />
+                <InputGroup
+                  label="Quantidade de anos de experiência"
+                  value={userData.anosExperiencia}
+                  isEditing={isEditing}
+                  isNumeric={true}
+                  onChange={(val) =>
+                    setUserData({ ...userData, anosExperiencia: val })
+                  }
+                />
+              </>
+            ) : (
+              <>
+                <InputGroup
+                  placeholder="Github"
+                  value={userData.github}
+                  isEditing={isEditing}
+                  onChange={(val) => setUserData({ ...userData, github: val })}
+                />
+                <InputGroup
+                  placeholder="Linkedin"
+                  value={userData.linkedin}
+                  isEditing={isEditing}
+                  onChange={(val) =>
+                    setUserData({ ...userData, linkedin: val })
+                  }
+                />
+                <InputGroup
+                  placeholder="Instagram"
+                  value={userData.instagram}
+                  isEditing={isEditing}
+                  onChange={(val) =>
+                    setUserData({ ...userData, instagram: val })
+                  }
+                />
+                <InputGroup
+                  placeholder="E-mail"
+                  value={userData.email}
+                  isEditing={isEditing}
+                  onChange={(val) => setUserData({ ...userData, email: val })}
+                />
+                <InputGroup
+                  placeholder="Telefone"
+                  value={userData.telefone}
+                  isEditing={isEditing}
+                  isNumeric={true}
+                  onChange={(val) =>
+                    setUserData({ ...userData, telefone: val })
+                  }
+                />
+              </>
+            )}
           </div>
-        )}
 
-        {/* CONTEÚDO: DADOS PESSOAIS */}
-        {abaAtiva === "pessoais" && (
-          <div className="perfil-grid">
-            <div className="perfil-coluna">
-              <div className="perfil-titulo-secao">
-                <span className="perfil-tag-titulo">Dados de contato</span>
-                <Pencil size={18} className="perfil-icone-editar" />
+          <div className="perfil-coluna">
+            {abaAtiva === "gerais" ? (
+              <div className="perfil-habilidades">
+                <h3 className="perfil-habilidades-titulo">
+                  Habilidades apresentadas para mentorar
+                </h3>
+                <div className="perfil-habilidades-lista">
+                  {["React", "MongoDB", "Java", "UX"].map((s) => (
+                    <span key={s} className="perfil-habilidade-tag">
+                      {s}
+                    </span>
+                  ))}
+                </div>
               </div>
-
-              <input
-                type="text"
-                placeholder="Github"
-                className="perfil-input"
-              />
-              <input
-                type="text"
-                placeholder="Linkedin"
-                className="perfil-input"
-              />
-              <input
-                type="text"
-                placeholder="Instagram"
-                className="perfil-input"
-              />
-              <input
-                type="email"
-                placeholder="E-mail"
-                className="perfil-input"
-              />
-              <input
-                type="tel"
-                placeholder="Telefone de contato"
-                className="perfil-input"
-              />
-            </div>
-
-            <div className="perfil-coluna">
+            ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>
                 <input
@@ -182,9 +311,9 @@ const ProfilePage = () => {
                   Salvar Nova Senha
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
