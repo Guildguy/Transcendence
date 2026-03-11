@@ -12,6 +12,7 @@ import org.passay.WhitespaceRule;
 import com.ft.trans.service.PasswordService;
 import com.ft.trans.utils.StringUtils;
 import com.ft.trans.validation.ValidationResult;
+import com.ft.trans.contract.IEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,7 +28,7 @@ import jakarta.persistence.UniqueConstraint;
     @UniqueConstraint(name = "email", columnNames = "email"),
     @UniqueConstraint(name = "phoneNumber", columnNames = "phoneNumber")
 })
-public class User {
+public class User implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long		id;

@@ -10,15 +10,18 @@ import com.ft.trans.entity.LoginRequest;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
+import com.ft.trans.validation.Result;
 import com.ft.trans.validation.ValidationResult;
 
 @Service
 public class UserService {
-    private UserRepository userRepository;
+    private UserRepository	userRepository;
+	private ProfileService	profileService;
 
-    public				UserService(UserRepository ur)
+    public				UserService(UserRepository ur, ProfileService ps)
     {
         this.userRepository = ur;
+		this.profileService = ps;
     }
 
     public Result		create(UserDTO userDTO)
@@ -31,7 +34,7 @@ public class UserService {
 		profile.user = user;
 		profile.setRole(userDTO.profileType);
 
-		result.consume(_persistProfile(profile));
+		result.consume(profileService._persistProfile(profile));
         return (result);
     }
 
@@ -95,20 +98,20 @@ public class UserService {
     	return new Result(savedUser, result);
 	}
 
-    public record		Result(
-		User 				user,
-		ValidationResult	validationResult
-	){
+    // public record		Result(
+	// 	User 				user,
+	// 	ValidationResult	validationResult
+	// ){
 
-		public void	consume(Result other)
-		{
-			if (other.validationResult().hasErrors())
-			{
-				for (ValidationResult.DomainError error : other.validationResult().getErrors())
-				{
-					this.validationResult.addError(error.field(), error.message());
-				}
-			}
-		}
-	};
+	// 	public void	consume(Result other)
+	// 	{
+	// 		if (other.validationResult().hasErrors())
+	// 		{
+	// 			for (ValidationResult.DomainError error : other.validationResult().getErrors())
+	// 			{
+	// 				this.validationResult.addError(error.field(), error.message());
+	// 			}
+	// 		}
+	// 	}
+	// };
 }
