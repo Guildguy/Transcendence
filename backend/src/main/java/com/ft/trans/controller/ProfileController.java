@@ -10,7 +10,7 @@ import com.ft.trans.entity.Profile;
 import com.ft.trans.service.ProfileService;
 
 @RestController
-@RequestMapping
+@RequestMapping("/profiles")
 public class ProfileController {
     private ProfileService profileService;
 

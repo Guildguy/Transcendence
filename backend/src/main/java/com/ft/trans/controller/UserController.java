@@ -15,8 +15,10 @@ import org.springframework.http.HttpStatus;
 
 import com.ft.trans.entity.User;
 import com.ft.trans.dto.UserDTO;
+import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.service.UserService;
 import com.ft.trans.validation.Result;
+
 
 @RestController
 @RequestMapping("/users")
@@ -45,11 +47,21 @@ public class UserController
             .body(result.entity());
 	}
 
-	@GetMapping
-    public List<User>		list()
+	@GetMapping("/{id}")
+	public ResponseEntity<?>		listUserProfiles(@PathVariable Long id)
 	{
-		return (this.userService.list());
+		UserProfilesDTO dto = this.userService.getUserProfiles(id);
+
+		return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(result.entity());
 	}
+
+	// @GetMapping
+    // public List<User>		list()
+	// {
+	// 	return (this.userService.list());
+	// }
 
 	@PutMapping
     public ResponseEntity<?>		update(@RequestBody User user)

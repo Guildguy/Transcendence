@@ -6,21 +6,24 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.ft.trans.dto.UserDTO;
+import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.entity.LoginRequest;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
 import com.ft.trans.validation.Result;
 import com.ft.trans.validation.ValidationResult;
+import com.ft.trans.repository.ProfileRepository;
 
 @Service
 public class UserService {
     private UserRepository	userRepository;
 	private ProfileService	profileService;
 
-    public				UserService(UserRepository ur, ProfileService ps)
+    public				UserService(UserRepository ur, ProfileRepository pr, ProfileService ps)
     {
         this.userRepository = ur;
+		this.profileRepository = pr;
 		this.profileService = ps;
     }
 
@@ -98,20 +101,13 @@ public class UserService {
     	return new Result(savedUser, result);
 	}
 
-    // public record		Result(
-	// 	User 				user,
-	// 	ValidationResult	validationResult
-	// ){
+	public UserProfilesDTO	getUserProfiles(long user_id)
+	{
+		UserProfilesDTO dto = new UserProfilesDTO();
 
-	// 	public void	consume(Result other)
-	// 	{
-	// 		if (other.validationResult().hasErrors())
-	// 		{
-	// 			for (ValidationResult.DomainError error : other.validationResult().getErrors())
-	// 			{
-	// 				this.validationResult.addError(error.field(), error.message());
-	// 			}
-	// 		}
-	// 	}
-	// };
+		dto.user = findById(user_id);
+		dto.profiles = profileRepository.findByUser(user_id);
+
+		return dto;
+	}
 }
