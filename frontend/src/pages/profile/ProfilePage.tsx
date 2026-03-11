@@ -143,6 +143,47 @@ const ProfilePage = () => {
     }
     setIsEditing(false);
   };
+  //Lógica de troca de senha
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const handleUpdatePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      alert("Por favor, preencha todos os campos de senha.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/users/${userData.id}/update-password`,
+        {
+          method: "PATCH", // Ou PUT, dependendo da sua Controller Java
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentPassword: currentPassword,
+            newPassword: newPassword,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        alert("Senha atualizada com sucesso!");
+        setCurrentPassword("");
+        setNewPassword("");
+      } else if (response.status === 401 || response.status === 403) {
+        // O Java geralmente retorna 401 Unauthorized se a senha atual estiver errada
+        alert("Senha atual não coincide.");
+      } else {
+        // Trata erro de validação (Passay)
+        const errorData = await response.json();
+        alert(
+          errorData.message ||
+            "A nova senha não segue a política de segurança.",
+        );
+      }
+    } catch (error) {
+      alert("Erro ao conectar com o servidor.");
+    }
+  };
 
   return (
     <div className="perfil-container">
@@ -301,13 +342,26 @@ const ProfilePage = () => {
                   type="password"
                   placeholder="Senha Atual"
                   className="perfil-input"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
                 />
                 <input
                   type="password"
                   placeholder="Nova Senha"
                   className="perfil-input"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                 />
-                <button className="perfil-botao-salvar">
+
+                {/* Pequeno lembrete visual das regras que você definiu no Java (Passay) */}
+                <p className="senha-dica">
+                  Mínimo 8 caracteres, com maiúscula, número e símbolo.
+                </p>
+
+                <button
+                  className="perfil-botao-salvar"
+                  onClick={handleUpdatePassword}
+                >
                   Salvar Nova Senha
                 </button>
               </div>
