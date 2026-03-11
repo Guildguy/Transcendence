@@ -2,6 +2,9 @@ package com.ft.trans.entity;
 
 import java.sql.Date;
 
+import com.ft.trans.contract.IEntity;
+import com.ft.trans.validation.ValidationResult;
+
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,7 +22,7 @@ import jakarta.persistence.UniqueConstraint;
 @Table(name = "profiles", uniqueConstraints = {
 	@UniqueConstraint(columnNames = {"user_id", "role"})
 })
-public class Profile
+public class Profile implements IEntity
 {
 	public enum ProfileType
 	{
@@ -52,5 +55,29 @@ public class Profile
 	public void			setRole(String profileType)
 	{
 		this.role = ProfileType.valueOf(profileType);
+	}
+
+	private	ValidationResult isUserValid(ValidationResult result)
+	{
+		if (this.user == null)
+			result.addError("User", "Profile precisa ter um usuario atrelado para poder ser criado.");
+		return result;
+	}
+
+	private	ValidationResult isRoleValid(ValidationResult result)
+	{
+		if (this.user == null)
+			result.addError("role", "Role do perfil não especificado (MENTOR ou MENTORADO)");
+		return result;
+	}
+
+	public ValidationResult	validate()
+	{
+		ValidationResult	result = new ValidationResult();
+
+		isUserValid(result);
+		isRoleValid(result);
+
+		return result;
 	}
 }
