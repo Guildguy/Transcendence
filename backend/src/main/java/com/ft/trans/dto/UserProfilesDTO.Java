@@ -1,7 +1,5 @@
 package com.ft.trans.dto;
 
-import java.sql.Date;
-
 import com.ft.trans.entity.User;
 import com.ft.trans.entity.Profile;
 
