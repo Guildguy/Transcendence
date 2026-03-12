@@ -1,0 +1,44 @@
+.input-group-container {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.input-label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.custom-input,
+.view-box {
+  width: 100%;
+  background-color: #f5f5f5; /* Cinza clarinho da imagem */
+  border: none;
+  border-radius: 20px; /* Bem arredondado como no seu print */
+  padding: 12px 20px;
+  font-size: 14px;
+  min-height: 45px;
+  box-sizing: border-box;
+}
+
+.custom-textarea,
+.view-textarea {
+  border-radius: 25px;
+  min-height: 120px;
+  resize: none;
+}
+
+.view-box {
+  display: flex;
+  align-items: center;
+  color: #333;
+}
+
+.placeholder-text {
+  color: #999;
+}
+
+.custom-input:focus {
+  outline: 2px solid #6e54d1; /* Cor roxa do seu botão */
+}
