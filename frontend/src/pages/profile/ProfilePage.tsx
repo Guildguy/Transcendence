@@ -72,7 +72,7 @@ const ProfilePage = () => {
           cargo: "Queen B",
           email: "Beyonce@RocNation.com",
           presentationText:
-            "Beyoncé Giselle Knowles-Carter é uma figura cultural proeminente...",
+            "Beyoncé Giselle Knowles-Carter,é uma cantora, compositora, atriz e empresária norte-americana. Referida como Queen Bey, ela é amplamente reconhecida por seu talento artístico, voz e apresentações ao vivo. Suas contribuições para a música e a mídia visual, bem como suas apresentações em concertos a converteram em uma figura cultural proeminente do século XXI.",
           anosExperiencia: "30",
           github: "github.com/beyonce",
           linkedin: "linkedin.com/in/beyonce",
