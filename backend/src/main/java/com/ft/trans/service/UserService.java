@@ -11,14 +11,15 @@ import com.ft.trans.entity.LoginRequest;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
+import com.ft.trans.repository.ProfileRepository;
 import com.ft.trans.validation.Result;
 import com.ft.trans.validation.ValidationResult;
-import com.ft.trans.repository.ProfileRepository;
 
 @Service
 public class UserService {
-    private UserRepository	userRepository;
-	private ProfileService	profileService;
+    private UserRepository		userRepository;
+	private ProfileService		profileService;
+	private ProfileRepository	profileRepository;
 
     public				UserService(UserRepository ur, ProfileRepository pr, ProfileService ps)
     {
@@ -105,8 +106,9 @@ public class UserService {
 	{
 		UserProfilesDTO dto = new UserProfilesDTO();
 
-		dto.user = findById(user_id);
-		dto.profiles = profileRepository.findByUser(user_id);
+		dto.user = userRepository.findById(user_id)
+			.orElse(null);
+		dto.profiles = profileRepository.findByUserId(user_id);
 
 		return dto;
 	}

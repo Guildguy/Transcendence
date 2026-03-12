@@ -1,7 +1,5 @@
 package com.ft.trans.controller;
 
-import java.util.List;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +52,7 @@ public class UserController
 
 		return ResponseEntity
             .status(HttpStatus.OK)
-            .body(result.entity());
+            .body(dto);
 	}
 
 	// @GetMapping
