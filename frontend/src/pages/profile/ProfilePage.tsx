@@ -3,12 +3,14 @@ import { Pencil, User, Save, Trash2 } from "lucide-react";
 import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/habilities";
+import Avatar from "../../components/common/Avatar/Avatar";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
   id?: string;
   nome: string;
   email: string;
+  avatarUrl: string;
   cargo: string; // mapeia para 'position' no banco
   presentationText: string; // mapeia para 'bio' no banco
   anosExperiencia: string; // mapeia para 'xp' no banco
@@ -31,7 +33,7 @@ const ProfilePage = () => {
 
   // Estados de Dados e Habilidades
   const [userData, setUserData] = useState<UserData>({
-    nome: "", email: "", cargo: "", presentationText: "",
+    nome: "", email: "", avatarUrl:"", cargo: "", presentationText: "",
     anosExperiencia: "", github: "", linkedin: "", instagram: "",
     telefone: "", level: "0", xp: "0",
   });
@@ -59,6 +61,7 @@ const ProfilePage = () => {
             id: user.id?.toString(),
             nome: user.name || "",
             email: user.email || "",
+            avatarUrl:user.avatarUrl || "",
             telefone: user.phoneNumber || "",
             cargo: profile.position || "",
             presentationText: profile.bio || "",
@@ -84,7 +87,8 @@ const ProfilePage = () => {
         console.warn("Backend offline, carregando Mock...");
         const mockUser: UserData = {
           id: "1", nome: "Marcelo Dias Machado", cargo: "Desenvolvedor Mentor",
-          email: "mrl.jose123@gmail.com", presentationText: "Apaixonado por tecnologia...",
+          email: "mrl.jose123@gmail.com", avatarUrl: "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80",
+          presentationText: "Apaixonado por tecnologia...",
           anosExperiencia: "5", github: "github.com/marcelo",
           linkedin: "linkedin.com/in/marcelo", instagram: "@marcelo",
           telefone: "11949335709", level: "0", xp: "500",
@@ -163,9 +167,15 @@ const ProfilePage = () => {
   return (
     <div className="perfil-container">
       <div className="perfil-header">
-        <div className="perfil-avatar">
-          <User size={64} color="#e5e7eb" />
-        </div>
+        <Avatar 
+          avatarUrl={userData.avatarUrl} 
+          size={128} 
+          isEditable={true} 
+          onImageChange={(file) => {
+            console.log("Arquivo selecionado para upload:", file);
+            // Aqui você faria o upload para o banco ou geraria um preview temporário
+          }}
+        />
         <div className="perfil-badges">
           {/* Exibindo dados que agora vêm do banco dinamicamente */}
           <div className="perfil-badge">Level: {userData.level}</div>
@@ -187,7 +197,6 @@ const ProfilePage = () => {
           Dados Pessoais
         </button>
       </div>
-
       <div className="perfil-conteudo">
         <div className="perfil-grid">
           <div className="perfil-coluna">
@@ -296,7 +305,6 @@ const ProfilePage = () => {
               </>
             )}
           </div>
-
           <div className="perfil-coluna">
             {abaAtiva === "gerais" ? (
             <Habilities 
