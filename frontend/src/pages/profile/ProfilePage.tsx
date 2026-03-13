@@ -2,188 +2,163 @@ import React, { useState, useEffect } from "react";
 import { Pencil, User, Save, Trash2 } from "lucide-react";
 import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
+import Habilities from "../../components/common/Habilities/habilities";
 
-// Interface alinhada com o banco de dados
+// 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
   id?: string;
   nome: string;
   email: string;
-  cargo: string;
-  presentationText: string;
-  anosExperiencia: string;
+  cargo: string; // mapeia para 'position' no banco
+  presentationText: string; // mapeia para 'bio' no banco
+  anosExperiencia: string; // mapeia para 'xp' no banco
   github: string;
   linkedin: string;
   instagram: string;
-  telefone: string;
+  telefone: string; // mapeia para 'phoneNumber' no banco
+  level?: string;
+  xp?: string;
+}
+
+interface Skill {
+  id: string;
+  name: string;
 }
 
 const ProfilePage = () => {
   const [abaAtiva, setAbaAtiva] = useState("gerais");
   const [isEditing, setIsEditing] = useState(false);
 
-  // 1. Estado inicial com strings vazias para evitar erros de "null" e permitir placeholders
+  // Estados de Dados e Habilidades
   const [userData, setUserData] = useState<UserData>({
-    nome: "",
-    email: "",
-    cargo: "",
-    presentationText: "",
-    anosExperiencia: "",
-    github: "",
-    linkedin: "",
-    instagram: "",
-    telefone: "",
+    nome: "", email: "", cargo: "", presentationText: "",
+    anosExperiencia: "", github: "", linkedin: "", instagram: "",
+    telefone: "", level: "0", xp: "0",
   });
+  const [userSkills, setUserSkills] = useState<Skill[]>([]);
 
-  // Estado para restaurar os dados caso o usuário clique no (X) cancelar
+  // Estados de Backup (para o botão Cancelar)
   const [backupData, setBackupData] = useState<UserData | null>(null);
+  const [backupSkills, setBackupSkills] = useState<Skill[]>([]);
 
-  // Lógica de Carregamento
+  // Estados de Senha
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
   useEffect(() => {
     const loadFullProfile = async () => {
       try {
-        const [resUser, resProfile] = await Promise.all([
-          fetch("http://localhost:8080/users/1"),
-          fetch("http://localhost:8080/profile/1"),
-        ]);
+        const response = await fetch("http://localhost:8080/users/1");
 
-        if (resUser.ok && resProfile.ok) {
-          const dataUser = await resUser.json();
-          const dataProfile = await resProfile.json();
+        if (response.ok) {
+          const data = await response.json();
+          const user = data.user;
+          const profile = data.profiles && data.profiles.length > 0 ? data.profiles[0] : {};
 
           const unifiedData: UserData = {
-            ...dataUser,
-            ...dataProfile,
+            id: user.id?.toString(),
+            nome: user.name || "",
+            email: user.email || "",
+            telefone: user.phoneNumber || "",
+            cargo: profile.position || "",
+            presentationText: profile.bio || "",
+            github: profile.github || "",
+            linkedin: profile.linkedin || "",
+            instagram: profile.instagram || "",
+            anosExperiencia: profile.xp?.toString() || "0",
+            level: profile.level?.toString() || "0",
+            xp: profile.xp?.toString() || "0",
           };
+
+          // Carrega as habilidades vindas do MongoDB (campo stacks)
+          const loadedSkills: Skill[] = profile.stacks || [];
 
           setUserData(unifiedData);
           setBackupData(unifiedData);
+          setUserSkills(loadedSkills);
+          setBackupSkills(loadedSkills);
         } else {
-          throw new Error("Dados não encontrados no servidor");
+          throw new Error("Dados não encontrados");
         }
       } catch (error) {
-        console.warn(
-          "Backend offline ou vazio, carregando Mock para testes...",
-        );
-
-        // Mantenha o mock aqui para testes visuais; apague este bloco quando o backend estiver 100%
+        console.warn("Backend offline, carregando Mock...");
         const mockUser: UserData = {
-          id: "1",
-          nome: "Beyoncé Knowles",
-          cargo: "Queen B",
-          email: "Beyonce@RocNation.com",
-          presentationText:
-            "Beyoncé Giselle Knowles-Carter,é uma cantora, compositora, atriz e empresária norte-americana. Referida como Queen Bey, ela é amplamente reconhecida por seu talento artístico, voz e apresentações ao vivo. Suas contribuições para a música e a mídia visual, bem como suas apresentações em concertos a converteram em uma figura cultural proeminente do século XXI.",
-          anosExperiencia: "30",
-          github: "github.com/beyonce",
-          linkedin: "linkedin.com/in/beyonce",
-          instagram: "@beyonce",
-          telefone: "11999999999",
+          id: "1", nome: "Marcelo Dias Machado", cargo: "Desenvolvedor Mentor",
+          email: "mrl.jose123@gmail.com", presentationText: "Apaixonado por tecnologia...",
+          anosExperiencia: "5", github: "github.com/marcelo",
+          linkedin: "linkedin.com/in/marcelo", instagram: "@marcelo",
+          telefone: "11949335709", level: "0", xp: "500",
         };
-
+        const mockSkills: Skill[] = [
+          { id: "sk_001", name: "JavaScript" },
+          { id: "sk_005", name: "React" },
+          { id: "sk_017", name: "MongoDB" }
+        ];
         setUserData(mockUser);
         setBackupData(mockUser);
+        setUserSkills(mockSkills);
+        setBackupSkills(mockSkills);
       }
     };
-
     loadFullProfile();
   }, []);
 
-  // função de save modo mock
   const handleSaveAll = async () => {
     if (!userData) return;
 
-    console.log("Dados salvos no Mock:", userData);
+    // Payload formatado para o seu microserviço FastAPI/MongoDB
+    const finalPayload = {
+      user_id: userData.id,
+      position: userData.cargo,
+      bio: userData.presentationText,
+      github: userData.github,
+      linkedin: userData.linkedin,
+      instagram: userData.instagram,
+      xp: parseInt(userData.anosExperiencia) || 0,
+      stacks: userSkills // Envia o array de objetos {id, name}
+    };
 
-    setBackupData(userData);
-
-    setIsEditing(false);
-  };
-
-  // Função de Salvar backend funcionado
-  /*const handleSaveAll = async () => {
     try {
-      const userPayload = { nome: userData.nome, email: userData.email };
-      const profilePayload = {
-        cargo: userData.cargo,
-        presentationText: userData.presentationText,
-        anosExperiencia: userData.anosExperiencia,
-        github: userData.github,
-        linkedin: userData.linkedin,
-        instagram: userData.instagram,
-        telefone: userData.telefone,
-      };
+      const response = await fetch(`http://localhost:8080/profile/${userData.id}`, {
+        method: "POST", // Altere para PUT se o seu backend exigir
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalPayload)
+      });
 
-      // Chamadas PUT com headers de JSON
-      await Promise.all([
-        fetch(`http://localhost:8080/users/${userData.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userPayload),
-        }),
-        fetch(`http://localhost:8080/profile/${userData.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(profilePayload),
-        })
-      ]);
-
+      if (response.ok) {
+        console.log("Salvo com sucesso no MongoDB!");
+      } else {
+        console.warn("Servidor respondeu com erro, simulando salvamento local.");
+      }
+    } catch (e) {
+      console.error("Erro de conexão. Dados mantidos localmente:", finalPayload);
+    } finally {
       setBackupData(userData);
+      setBackupSkills(userSkills);
       setIsEditing(false);
-      alert("Alterações salvas com sucesso!");
-    } catch (error) {
-      console.error("Erro ao salvar:", error);
-      console.log("Erro ao conectar com o servidor.");
     }
-  };*/
-
-  // Função de Cancelar
-  const handleCancel = () => {
-    if (backupData) {
-      setUserData(backupData);
-    }
-    setIsEditing(false);
   };
-  //Lógica de troca de senha
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword) {
       alert("Por favor, preencha todos os campos de senha.");
       return;
     }
-
-    try {
-      const response = await fetch(
-        `http://localhost:8080/users/${userData.id}/update-password`,
-        {
-          method: "PATCH", // Ou PUT, dependendo da sua Controller Java
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            currentPassword: currentPassword,
-            newPassword: newPassword,
-          }),
-        },
-      );
-
-      if (response.ok) {
-        alert("Senha atualizada com sucesso!");
-        setCurrentPassword("");
-        setNewPassword("");
-      } else if (response.status === 401 || response.status === 403) {
-        // O Java geralmente retorna 401 Unauthorized se a senha atual estiver errada
-        alert("Senha atual não coincide.");
-      } else {
-        // Trata erro de validação (Passay)
-        const errorData = await response.json();
-        alert(
-          errorData.message ||
-            "A nova senha não segue a política de segurança.",
-        );
-      }
-    } catch (error) {
-      alert("Erro ao conectar com o servidor.");
-    }
+    alert("Simulando troca de senha no Mock...");
+    setCurrentPassword("");
+    setNewPassword("");
   };
+
+  const handleCancel = () => {
+    if (backupData) setUserData(backupData);
+    setUserSkills(backupSkills); // Restaura as habilidades originais
+    setIsEditing(false);
+  };
+
+  const handleSkillsChange = (newSkills: Skill[]) => {
+    setUserSkills(newSkills);
+  };
+
 
   return (
     <div className="perfil-container">
@@ -192,8 +167,9 @@ const ProfilePage = () => {
           <User size={64} color="#e5e7eb" />
         </div>
         <div className="perfil-badges">
-          <div className="perfil-badge">Level de Mentoria</div>
-          <div className="perfil-badge">XP</div>
+          {/* Exibindo dados que agora vêm do banco dinamicamente */}
+          <div className="perfil-badge">Level: {userData.level}</div>
+          <div className="perfil-badge">XP: {userData.xp}</div>
         </div>
       </div>
 
@@ -232,7 +208,7 @@ const ProfilePage = () => {
                     size={22}
                     className="perfil-icone-cancelar"
                     onClick={handleCancel}
-                    title="Descartar alterações"
+                    title="Descartar"
                   />
                 </div>
               ) : (
@@ -268,15 +244,15 @@ const ProfilePage = () => {
                     setUserData({ ...userData, presentationText: val })
                   }
                 />
-                <InputGroup
-                  label="Quantidade de anos de experiência"
-                  value={userData.anosExperiencia}
-                  isEditing={isEditing}
-                  isNumeric={true}
-                  onChange={(val) =>
-                    setUserData({ ...userData, anosExperiencia: val })
-                  }
-                />
+                <div className="anos-experiencia">
+                  <InputGroup
+                    label="Anos de experiência"
+                    value={userData.anosExperiencia}
+                    isEditing={isEditing}
+                    isNumeric={true}
+                    onChange={(val) => setUserData({ ...userData, anosExperiencia: val })}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -323,18 +299,12 @@ const ProfilePage = () => {
 
           <div className="perfil-coluna">
             {abaAtiva === "gerais" ? (
-              <div className="perfil-habilidades">
-                <h3 className="perfil-habilidades-titulo">
-                  Habilidades apresentadas para mentorar
-                </h3>
-                <div className="perfil-habilidades-lista">
-                  {["React", "MongoDB", "Java", "UX"].map((s) => (
-                    <span key={s} className="perfil-habilidade-tag">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <Habilities 
+            selectedSkills={userSkills} 
+            onSkillsChange={handleSkillsChange} 
+            isEditable={true} 
+            title="Habilidades apresentadas para mentorar"
+          />
             ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>
@@ -352,12 +322,9 @@ const ProfilePage = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
-
-                {/* Pequeno lembrete visual das regras que você definiu no Java (Passay) */}
                 <p className="senha-dica">
                   Mínimo 8 caracteres, com maiúscula, número e símbolo.
                 </p>
-
                 <button
                   className="perfil-botao-salvar"
                   onClick={handleUpdatePassword}

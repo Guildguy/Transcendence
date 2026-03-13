@@ -1,0 +1,24 @@
+{
+  "skills": [
+    { "id": "sk_001", "name": "JavaScript" },
+    { "id": "sk_002", "name": "GitHub" },
+    { "id": "sk_003", "name": "GitLab" },
+    { "id": "sk_004", "name": "Java" },
+    { "id": "sk_005", "name": "React" },
+    { "id": "sk_006", "name": "Python" },
+    { "id": "sk_007", "name": "Spring Boot" },
+    { "id": "sk_008", "name": "Docker" },
+    { "id": "sk_009", "name": "Kubernetes" },
+    { "id": "sk_010", "name": "TypeScript" },
+    { "id": "sk_011", "name": "Angular" },
+    { "id": "sk_012", "name": "Node.js" },
+    { "id": "sk_013", "name": "Cybersecurity Fundamentals" },
+    { "id": "sk_014", "name": "Penetration Testing" },
+    { "id": "sk_015", "name": "Cryptography" },
+    { "id": "sk_016", "name": "PostgreSQL" },
+    { "id": "sk_017", "name": "MongoDB" },
+    { "id": "sk_018", "name": "AWS" },
+    { "id": "sk_019", "name": "CSS Pure / Flexbox" },
+    { "id": "sk_020", "name": "RESTful APIs" }
+  ]
+}
