@@ -343,3 +343,7 @@
   font-size: 14px;
   font-weight: bold;
 }
+
+.anos-experiencia .input-group-container {
+    max-width: 150px; 
+}
