@@ -16,6 +16,7 @@ import com.ft.trans.dto.UserDTO;
 import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.service.UserService;
 import com.ft.trans.validation.Result;
+import java.util.List;
 
 
 @RestController
@@ -55,11 +56,11 @@ public class UserController
             .body(dto);
 	}
 
-	// @GetMapping
-    // public List<User>		list()
-	// {
-	// 	return (this.userService.list());
-	// }
+	@GetMapping
+    public List<User>		list()
+	{
+		return (this.userService.list());
+	}
 
 	@PutMapping
     public ResponseEntity<?>		update(@RequestBody User user)
