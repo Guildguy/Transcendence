@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import skillsData from './habilities.json';
+import skillsData from './Habilities.json';
 import './Habilities.css';
 
 interface Skill {
