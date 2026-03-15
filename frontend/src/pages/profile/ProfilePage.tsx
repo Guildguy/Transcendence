@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Pencil, User, Save, Trash2 } from "lucide-react";
 import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
-import Habilities from "../../components/common/Habilities/habilities";
+import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
@@ -20,6 +20,7 @@ interface UserData {
   telefone: string; // mapeia para 'phoneNumber' no banco
   level?: string;
   xp?: string;
+  role: string; // Adicionado para diferenciar mentores de mentorados
 }
 
 interface Skill {
@@ -35,7 +36,7 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState<UserData>({
     nome: "", email: "", avatarUrl:"", cargo: "", presentationText: "",
     anosExperiencia: "", github: "", linkedin: "", instagram: "",
-    telefone: "", level: "0", xp: "0",
+    telefone: "", level: "0", xp: "0", role: "mentor" 
   });
   const [userSkills, setUserSkills] = useState<Skill[]>([]);
 
@@ -71,6 +72,7 @@ const ProfilePage = () => {
             anosExperiencia: profile.xp?.toString() || "0",
             level: profile.level?.toString() || "0",
             xp: profile.xp?.toString() || "0",
+            role: user.role || "mentor"
           };
 
           // Carrega as habilidades vindas do MongoDB (campo stacks)
@@ -91,7 +93,7 @@ const ProfilePage = () => {
           presentationText: "Apaixonado por tecnologia...",
           anosExperiencia: "5", github: "github.com/marcelo",
           linkedin: "linkedin.com/in/marcelo", instagram: "@marcelo",
-          telefone: "11949335709", level: "0", xp: "500",
+          telefone: "11949335709", level: "0", xp: "500", role: "mentor",
         };
         const mockSkills: Skill[] = [
           { id: "sk_001", name: "JavaScript" },
