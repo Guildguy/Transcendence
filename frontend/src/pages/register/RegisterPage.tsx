@@ -119,12 +119,25 @@ function RegisterPage() {
 
       if (!response.ok) {
         // Aqui capturamos os erros do objeto Result/ValidationResult que criamos no Java
-        if (data.result && data.result.errors) {
-            console.error('Erros de validação:', data.result.errors);
+        if (data) {
+            alert(data[0].message);
             // Exemplo: alert(data.result.errors.email);
         }
         throw new Error('Falha ao cadastrar usuário');
       }
+
+      if (response.ok) {
+        const data = await response.json();
+        // Supondo que o backend retorne { id: 123, ... } ou { user: { id: 123 } }
+        const userId = data.user?.id || data.id; 
+        
+        if (userId) {
+          localStorage.setItem('userId', userId.toString());
+      }
+
+  console.log('Usuário cadastrado com sucesso:', data);
+  navigate('/home-logged');
+}
 
       //trazer as respostas do backened se der erro
 
