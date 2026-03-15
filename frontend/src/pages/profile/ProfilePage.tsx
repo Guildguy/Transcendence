@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Pencil, User, Save, Trash2 } from "lucide-react";
 import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
@@ -29,6 +30,7 @@ interface Skill {
 }
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const [abaAtiva, setAbaAtiva] = useState("gerais");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -49,9 +51,26 @@ const ProfilePage = () => {
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      // Se não há usuário logado, redirecionar para login
+      navigate('/auth');
+      return;
+    }
+
     const loadFullProfile = async () => {
+      // 1. Pega o ID que salvamos no Registro ou Login
+      const loggedUserId = localStorage.getItem('userId');
+
+      // Se não achar o ID, manda o cara de volta para o registro/login
+      if (!loggedUserId) {
+        console.warn("Nenhum usuário logado encontrado.");
+        navigate('/register'); 
+        return;
+      }
+
       try {
-        const response = await fetch("http://localhost:8080/users/1");
+        const response = await fetch(`http://localhost:8080/users/${loggedUserId}`); // Usar o ID do usuário logado
 
         if (response.ok) {
           const data = await response.json();
@@ -213,13 +232,11 @@ const ProfilePage = () => {
                     size={22}
                     className="perfil-icone-salvar"
                     onClick={handleSaveAll}
-                    title="Salvar"
                   />
                   <Trash2
                     size={22}
                     className="perfil-icone-cancelar"
                     onClick={handleCancel}
-                    title="Descartar"
                   />
                 </div>
               ) : (
@@ -227,7 +244,6 @@ const ProfilePage = () => {
                   size={18}
                   className="perfil-icone-editar"
                   onClick={() => setIsEditing(true)}
-                  title="Editar"
                 />
               )}
             </div>
