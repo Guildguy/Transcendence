@@ -13,11 +13,11 @@ public class UserAchievement
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(nullable = false)
-    public Long user_id;
-
-    @Column(nullable = false)
-    public Long achievement_id;
+    @Column(name = "user_id")
+    public Long userId;
+    
+    @Column(name = "achievement_id")
+    public Long achievementId;
 
     public Date unlocked_at;
 
