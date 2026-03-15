@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import './RegisterPage.css'
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
@@ -12,9 +13,12 @@ type Errors = {
   confirmPassword?: string
   privacy?: string
   terms?: string
+  profileType?: string
 }
 
 function RegisterPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [name, setName] = useState('')
   const [phoneNumber, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -23,8 +27,16 @@ function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  const [profileType, setProfileType] = useState('') // Added state for profileType
 
   const [errors, setErrors] = useState<Errors>({})
+
+  useEffect(() => {
+    const type = searchParams.get('type');
+    if (type) {
+      setProfileType(type.toUpperCase());
+    }
+  }, [searchParams]);
 
   function formatPhone(value: string) {
     const numbers = value.replace(/\D/g, '').slice(0, 11)
@@ -45,6 +57,10 @@ function RegisterPage() {
     const newErrors: Errors = {}
 
     if (!name) newErrors.name = 'Nome completo é obrigatório.'
+
+    if (!profileType) {
+      newErrors.profileType = 'Tipo de perfil é obrigatório.'
+    }
 
     if (!phoneNumber) {
       newErrors.phone = 'Celular é obrigatório.'
@@ -76,22 +92,6 @@ function RegisterPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  // function handleSubmit(e: React.FormEvent) {
-  //   e.preventDefault()
-
-  //   if (!validate()) return
-
-  //   const payload = {
-  //     name,
-  //     phone_phone: phone_number,
-  //     email,
-  //     password,
-  //     status: 1
-  //   }
-
-  //   console.log('JSON enviado para o backend:', payload)
-  // }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -99,6 +99,7 @@ function RegisterPage() {
 
     const payload = {
       name,
+      profileType,
       phoneNumber, // Ajustado para bater com o campo da sua entidade/DTO
       email,
       password,
@@ -125,7 +126,10 @@ function RegisterPage() {
         throw new Error('Falha ao cadastrar usuário');
       }
 
+      //trazer as respostas do backened se der erro
+
       console.log('Usuário cadastrado com sucesso:', data);
+      navigate('/home-logged');
       // Redirecionar ou limpar formulário aqui
       
     } catch (error) {
@@ -133,8 +137,9 @@ function RegisterPage() {
     }
 
     console.log('JSON enviado para o backend:', payload)
-    
+  }
   
+
   return (
     <main className="register-form-wrapper">
       <form className="register-form" onSubmit={handleSubmit}>
@@ -240,7 +245,6 @@ function RegisterPage() {
       </form>
     </main>
   )
-}
 }
 
 export default RegisterPage
