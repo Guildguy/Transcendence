@@ -82,15 +82,7 @@ function HomeLogged() {
               {activeTab === 'pending' && mockRequests.map((req) => (
                 <div key={req.id} className="request-card">
                   <div className="request-avatar">
-                    <Avatar 
-                      avatarUrl={userData.avatarUrl} 
-                      size={128} 
-                      isEditable={true} 
-                      onImageChange={(file) => {
-                        console.log("Arquivo selecionado para upload:", file);
-                        // Aqui você faria o upload para o banco ou geraria um preview temporário
-                      }}
-                    />
+                    <Avatar />
                   </div>                  
                   <p className="request-text">
                     <strong>{req.name}</strong> solicitou realizar mentoria com você, aceita?
