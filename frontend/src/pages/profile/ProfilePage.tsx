@@ -59,8 +59,18 @@ const ProfilePage = () => {
     }
 
     const loadFullProfile = async () => {
+      // 1. Pega o ID que salvamos no Registro ou Login
+      const loggedUserId = localStorage.getItem('userId');
+
+      // Se não achar o ID, manda o cara de volta para o registro/login
+      if (!loggedUserId) {
+        console.warn("Nenhum usuário logado encontrado.");
+        navigate('/register'); 
+        return;
+      }
+
       try {
-        const response = await fetch(`http://localhost:8080/users/${userId}`); // Usar o ID do usuário logado
+        const response = await fetch(`http://localhost:8080/users/${loggedUserId}`); // Usar o ID do usuário logado
 
         if (response.ok) {
           const data = await response.json();
