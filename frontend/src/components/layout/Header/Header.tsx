@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import './Header.css'
-import logo from '../../images/jpg/logo.jpg'
+import logo from '../../images/jpg/logo.png'
 
 interface HeaderProps {
   isAuthenticated?: boolean
