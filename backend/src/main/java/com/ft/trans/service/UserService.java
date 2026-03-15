@@ -5,23 +5,41 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.ft.trans.dto.UserDTO;
+import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.entity.LoginRequest;
+import com.ft.trans.entity.Profile;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
+import com.ft.trans.repository.ProfileRepository;
+import com.ft.trans.validation.Result;
 import com.ft.trans.validation.ValidationResult;
 
 @Service
 public class UserService {
-    private UserRepository userRepository;
+    private UserRepository		userRepository;
+	private ProfileService		profileService;
+	private ProfileRepository	profileRepository;
 
-    public				UserService(UserRepository ur)
+    public				UserService(UserRepository ur, ProfileRepository pr, ProfileService ps)
     {
         this.userRepository = ur;
+		this.profileRepository = pr;
+		this.profileService = ps;
     }
 
-    public Result		create(User user)
+    public Result		create(UserDTO userDTO)
     {
-        return (_persistUser(user, false));
+		User	user = userDTO.toUser();
+		Result	result = _persistUser(user, false);
+		if (result.validationResult().hasErrors())
+			return result;
+		Profile	profile = new Profile();
+		profile.user = user;
+		profile.setRole(userDTO.profileType);
+
+		result.consume(profileService._persistProfile(profile));
+        return (result);
     }
 
 	public List<User>	list()
@@ -84,8 +102,14 @@ public class UserService {
     	return new Result(savedUser, result);
 	}
 
-    public record		Result(
-		User 				user,
-		ValidationResult	validationResult
-	){};
+	public UserProfilesDTO	getUserProfiles(long user_id)
+	{
+		UserProfilesDTO dto = new UserProfilesDTO();
+
+		dto.user = userRepository.findById(user_id)
+			.orElse(null);
+		dto.profiles = profileRepository.findByUserId(user_id);
+
+		return dto;
+	}
 }
