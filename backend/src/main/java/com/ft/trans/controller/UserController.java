@@ -1,7 +1,5 @@
 package com.ft.trans.controller;
 
-import java.util.List;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import com.ft.trans.entity.User;
+import com.ft.trans.dto.UserDTO;
+import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.service.UserService;
+import com.ft.trans.validation.Result;
+
 
 @RestController
 @RequestMapping("/users")
@@ -28,9 +30,9 @@ public class UserController
     }
 
 	@PostMapping
-    public ResponseEntity<?>	create(@RequestBody User user)
+    public ResponseEntity<?>	create(@RequestBody UserDTO userDTO)
 	{
-		UserService.Result result = this.userService.create(user);
+		Result result = this.userService.create(userDTO);
 
 		if (result.validationResult().hasErrors())
 		{
@@ -40,19 +42,29 @@ public class UserController
 		}
 		return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(result.user());
+            .body(result.entity());
 	}
 
-	@GetMapping
-    public List<User>		list()
+	@GetMapping("/{id}")
+	public ResponseEntity<?>		listUserProfiles(@PathVariable Long id)
 	{
-		return (this.userService.list());
+		UserProfilesDTO dto = this.userService.getUserProfiles(id);
+
+		return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(dto);
 	}
+
+	// @GetMapping
+    // public List<User>		list()
+	// {
+	// 	return (this.userService.list());
+	// }
 
 	@PutMapping
     public ResponseEntity<?>		update(@RequestBody User user)
 	{
-		UserService.Result result = this.userService.update(user);
+		Result result = this.userService.update(user);
 
 		if (result.validationResult().hasErrors())
 		{
@@ -62,7 +74,7 @@ public class UserController
 		}
 		return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(result.user());
+            .body(result.entity());
 	}
 
 	@DeleteMapping("{id}")
