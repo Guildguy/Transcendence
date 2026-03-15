@@ -1,8 +1,10 @@
 import { useState } from 'react'; // Importante para capturar os dados
+import { useNavigate } from 'react-router-dom';
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
 
 function LoginForm() {
+  const navigate = useNavigate();
   // 1. Estados para armazenar os inputs
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +38,15 @@ function LoginForm() {
       }
 
       console.log('Login realizado com sucesso:', data);
+      
+      // Armazenar o ID do usuário logado no localStorage
+      const userId = data.user?.id || data.id;
+      if (userId) {
+        localStorage.setItem('userId', userId.toString());
+      }
+      
+      // Redirecionar para a página inicial logada
+      navigate('/home-logged');
       
     } catch (error) {
       console.error('Erro na requisição:', error);

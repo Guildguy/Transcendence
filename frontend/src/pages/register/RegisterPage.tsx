@@ -92,52 +92,51 @@ function RegisterPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  if (!validate()) return;
 
-    if (!validate()) return;
+  const payload = {
+    name,
+    profileType,
+    phoneNumber,
+    email,
+    password,
+    status: true 
+  };
 
-    const payload = {
-      name,
-      profileType,
-      phoneNumber, // Ajustado para bater com o campo da sua entidade/DTO
-      email,
-      password,
-      status: true // No Java definimos como boolean
-    };
+  try {
+    const response = await fetch('http://localhost:8080/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-    try {
-      const response = await fetch('http://localhost:8080/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+    // Lemos o JSON apenas UMA vez aqui
+    const data = await response.json();
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Aqui capturamos os erros do objeto Result/ValidationResult que criamos no Java
-        if (data.result && data.result.errors) {
-            console.error('Erros de validação:', data.result.errors);
-            // Exemplo: alert(data.result.errors.email);
-        }
-        throw new Error('Falha ao cadastrar usuário');
+    if (!response.ok) {
+      if (data && data[0]?.message) {
+          alert(data[0].message);
       }
-
-      //trazer as respostas do backened se der erro
-
-      console.log('Usuário cadastrado com sucesso:', data);
-      navigate('/home-logged');
-      // Redirecionar ou limpar formulário aqui
-      
-    } catch (error) {
-      console.error('Erro na requisição:', error);
+      throw new Error('Falha ao cadastrar usuário');
     }
 
-    console.log('JSON enviado para o backend:', payload)
+    // Se chegou aqui, deu certo! 
+    // Extraímos o ID (verifique se seu backend manda como data.id ou data.user.id)
+    const userId = data.id || data.user?.id;
+    
+    if (userId) {
+      localStorage.setItem('userId', userId.toString());
+      console.log('ID do usuário salvo:', userId);
+    }
+
+    navigate('/home-logged');
+    
+  } catch (error) {
+    console.error('Erro na requisição:', error);
   }
+}
   
 
   return (
