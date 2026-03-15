@@ -12,7 +12,8 @@ public class AchievementMockConfig
 {
 
     @Bean
-    CommandLineRunner loadAchievements(AchievementRepository repo) {
+    CommandLineRunner loadAchievements(AchievementRepository repo) 
+	{
         return args ->
 		{
 
@@ -114,13 +115,7 @@ public class AchievementMockConfig
         };
     }
 
-    private Achievement create(
-            String name,
-            String description,
-            String type,
-            int target,
-            int xp
-    )
+    private Achievement create(String name, String description, String type, int target, int xp)
 	{
         Achievement a = new Achievement();
 

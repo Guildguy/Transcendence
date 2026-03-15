@@ -6,7 +6,8 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "achievements")
-public class Achievement {
+public class Achievement
+{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
