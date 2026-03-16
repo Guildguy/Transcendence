@@ -19,8 +19,8 @@ public class UserAchievementMockConfig
 {
 
     @Bean
-    CommandLineRunner loadUserAchievements(UserRepository userRepo, AchievementRepository achievementRepo, UserAchievementRepository repo
-    ) {
+    CommandLineRunner loadUserAchievements(UserRepository userRepo, AchievementRepository achievementRepo, UserAchievementRepository repo)
+    {
         return args ->
         {
 
