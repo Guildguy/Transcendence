@@ -5,6 +5,7 @@ import java.sql.Date;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import com.ft.trans.entity.User;
 import com.ft.trans.entity.Achievement;
@@ -19,6 +20,7 @@ public class UserAchievementMockConfig
 {
 
     @Bean
+    @Order(4)
     CommandLineRunner loadUserAchievements(UserRepository userRepo, AchievementRepository achievementRepo, UserAchievementRepository repo)
     {
         return args ->
