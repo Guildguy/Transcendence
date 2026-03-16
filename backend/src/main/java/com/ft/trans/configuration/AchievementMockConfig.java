@@ -3,6 +3,7 @@ package com.ft.trans.configuration;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import com.ft.trans.entity.Achievement;
 import com.ft.trans.repository.AchievementRepository;
@@ -12,6 +13,7 @@ public class AchievementMockConfig
 {
 
     @Bean
+    @Order(2)
     CommandLineRunner loadAchievements(AchievementRepository repo) 
 	{
         return args ->

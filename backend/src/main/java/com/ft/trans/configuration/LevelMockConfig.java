@@ -3,6 +3,7 @@ package com.ft.trans.configuration;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import com.ft.trans.entity.Level;
 import com.ft.trans.repository.LevelRepository;
@@ -12,6 +13,7 @@ public class LevelMockConfig
 {
 
     @Bean
+    @Order(3)
     CommandLineRunner loadLevels(LevelRepository levelRepository)
     {
         return args ->
