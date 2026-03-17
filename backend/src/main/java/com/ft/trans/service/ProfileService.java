@@ -4,19 +4,24 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.ft.trans.dto.UpdateProfileDTO;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.repository.ProfileRepository;
+import com.ft.trans.repository.UserRepository;
 import com.ft.trans.validation.Result;
 import com.ft.trans.validation.ValidationResult;
 
 @Service
 public class ProfileService {
 
+    private final UserRepository userRepository;
+
     private ProfileRepository   profileRepository;
 
-    public ProfileService(ProfileRepository pr)
+    public ProfileService(ProfileRepository pr, UserRepository userRepository)
     {
         this.profileRepository = pr;
+        this.userRepository = userRepository;
     }
 
 	public List<Profile>	list()
@@ -24,7 +29,14 @@ public class ProfileService {
         return (this.profileRepository.findAll());
     }
 
-    public Result _persistProfile(Profile profile)
+	public Result	update(UpdateProfileDTO profileDTO)
+	{
+		Profile profile = profileDTO.toProfile();
+		profile.user = userRepository.findById(profileDTO.user_id).orElse(null);
+		return _persistProfile(profile);
+	}
+
+    public Result	_persistProfile(Profile profile)
 	{
 	    Profile				savedProfile = null;
 	    ValidationResult	result = profile.validate();
