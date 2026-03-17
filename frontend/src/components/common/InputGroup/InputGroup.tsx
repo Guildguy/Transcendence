@@ -22,33 +22,34 @@ const InputGroup = ({ label, value, onChange, isEditing, isNumeric, isTextArea, 
   };
 
   return (
-    <div className="input-group-container">
-      {label && <label className="input-label">{label}</label>}
-      
-      {isEditing ? (
-        isTextArea ? (
-          <textarea 
-            className="custom-input custom-textarea" 
-            value={value} 
-            onChange={handleChange}
-            placeholder={placeholder}
-          />
-        ) : (
-          <input 
-            type="text" 
-            className="custom-input" 
-            value={value} 
-            onChange={handleChange}
-            placeholder={placeholder}
-          />
-        )
+  /* Adicionamos a classe 'editing-mode' apenas quando isEditing for true */
+  <div className={`input-group-container ${isEditing ? 'editing-mode' : ''}`}>
+    {label && <label className="input-label">{label}</label>}
+    
+    {isEditing ? (
+      isTextArea ? (
+        <textarea 
+          className="custom-input custom-textarea" 
+          value={value} 
+          onChange={handleChange}
+          placeholder={placeholder}
+        />
       ) : (
-        <div className={`view-box ${isTextArea ? 'view-textarea' : ''}`}>
-          {value || <span className="placeholder-text">{placeholder}</span>}
-        </div>
-      )}
-    </div>
-  );
+        <input 
+          type="text" 
+          className="custom-input" 
+          value={value} 
+          onChange={handleChange}
+          placeholder={placeholder}
+        />
+      )
+    ) : (
+      <div className={`view-box ${isTextArea ? 'view-textarea' : ''}`}>
+        {value || <span className="placeholder-text">{placeholder}</span>}
+      </div>
+    )}
+  </div>
+);
 };
 
 export default InputGroup;
