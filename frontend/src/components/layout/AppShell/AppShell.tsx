@@ -3,9 +3,10 @@ import './AppShell.css'
 
 function AppShell({ sidebar, header, footer, children }) {
   const hasAuth = !sidebar
+  const hasSidebar = !!sidebar
 
   return (
-    <div className={`app-shell ${hasAuth ? 'auth' : ''}`}>
+    <div className={`app-shell ${hasAuth ? 'auth' : ''} ${hasSidebar ? 'with-sidebar' : ''}`}>
       {sidebar && (
         <aside className="sidebar">
           {sidebar}

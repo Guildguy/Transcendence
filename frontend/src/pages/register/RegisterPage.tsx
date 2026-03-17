@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import './RegisterPage.css'
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
@@ -12,9 +13,12 @@ type Errors = {
   confirmPassword?: string
   privacy?: string
   terms?: string
+  profileType?: string
 }
 
 function RegisterPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [name, setName] = useState('')
   const [phoneNumber, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -23,8 +27,16 @@ function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  const [profileType, setProfileType] = useState('') // Added state for profileType
 
   const [errors, setErrors] = useState<Errors>({})
+
+  useEffect(() => {
+    const type = searchParams.get('type');
+    if (type) {
+      setProfileType(type.toUpperCase());
+    }
+  }, [searchParams]);
 
   function formatPhone(value: string) {
     const numbers = value.replace(/\D/g, '').slice(0, 11)
@@ -45,6 +57,10 @@ function RegisterPage() {
     const newErrors: Errors = {}
 
     if (!name) newErrors.name = 'Nome completo é obrigatório.'
+
+    if (!profileType) {
+      newErrors.profileType = 'Tipo de perfil é obrigatório.'
+    }
 
     if (!phoneNumber) {
       newErrors.phone = 'Celular é obrigatório.'
@@ -76,65 +92,53 @@ function RegisterPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  // function handleSubmit(e: React.FormEvent) {
-  //   e.preventDefault()
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  if (!validate()) return;
 
-  //   if (!validate()) return
+  const payload = {
+    name,
+    profileType,
+    phoneNumber,
+    email,
+    password,
+    status: true 
+  };
 
-  //   const payload = {
-  //     name,
-  //     phone_phone: phone_number,
-  //     email,
-  //     password,
-  //     status: 1
-  //   }
+  try {
+    const response = await fetch('http://localhost:8080/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-  //   console.log('JSON enviado para o backend:', payload)
-  // }
+    // Lemos o JSON apenas UMA vez aqui
+    const data = await response.json();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!validate()) return;
-
-    const payload = {
-      name,
-      phoneNumber, // Ajustado para bater com o campo da sua entidade/DTO
-      email,
-      password,
-      status: true // No Java definimos como boolean
-    };
-
-    try {
-      const response = await fetch('http://localhost:8080/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Aqui capturamos os erros do objeto Result/ValidationResult que criamos no Java
-        if (data.result && data.result.errors) {
-            console.error('Erros de validação:', data.result.errors);
-            // Exemplo: alert(data.result.errors.email);
-        }
-        throw new Error('Falha ao cadastrar usuário');
+    if (!response.ok) {
+      if (data && data[0]?.message) {
+          alert(data[0].message);
       }
-
-      console.log('Usuário cadastrado com sucesso:', data);
-      // Redirecionar ou limpar formulário aqui
-      
-    } catch (error) {
-      console.error('Erro na requisição:', error);
+      throw new Error('Falha ao cadastrar usuário');
     }
 
-    console.log('JSON enviado para o backend:', payload)
+    // Se chegou aqui, deu certo! 
+    // Extraímos o ID (verifique se seu backend manda como data.id ou data.user.id)
+    const userId = data.id || data.user?.id;
     
+    if (userId) {
+      localStorage.setItem('userId', userId.toString());
+      console.log('ID do usuário salvo:', userId);
+    }
+
+    navigate('/home-logged');
+    
+  } catch (error) {
+    console.error('Erro na requisição:', error);
+  }
+}
   
+
   return (
     <main className="register-form-wrapper">
       <form className="register-form" onSubmit={handleSubmit}>
@@ -240,7 +244,6 @@ function RegisterPage() {
       </form>
     </main>
   )
-}
 }
 
 export default RegisterPage
