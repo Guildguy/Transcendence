@@ -38,19 +38,22 @@
 .profile-stats {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.75rem;
   justify-content: flex-start;
   padding-top: 8px;
 }
 
 .stat-pill {
-  background-color: #d8d6f0;
+  background-color: var(--cor-cinza-fundo);
   border-radius: 20px;
-  padding: 8px 20px;
-  font-size: 14px;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-dark);
+  /* width: 12rem; */
   width: fit-content;
+  text-align: left;
+  color: var(--text-dark);
+  border-radius: var(--borda-raio-redondo);
 }
 
 .stat-pill.level {
