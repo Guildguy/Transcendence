@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import './RegisterPage.css'
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
@@ -11,32 +10,26 @@ type Errors = {
   confirmEmail?: string
   password?: string
   confirmPassword?: string
+  stacks?: string
   privacy?: string
   terms?: string
-  profileType?: string
 }
 
+const USERS_API = 'http://localhost:8080/users'
+const PROFILE_API = 'http://localhost:8000/profile'
+
 function RegisterPage() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [name, setName] = useState('')
-  const [phoneNumber, setPhone] = useState('')
+  const [phone_number, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [confirmEmail, setConfirmEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [stacks, setStacks] = useState('')
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
-  const [profileType, setProfileType] = useState('') // Added state for profileType
 
   const [errors, setErrors] = useState<Errors>({})
-
-  useEffect(() => {
-    const type = searchParams.get('type');
-    if (type) {
-      setProfileType(type.toUpperCase());
-    }
-  }, [searchParams]);
 
   function formatPhone(value: string) {
     const numbers = value.replace(/\D/g, '').slice(0, 11)
@@ -58,13 +51,9 @@ function RegisterPage() {
 
     if (!name) newErrors.name = 'Nome completo é obrigatório.'
 
-    if (!profileType) {
-      newErrors.profileType = 'Tipo de perfil é obrigatório.'
-    }
-
-    if (!phoneNumber) {
+    if (!phone_number) {
       newErrors.phone = 'Celular é obrigatório.'
-    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phoneNumber)) {
+    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phone_number)) {
       newErrors.phone = 'Use o formato (xx) xxxxx-xxxx.'
     }
 
@@ -80,6 +69,10 @@ function RegisterPage() {
       newErrors.confirmPassword = 'As senhas não coincidem.'
     }
 
+    if (!stacks.trim()) {
+      newErrors.stacks = 'Informe pelo menos uma stack (ex: React, Java).'
+    }
+
     if (!acceptPrivacy) {
       newErrors.privacy = 'Você deve aceitar a Política de Privacidade.'
     }
@@ -92,52 +85,68 @@ function RegisterPage() {
     return Object.keys(newErrors).length === 0
   }
 
-async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
-  if (!validate()) return;
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
 
-  const payload = {
-    name,
-    profileType,
-    phoneNumber,
-    email,
-    password,
-    status: true 
-  };
+    if (!validate()) return;
 
-  try {
-    const response = await fetch('http://localhost:8080/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    const payload = {
+      name,
+      phone_number,
+      email,
+      password,
+      status: true
+    };
 
-    // Lemos o JSON apenas UMA vez aqui
-    const data = await response.json();
+    const parsedStacks = stacks
+      .split(',')
+      .map((stack: string) => stack.trim())
+      .filter((stack: string) => stack.length > 0)
 
-    if (!response.ok) {
-      if (data && data[0]?.message) {
-          alert(data[0].message);
+    try {
+      const response = await fetch(USERS_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Aqui capturamos os erros do objeto Result/ValidationResult que criamos no Java
+        if (data.result && data.result.errors) {
+            console.error('Erros de validação:', data.result.errors);
+            // Exemplo: alert(data.result.errors.email);
+        }
+        throw new Error('Falha ao cadastrar usuário');
       }
-      throw new Error('Falha ao cadastrar usuário');
-    }
 
-    // Se chegou aqui, deu certo! 
-    // Extraímos o ID (verifique se seu backend manda como data.id ou data.user.id)
-    const userId = data.id || data.user?.id;
-    
-    if (userId) {
-      localStorage.setItem('userId', userId.toString());
-      console.log('ID do usuário salvo:', userId);
-    }
+      const profilePayload = {
+        profile_id: String(data.id ?? email),
+        stacks: parsedStacks,
+      }
 
-    navigate('/home-logged');
-    
-  } catch (error) {
-    console.error('Erro na requisição:', error);
+      const profileResponse = await fetch(PROFILE_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profilePayload),
+      })
+
+      if (!profileResponse.ok) {
+        throw new Error('Usuário criado, mas falha ao salvar stacks no perfil')
+      }
+
+      console.log('Usuário cadastrado com sucesso:', data);
+      // Redirecionar ou limpar formulário aqui
+      
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+    }
   }
-}
-  
 
   return (
     <main className="register-form-wrapper">
@@ -154,7 +163,7 @@ async function handleSubmit(e: React.FormEvent) {
         <input
           type="tel"
           placeholder="Celular"
-          value={phoneNumber}
+          value={phone_number}
           onChange={handlePhoneChange}
           className={errors.phone ? 'error' : ''}
         />
@@ -212,6 +221,17 @@ async function handleSubmit(e: React.FormEvent) {
         />
         {errors.confirmPassword && (
           <span className="input-error">{errors.confirmPassword}</span>
+        )}
+
+        <input
+          type="text"
+          placeholder="Stacks (ex: React, Java, Python)"
+          value={stacks}
+          onChange={(e) => setStacks(e.target.value)}
+          className={errors.stacks ? 'error' : ''}
+        />
+        {errors.stacks && (
+          <span className="input-error">{errors.stacks}</span>
         )}
 
         <label className="checkbox">
