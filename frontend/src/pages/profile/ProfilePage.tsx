@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Pencil, User, Save, Trash2 } from "lucide-react";
+// Import do useNavigate mantido caso você precise usar em outro lugar
+import { useNavigate } from "react-router-dom"; 
+import { Pencil, Save, Trash2 } from "lucide-react";
 import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
@@ -30,7 +31,7 @@ interface Skill {
 }
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Mantido caso necessário futuramente
   const [abaAtiva, setAbaAtiva] = useState("gerais");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -51,26 +52,17 @@ const ProfilePage = () => {
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      // Se não há usuário logado, redirecionar para login
-      navigate('/auth');
-      return;
-    }
-
     const loadFullProfile = async () => {
-      // 1. Pega o ID que salvamos no Registro ou Login
-      const loggedUserId = localStorage.getItem('userId');
+      // 1. Pega o ID salvo ou força o ID "1" para visualização sem login
+      const loggedUserId = localStorage.getItem('userId') || "1";
+      
+      console.log('=== ProfilePage useEffect ===');
+      console.log('ID do usuário sendo buscado:', loggedUserId);
 
-      // Se não achar o ID, manda o cara de volta para o registro/login
-      if (!loggedUserId) {
-        console.warn("Nenhum usuário logado encontrado.");
-        navigate('/register'); 
-        return;
-      }
+      // REMOVIDO: A trava de redirecionamento if (!loggedUserId) navigate('/auth')
 
       try {
-        const response = await fetch(`http://localhost:8080/users/${loggedUserId}`); // Usar o ID do usuário logado
+        const response = await fetch(`http://localhost:8080/users/${loggedUserId}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -102,31 +94,42 @@ const ProfilePage = () => {
           setUserSkills(loadedSkills);
           setBackupSkills(loadedSkills);
         } else {
-          throw new Error("Dados não encontrados");
+          throw new Error("Dados não encontrados no servidor");
         }
       } catch (error) {
-        console.warn("Backend offline, carregando Mock...");
+        console.warn("Backend offline ou usuário não encontrado. Carregando Mock...");
+        
         const mockUser: UserData = {
-          id: "1", nome: "Marcelo Dias Machado", cargo: "Desenvolvedor Mentor",
-          email: "mrl.jose123@gmail.com", avatarUrl: "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80",
-          presentationText: "Apaixonado por tecnologia...",
-          anosExperiencia: "5", github: "github.com/marcelo",
-          linkedin: "linkedin.com/in/marcelo", instagram: "@marcelo",
-          telefone: "11949335709", level: "0", xp: "500", role: "mentor",
+          id: loggedUserId, // Mantém o ID que tentou buscar
+          nome: "Marcelo Dias Machado", 
+          cargo: "Desenvolvedor Mentor",
+          email: "mrl.jose123@gmail.com", 
+          avatarUrl: "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80",
+          presentationText: "Apaixonado por tecnologia e mentoria...",
+          anosExperiencia: "5", 
+          github: "github.com/marcelo",
+          linkedin: "linkedin.com/in/marcelo", 
+          instagram: "@marcelo",
+          telefone: "11949335709", 
+          level: "10", 
+          xp: "500", 
+          role: "mentor",
         };
         const mockSkills: Skill[] = [
           { id: "sk_001", name: "JavaScript" },
           { id: "sk_005", name: "React" },
           { id: "sk_017", name: "MongoDB" }
         ];
+
         setUserData(mockUser);
         setBackupData(mockUser);
         setUserSkills(mockSkills);
         setBackupSkills(mockSkills);
       }
     };
+    
     loadFullProfile();
-  }, []);
+  }, []); // Removi o `navigate` do array de dependências, já que não o usamos mais dentro do useEffect
 
   const handleSaveAll = async () => {
     if (!userData) return;
@@ -194,11 +197,9 @@ const ProfilePage = () => {
           isEditable={true} 
           onImageChange={(file) => {
             console.log("Arquivo selecionado para upload:", file);
-            // Aqui você faria o upload para o banco ou geraria um preview temporário
           }}
         />
         <div className="perfil-badges">
-          {/* Exibindo dados que agora vêm do banco dinamicamente */}
           <div className="perfil-badge">Level: {userData.level}</div>
           <div className="perfil-badge">XP: {userData.xp}</div>
         </div>
@@ -326,11 +327,11 @@ const ProfilePage = () => {
           <div className="perfil-coluna">
             {abaAtiva === "gerais" ? (
             <Habilities 
-            selectedSkills={userSkills} 
-            onSkillsChange={handleSkillsChange} 
-            isEditable={true} 
-            title="Habilidades apresentadas para mentorar"
-          />
+              selectedSkills={userSkills} 
+              onSkillsChange={handleSkillsChange} 
+              isEditable={true} 
+              title="Habilidades apresentadas para mentorar"
+            />
             ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>
