@@ -16,11 +16,13 @@ public class Level
     @Column(nullable = false, unique = true)
     public Integer level;
 
-    @Column(nullable = false)
-    public Integer xp_required;
+    @Column(name = "xp_required", nullable = false)
+    public Integer xpRequired;
 
-    public Date created_at;
+    @Column(name = "created_at")
+    public Date createdAt;
     public String created_by;
-    public Date last_update_at;
+    @Column(name = "last_update_at")
+    public Date lastUpdateAt;
     public String last_update_by;
 }
