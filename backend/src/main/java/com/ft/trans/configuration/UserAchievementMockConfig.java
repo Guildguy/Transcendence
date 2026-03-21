@@ -1,6 +1,7 @@
 package com.ft.trans.configuration;
 
 import java.sql.Date;
+import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -44,20 +45,23 @@ public class UserAchievementMockConfig
                 return;
             }
 
-            User user = userRepo.findAll().get(0);
+            List<User> users = userRepo.findAll();
+            List<Achievement> achievements = achievementRepo.findAll();
 
-            Achievement achievement = achievementRepo.findAll().get(0);
-
-            UserAchievement ua = new UserAchievement();
-            // Mock para popular user_achievements com user_id fictício e achievementId válidos
-            for (long userId = 1; userId <= 3; userId++)
+            // Relaciona cada usuario com as 3 primeiras achievements como seed de teste.
+            for (User user : users)
             {
-                for (long achievementId = 1; achievementId <= 3; achievementId++)
+                int limit = Math.min(3, achievements.size());
+                for (int i = 0; i < limit; i++)
                 {
+                    Achievement achievement = achievements.get(i);
+                    if (repo.existsByUserIdAndAchievementId(user.id, achievement.id))
+                        continue;
+
                     UserAchievement mockUa = new UserAchievement();
-                    mockUa.userId = userId;
-                    mockUa.achievementId = achievementId;
-                    mockUa.unlocked_at = new Date(System.currentTimeMillis());
+                    mockUa.userId = user.id;
+                    mockUa.achievementId = achievement.id;
+                    mockUa.unlockedAt = new Date(System.currentTimeMillis());
                     repo.save(mockUa);
                 }
             }

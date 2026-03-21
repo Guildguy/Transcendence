@@ -5,7 +5,12 @@ import java.sql.Date;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "user_achievements")
+@Table(
+    name = "user_achievements",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uq_user_achievement", columnNames = {"user_id", "achievement_id"})
+    }
+)
 public class UserAchievement
 {
 
@@ -19,10 +24,13 @@ public class UserAchievement
     @Column(name = "achievement_id")
     public Long achievementId;
 
-    public Date unlocked_at;
+    @Column(name = "unlocked_at")
+    public Date unlockedAt;
 
-    public Date created_at;
+    @Column(name = "created_at")
+    public Date createdAt;
     public String created_by;
-    public Date last_update_at;
+    @Column(name = "last_update_at")
+    public Date lastUpdateAt;
     public String last_update_by;
 }
