@@ -17,9 +17,9 @@ export interface Achievement {
 }
 
 export const mockRequests: PendingRequest[] = [
-  { id: 1, name: 'Vítoria' },
-  { id: 2, name: 'Vítoria' },
-  { id: 3, name: 'Carlos' },
+  { id: 1, name: 'Lula' },
+  { id: 2, name: 'Janja' },
+  { id: 3, name: 'Renan Leite' },
 ]
 
 export const mockSchedule: ScheduleItem[] = [

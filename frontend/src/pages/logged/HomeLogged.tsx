@@ -11,17 +11,22 @@ import { mockRequests, mockSchedule, mockAchievements } from './HomeLogged.mock.
 import './HomeLogged.css'
 
 
-const handleAccept = (id: number) => {
-  console.log(`Accepted request with ID: ${id}`);
-};
-
-const handleReject = (id: number) => {
-  console.log(`Rejected request with ID: ${id}`);
-};
 
 function HomeLogged() {
-  const [searchParams] = useSearchParams()
+  // request handlers are defined inside the component so they can update state
+  useSearchParams()
   const [activeTab, setActiveTab] = useState<'pending' | 'notifications'>('pending')
+  const [requests, setRequests] = useState(() => mockRequests)
+
+  const handleAccept = (id: number) => {
+    console.log(`Accepted request with ID: ${id}`)
+    setRequests(prev => prev.filter(r => r.id !== id))
+  }
+
+  const handleDecline = (id: number) => {
+    console.log(`Declined request with ID: ${id}`)
+    setRequests(prev => prev.filter(r => r.id !== id))
+  }
 
   return (
     <AppShell
@@ -54,7 +59,7 @@ function HomeLogged() {
             </div>
 
             <div className="requests-list">
-              {activeTab === 'pending' && mockRequests.map((req) => (
+              {activeTab === 'pending' && requests.map((req) => (
                 <div key={req.id} className="request-card">
                   <div className="request-avatar">
                     <Avatar />
@@ -66,7 +71,7 @@ function HomeLogged() {
                     <Button onClick={() => handleAccept(req.id)} className="icon-button" aria-label="Accept">
                       <Check size={18} color="green"/>
                     </Button>
-                    <Button onClick={() => handleReject(req.id)} className="icon-button" aria-label="Reject">
+                    <Button onClick={() => handleDecline(req.id)} className="icon-button" aria-label="Decline">
                       <X size={18} color="red"/>
                     </Button>
                   </div>
