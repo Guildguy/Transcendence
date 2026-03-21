@@ -6,6 +6,7 @@ import Footer from '../../components/layout/Footer/Footer'
 import UserHeader from '../../components/layout/UserHeader/UserHeader'
 import Avatar from '../../components/common/Avatar/Avatar'
 import Button from '../../components/common/Button/Button'
+import { Check, X } from "lucide-react";
 import './HomeLogged.css'
 
 interface PendingRequest {
@@ -44,6 +45,14 @@ const mockAchievements: Achievement[] = [
   { id: 1 }, { id: 2 }, { id: 3 },
   { id: 4 }, { id: 5 }, { id: 6 },
 ]
+
+const handleAccept = (id: number) => {
+  console.log(`Accepted request with ID: ${id}`);
+};
+
+const handleReject = (id: number) => {
+  console.log(`Rejected request with ID: ${id}`);
+};
 
 function HomeLogged() {
   const [searchParams] = useSearchParams()
@@ -88,8 +97,12 @@ function HomeLogged() {
                     <strong>{req.name}</strong> solicitou realizar mentoria com você, aceita?
                   </p>
                   <div className="request-actions">
-                    <button className="action-btn accept" aria-label="Aceitar">✔</button>
-                    <button className="action-btn reject" aria-label="Recusar">✖</button>
+                    <button onClick={() => handleAccept(req.id)} className="action-btn accept" aria-label="Accept">
+                      <Check size={20} color="green"/>
+                    </button>
+                    <button onClick={() => handleReject(req.id)}  className="action-btn reject" aria-label="Reject">
+                      <X size={20} color="red"/>
+                    </button>
                   </div>
                 </div>
               ))}
