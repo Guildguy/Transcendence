@@ -1,0 +1,102 @@
+.mentor-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 20px;
+  width: 100%;
+  max-width: 350px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+  color: #374151;
+}
+
+.mentor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.mentor-avatar-container {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mentor-avatar-icon {
+  color: #1f2937;
+}
+
+.mentor-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.mentor-position {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.mentor-skills-section {
+  margin-bottom: 15px;
+}
+
+.skills-label {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.mentor-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  color: #6366f1; /* Tom de roxo/azul para as habilidades */
+  background-color: #f8f9fa;
+}
+
+.btn-ver-mais {
+  background-color: #c7d2fe;
+  border: none;
+  color: #4338ca;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.btn-ver-mais:hover {
+  opacity: 0.8;
+}
+
+.mentor-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.mentor-footer p, .mentor-status {
+  margin: 0;
+}
+
+.mentor-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  margin-top: 2px;
+}
