@@ -13,8 +13,8 @@ public class XpHistory
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(nullable = false)
-    public Long user_id;
+    @Column(name = "user_id", nullable = false)
+    public Long userId;
 
     @Column(nullable = false)
     public Integer xp;
@@ -22,11 +22,13 @@ public class XpHistory
     @Column(nullable = false)
     public String reason;
 
-    public Date created_at;
+    @Column(name = "created_at")
+    public Date createdAt;
 
     public String created_by;
 
-    public Date last_update_at;
+    @Column(name = "last_update_at")
+    public Date lastUpdateAt;
 
     public String last_update_by;
 }
