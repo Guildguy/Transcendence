@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 // Import do useNavigate mantido caso você precise usar em outro lugar
 import { useNavigate } from "react-router-dom"; 
 import { Pencil, Save, Trash2 } from "lucide-react";
@@ -9,7 +9,8 @@ import Avatar from "../../components/common/Avatar/Avatar";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
-  id?: string;
+  id?: number;
+  profile_id?: number; // Adicionado para mapear o ID do profile, se necessário
   nome: string;
   email: string;
   avatarUrl: string;
@@ -20,8 +21,8 @@ interface UserData {
   linkedin: string;
   instagram: string;
   telefone: string; // mapeia para 'phoneNumber' no banco
-  level?: string;
-  xp?: string;
+  level?: number;
+  xp?: number;
   role: string; // Adicionado para diferenciar mentores de mentorados
 }
 
@@ -39,7 +40,7 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState<UserData>({
     nome: "", email: "", avatarUrl:"", cargo: "", presentationText: "",
     anosExperiencia: "", github: "", linkedin: "", instagram: "",
-    telefone: "", level: "0", xp: "0", role: "mentor" 
+    telefone: "", level: 0, xp: 0, role: "MENTOR" 
   });
   const [userSkills, setUserSkills] = useState<Skill[]>([]);
 
@@ -70,7 +71,8 @@ const ProfilePage = () => {
           const profile = data.profiles && data.profiles.length > 0 ? data.profiles[0] : {};
 
           const unifiedData: UserData = {
-            id: user.id?.toString(),
+            id: user.id,
+            profile_id: profile.id,
             nome: user.name || "",
             email: user.email || "",
             avatarUrl:user.avatarUrl || "",
@@ -81,8 +83,8 @@ const ProfilePage = () => {
             linkedin: profile.linkedin || "",
             instagram: profile.instagram || "",
             anosExperiencia: profile.xp?.toString() || "0",
-            level: profile.level?.toString() || "0",
-            xp: profile.xp?.toString() || "0",
+            level: profile.level || 0,
+            xp: profile.xp || 0,
             role: user.role || "mentor"
           };
 
@@ -100,7 +102,7 @@ const ProfilePage = () => {
         console.warn("Backend offline ou usuário não encontrado. Carregando Mock...");
         
         const mockUser: UserData = {
-          id: loggedUserId, // Mantém o ID que tentou buscar
+          id: Number(loggedUserId), // Mantém o ID que tentou buscar
           nome: "Marcelo Dias Machado", 
           cargo: "Desenvolvedor Mentor",
           email: "mrl.jose123@gmail.com", 
@@ -111,8 +113,8 @@ const ProfilePage = () => {
           linkedin: "linkedin.com/in/marcelo", 
           instagram: "@marcelo",
           telefone: "11949335709", 
-          level: "10", 
-          xp: "500", 
+          level: 10, 
+          xp: 500, 
           role: "mentor",
         };
         const mockSkills: Skill[] = [
@@ -131,39 +133,46 @@ const ProfilePage = () => {
     loadFullProfile();
   }, []); // Removi o `navigate` do array de dependências, já que não o usamos mais dentro do useEffect
 
-  const handleSaveAll = async () => {
-    if (!userData) return;
+const handleSaveAll = async () => {
+    if (!userData || !userData.id) return;
 
-    // Payload formatado para o seu microserviço FastAPI/MongoDB
-    const finalPayload = {
+    // 1. Montamos o Payload apenas com os dados da tabela PROFILE
+    const profilePayload = {
       user_id: userData.id,
+      profile_id: userData.profile_id,
       position: userData.cargo,
       bio: userData.presentationText,
       github: userData.github,
       linkedin: userData.linkedin,
       instagram: userData.instagram,
       xp: parseInt(userData.anosExperiencia) || 0,
-      stacks: userSkills // Envia o array de objetos {id, name}
+      role: userData.role?.toUpperCase()
     };
 
     try {
-      const response = await fetch(`http://localhost:8080/profile/${userData.id}`, {
-        method: "POST", // Altere para PUT se o seu backend exigir
+      // Faz a requisição PUT para o endpoint de profile
+      // Ajuste a URL e o método HTTP se o seu backend for diferente
+      const response = await fetch(`http://localhost:8080/profiles`, {
+        method: "PUT", 
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalPayload)
+        body: JSON.stringify(profilePayload)
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        console.log("Salvo com sucesso no MongoDB!");
+        alert("Perfil atualizado com sucesso!");
+        setBackupData(userData);
+        setBackupSkills(userSkills);
+        setIsEditing(false);
+        
       } else {
-        console.warn("Servidor respondeu com erro, simulando salvamento local.");
+        const errorData = await response.json().catch(() => null);
+        alert(`Erro ao salvar perfil: ${errorData?.message || "Tente novamente."}`);
       }
     } catch (e) {
-      console.error("Erro de conexão. Dados mantidos localmente:", finalPayload);
-    } finally {
-      setBackupData(userData);
-      setBackupSkills(userSkills);
-      setIsEditing(false);
+      console.error("Erro de conexão:", e);
+      alert("Erro de conexão com o servidor. Os dados não foram salvos.");
     }
   };
 
