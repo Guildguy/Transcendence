@@ -97,12 +97,12 @@ function HomeLogged() {
                     <strong>{req.name}</strong> solicitou realizar mentoria com você, aceita?
                   </p>
                   <div className="request-actions">
-                    <button onClick={() => handleAccept(req.id)} className="action-btn accept" aria-label="Accept">
-                      <Check size={20} color="green"/>
-                    </button>
-                    <button onClick={() => handleReject(req.id)}  className="action-btn reject" aria-label="Reject">
-                      <X size={20} color="red"/>
-                    </button>
+                    <Button onClick={() => handleAccept(req.id)} className="icon-button" aria-label="Accept">
+                      <Check size={18} color="green"/>
+                    </Button>
+                    <Button onClick={() => handleReject(req.id)} className="icon-button" aria-label="Reject">
+                      <X size={18} color="red"/>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -121,15 +121,7 @@ function HomeLogged() {
                   <span className="schedule-time">
                     <strong>{item.time}</strong> - {item.mentee}
                   </span>
-                    <Button 
-                    style={{ 
-                      backgroundColor: '#E8E6F8', 
-                      color: '#5B4FCF',
-                      fontWeight: '500'
-                    }}
-                  >
-                    Remarcar
-                  </Button>
+                    <Button>Remarcar</Button>
                 </div>
               ))}
             </div>
