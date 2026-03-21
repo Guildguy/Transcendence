@@ -39,28 +39,28 @@ public class XpHistoryMockConfig
             {
 
                 XpHistory x1 = new XpHistory();
-                x1.user_id = u.id;
+                x1.userId = u.id;
                 x1.xp = 50;
                 x1.reason = "PROFILE_COMPLETE";
-                x1.created_at = new Date(System.currentTimeMillis());
+                x1.createdAt = new Date(System.currentTimeMillis());
 
                 repo.save(x1);
 
 
                 XpHistory x2 = new XpHistory();
-                x2.user_id = u.id;
+                x2.userId = u.id;
                 x2.xp = 150;
                 x2.reason = "MATCH_ACCEPT";
-                x2.created_at = new Date(System.currentTimeMillis());
+                x2.createdAt = new Date(System.currentTimeMillis());
 
                 repo.save(x2);
 
 
                 XpHistory x3 = new XpHistory();
-                x3.user_id = u.id;
+                x3.userId = u.id;
                 x3.xp = 50;
                 x3.reason = "SESSION_DONE";
-                x3.created_at = new Date(System.currentTimeMillis());
+                x3.createdAt = new Date(System.currentTimeMillis());
 
                 repo.save(x3);
 
