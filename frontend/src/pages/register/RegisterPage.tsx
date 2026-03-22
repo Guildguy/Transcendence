@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './RegisterPage.css'
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
@@ -19,6 +20,7 @@ const USERS_API = 'http://localhost:8080/users'
 const PROFILE_API = 'http://localhost:8000/profile'
 
 function RegisterPage() {
+  const navigate = useNavigate()
   const [name, setName] = useState('')
   const [phone_number, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -141,7 +143,15 @@ function RegisterPage() {
       }
 
       console.log('Usuário cadastrado com sucesso:', data);
-      // Redirecionar ou limpar formulário aqui
+      
+      // Salvar o ID do usuário no localStorage
+      const userId = data.id || data.user?.id;
+      if (userId) {
+        localStorage.setItem('userId', userId.toString());
+      }
+      
+      // Redirecionar para a página inicial logada
+      navigate('/home-logged');
       
     } catch (error) {
       console.error('Erro na requisição:', error);
