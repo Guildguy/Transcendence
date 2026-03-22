@@ -11,7 +11,7 @@ interface InputGroupProps {
   placeholder?: string;
 }
 
-const InputGroup = ({ label, value, onChange, isEditing, isNumeric, isTextArea, placeholder }: InputGroupProps) => {
+export const InputGroup = ({ label, value, onChange, isEditing, isNumeric, isTextArea, placeholder }: InputGroupProps) => {
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let val = e.target.value;

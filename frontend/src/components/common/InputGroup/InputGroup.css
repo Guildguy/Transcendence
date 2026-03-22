@@ -13,9 +13,9 @@
 .custom-input,
 .view-box {
   width: 100%;
-  background-color: #f5f5f5; /* Cinza clarinho da imagem */
+  background-color: #f5f5f5;
   border: none;
-  border-radius: 20px; /* Bem arredondado como no seu print */
+  border-radius: 20px;
   padding: 12px 20px;
   font-size: 14px;
   min-height: 45px;
@@ -40,10 +40,9 @@
 }
 
 .custom-input:focus {
-  outline: 2px solid #6e54d1; /* Cor roxa do seu botão */
+  outline: 2px solid #6e54d1;
 }
 
-/* Estilo quando está em modo de visualização (opcional) */
 .view-box {
     padding: 8px;
     color: #374151;
