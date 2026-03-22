@@ -9,7 +9,7 @@ interface AvatarProps {
   onImageChange?: (file: File) => void;
 }
 
-const Avatar: React.FC<AvatarProps> = ({ 
+export const Avatar: React.FC<AvatarProps> = ({ 
   avatarUrl, 
   size = 128, 
   isEditable = false, 

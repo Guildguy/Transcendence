@@ -31,8 +31,8 @@ interface Skill {
   name: string;
 }
 
-const ProfilePage = () => {
-  const navigate = useNavigate(); // Mantido caso necessário futuramente
+export const ProfilePage = () => {
+  const navigate = useNavigate();
   const [abaAtiva, setAbaAtiva] = useState("gerais");
   const [isEditing, setIsEditing] = useState(false);
 
