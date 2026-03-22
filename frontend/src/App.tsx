@@ -12,6 +12,7 @@ import RegisterLayout from './pages/register/RegisterLayout'
 import ProfilePage from './pages/profile/ProfilePage'
 import HomeLogged from './pages/logged/HomeLogged'
 import BookSessionWithMentor from './pages/book-session/BookSessionWithMentor'
+import MentoriasPage from './pages/mentoria/MentoriasPage'
 
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
          HOME LOGGED
       ===================== */}
       <Route path="/home-logged" element={<HomeLogged />} />
+      <Route path="/mentorias" element={<MentoriasPage />} />
 
       {/* =====================
          BOOK SESSION WITH MENTOR

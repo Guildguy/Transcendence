@@ -5,12 +5,16 @@
   /* Purple palette */
   --purple-primary: #5b4fcf;
   --purple-light: #e8e6f8;
+  --purple-medium: #dedcf7;
   --purple-bg: #ebebf8;
   
   /* Neutrals */
   --white: #ffffff;
   --text-dark: #1a1a2e;
   --text-medium: #4a4a6a;
+  --gray-light: #f3f4f6;
+  --gray-medium: #d1d5db;
+  --gray-dark: #9ca3af;
   
   /* UI elements */
   --border-color: #d8d6f0;
