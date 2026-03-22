@@ -13,6 +13,6 @@ public interface XpHistoryRepository extends JpaRepository<XpHistory, Long>
 
 	List<XpHistory> findTop10ByUserIdOrderByIdDesc(Long userId);
 
-	@Query("SELECT COALESCE(SUM(x.xp), 0) FROM XpHistory x WHERE x.userId = :userId")
-	Integer sumXpByUserId(Long userId);
+	@Query("SELECT COALESCE(SUM(x.xp), 0L) FROM XpHistory x WHERE x.userId = :userId")
+	Long sumXpByUserId(Long userId);
 }
