@@ -158,3 +158,18 @@
 .page-dots {
   color: #9ca3af;
 }
+
+.page-number.active {
+    color: #5b4eb1; /* Cor de destaque */
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.page-link {
+    cursor: pointer;
+    user-select: none;
+}
+
+.page-link:hover {
+    opacity: 0.7;
+}
