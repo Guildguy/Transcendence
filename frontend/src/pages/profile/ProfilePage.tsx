@@ -254,13 +254,16 @@ const handleSaveAll = async () => {
       const response = await fetch(`http://localhost:8080/profiles/image/${profileId}`);
       
       if (response.ok) {
-        const imageData = await response.json();
+        const data = await response.json();
         
+
         // Se a imagem foi encontrada, atualiza o state
-        if (imageData && imageData.image_base64) {
+        const image = JSON.parse(data.avatarUrl).image_base64;
+
+        if (data && data.avatarUrl) {
           setUserData(prev => ({
             ...prev,
-            avatarUrl: imageData.image_base64
+            avatarUrl: image
           }));
         }
       } else {

@@ -143,7 +143,7 @@ public class ProfileService {
 				result.addError("Image", "Imagem não encontrada para este perfil.");
 				return new Result(null, result);
 			}
-
+			profile.avatarUrl = pythonImageResponse; // Supondo que o serviço Python retorne a URL da imagem
 			// Retorna a resposta do Python como resposta
 			return new Result(profile, result);
 
