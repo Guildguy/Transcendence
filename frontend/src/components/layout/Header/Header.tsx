@@ -17,8 +17,8 @@ function Header({ isAuthenticated = false }: HeaderProps) {
         {!isAuthenticated ? (
           <>
             <Link to="/about">Quem somos</Link>
-            <Link to="/register?type=mentor">Seja Mentor</Link>
-            <Link to="/register?type=mentorado">Seja Mentorado</Link>
+            <Link to="/register?type=MENTOR">Seja Mentor</Link>
+            <Link to="/register?type=MENTORADO">Seja Mentorado</Link>
           </>
         ) : (
           <>
