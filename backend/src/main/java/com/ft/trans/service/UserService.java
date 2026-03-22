@@ -94,7 +94,7 @@ public class UserService {
 	            else if (errorMsg.contains("phoneNumber"))
 	                result.addError("phoneNumber", "Este telefone já está sendo utilizado.");
 	        	else
-	                result.addError("global", "Erro de integridade: um registro duplicado foi detectado.");
+	                result.addError("global", "Erro de integridade: um registro duplicado foi detectado." + errorMsg);
 	        } catch (Exception e) {
 	            result.addError("global", "Ocorreu um erro interno ao salvar o usuário.");
 	        }
