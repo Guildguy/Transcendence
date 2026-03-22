@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.ft.trans.dto.ProfileImageDTO;
 import com.ft.trans.dto.UpdateProfileDTO;
@@ -61,6 +62,21 @@ public class ProfileController {
         }
         return ResponseEntity
             .status(HttpStatus.CREATED)
+            .body(result.entity());
+    }
+
+    @GetMapping("/image/{profileId}")
+    public ResponseEntity<?> getProfileImage(@PathVariable Long profileId) {
+        Result result = this.profileService.getProfileImage(profileId);
+
+        if (result.validationResult().hasErrors())
+        {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(result.validationResult().getErrors());
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
             .body(result.entity());
     }
 }
