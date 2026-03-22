@@ -2,10 +2,15 @@ import React from 'react';
 import { User, Circle } from 'lucide-react';
 import './Mentorcard.css';
 
+interface Skill {
+  id: string;
+  name: string;
+}
+
 interface MentorCardProps {
   name: string;
   position: string;
-  skills: string[];
+  skills: Skill[];
   experience: string | number;
   isActive: boolean;
   avatarUrl?: string;
@@ -19,6 +24,9 @@ const MentorCard: React.FC<MentorCardProps> = ({
   isActive, 
   avatarUrl 
 }) => {
+  const displaySkills = skills.slice(0, 5);
+  const hasMoreSkills = skills.length > 5;
+
   return (
     <div className="mentor-card">
       <div className="mentor-card-header">
@@ -39,10 +47,18 @@ const MentorCard: React.FC<MentorCardProps> = ({
       <div className="mentor-skills-section">
         <p className="skills-label">Habilidades:</p>
         <div className="mentor-skills-list">
-          {skills.slice(0, 3).map((skill, index) => (
-            <span key={index} className="skill-tag">{skill}</span>
-          ))}
-          <button className="skill-tag btn-ver-mais">Ver mais</button>
+          {displaySkills.length > 0 ? (
+            <>
+              {displaySkills.map((skill) => (
+                <span key={skill.id} className="skill-tag">{skill.name}</span>
+              ))}
+              {hasMoreSkills && (
+                <button className="skill-tag btn-ver-mais">+{skills.length - 5}</button>
+              )}
+            </>
+          ) : (
+            <p className="no-skills-message">Sem habilidades informadas</p>
+          )}
         </div>
       </div>
 
