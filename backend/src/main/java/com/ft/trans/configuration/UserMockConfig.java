@@ -35,15 +35,15 @@ public class UserMockConfig
 
                 u.email = "ze" + i + "@mail.com";
 
-                u.phone_number = "1199999999" + i;
+                u.phoneNumber = "1199999999" + i;
 
                 u.password = "Aa@12345";
                 u.encodePassword();
 
                 u.status = true;
 
-                u.created_at = new Date(System.currentTimeMillis());
-                u.created_by = "mock";
+                u.createdAt = new Date(System.currentTimeMillis());
+                u.createdBy = 1L;
 
                 repo.save(u);
             }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.ft.trans.dto.ProfileImageDTO;
 import com.ft.trans.dto.UpdateProfileDTO;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.repository.ProfileRepository;
@@ -52,5 +53,39 @@ public class ProfileService {
 	        }
     	}
     	return new Result(savedProfile, result);
+	}
+
+	public Result saveProfileImage(ProfileImageDTO imageDTO)
+	{
+		Profile savedProfile = null;
+		ValidationResult result = new ValidationResult();
+
+		if (imageDTO.profileId == null) {
+			result.addError("profileId", "ID do perfil é obrigatório.");
+			return new Result(null, result);
+		}
+
+		if (imageDTO.imageBase64 == null || imageDTO.imageBase64.isEmpty()) {
+			result.addError("imageBase64", "Imagem não pode estar vazia.");
+			return new Result(null, result);
+		}
+
+		try {
+			Profile profile = this.profileRepository.findById(imageDTO.profileId).orElse(null);
+			
+			if (profile == null) {
+				result.addError("Profile", "Perfil não encontrado.");
+				return new Result(null, result);
+			}
+
+			// Salva a URL da imagem (Base64 ou URL remota)
+			profile.avatarUrl = imageDTO.imageBase64;
+			
+			savedProfile = this.profileRepository.save(profile);
+		} catch (Exception e) {
+			result.addError("global", "Ocorreu um erro ao salvar a imagem do perfil.");
+		}
+
+		return new Result(savedProfile, result);
 	}
 }

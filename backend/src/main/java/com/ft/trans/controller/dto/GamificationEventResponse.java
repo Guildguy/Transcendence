@@ -6,7 +6,7 @@ public record GamificationEventResponse(
     Long userId,
     String eventType,
     Integer awardedXp,
-    Integer totalXp,
+    Long totalXp,
     Integer currentLevel,
     Integer nextLevelXp,
     List<String> unlockedAchievements,

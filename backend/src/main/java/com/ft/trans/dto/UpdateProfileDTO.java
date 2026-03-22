@@ -14,6 +14,7 @@ public class UpdateProfileDTO {
 	public String		linkedin;
 	public String		github;
 	public String		instagram;
+	public Integer		anosExperiencia;
 
     public Profile		toProfile()
 	{
@@ -29,6 +30,7 @@ public class UpdateProfileDTO {
 		profile.linkedin = this.linkedin;
 		profile.github = this.github;
 		profile.instagram = this.instagram;
+		profile.anosExperiencia = this.anosExperiencia;
 
 		return profile;
 	}

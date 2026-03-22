@@ -82,7 +82,7 @@ const ProfilePage = () => {
             github: profile.github || "",
             linkedin: profile.linkedin || "",
             instagram: profile.instagram || "",
-            anosExperiencia: profile.xp?.toString() || "0",
+            anosExperiencia: profile.anosExperiencia?.toString() || "0",
             level: profile.level || 0,
             xp: profile.xp || 0,
             role: user.role || "mentor"
@@ -145,7 +145,8 @@ const handleSaveAll = async () => {
       github: userData.github,
       linkedin: userData.linkedin,
       instagram: userData.instagram,
-      xp: parseInt(userData.anosExperiencia) || 0,
+      xp: userData.xp || 0,
+      anosExperiencia: parseInt(userData.anosExperiencia) || 0,
       role: userData.role?.toUpperCase()
     };
 
