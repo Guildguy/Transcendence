@@ -1,0 +1,230 @@
+groups:
+  - name: service_availability
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Serviço {{ $labels.job }} está fora do ar"
+          description: "O target {{ $labels.instance }} do job '{{ $labels.job }}' não responde há mais de 1 minuto."
+
+      - alert: PrometheusTargetMissing
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Target Prometheus ausente: {{ $labels.instance }}"
+          description: "O target {{ $labels.instance }} desapareceu da configuração do Prometheus."
+
+  - name: spring_boot
+    rules:
+      - alert: HighJvmHeapUsage
+        expr: |
+          (jvm_memory_used_bytes{area="heap"} /
+           jvm_memory_max_bytes{area="heap"}) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Heap JVM acima de 80% ({{ $labels.instance }})"
+          description: "Uso de heap em {{ $value | printf \"%.1f\" }}%. Verifique possíveis memory leaks."
+
+      - alert: CriticalJvmHeapUsage
+        expr: |
+          (jvm_memory_used_bytes{area="heap"} /
+           jvm_memory_max_bytes{area="heap"}) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Heap JVM crítico ({{ $labels.instance }})"
+          description: "Heap JVM em {{ $value | printf \"%.1f\" }}%. Risco iminente de OutOfMemoryError."
+
+      - alert: HighHttpErrorRate
+        expr: |
+          (rate(http_server_requests_seconds_count{status=~"5.."}[5m]) /
+           rate(http_server_requests_seconds_count[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taxa de erros HTTP 5xx alta ({{ $labels.instance }})"
+          description: "{{ $value | printf \"%.1f\" }}% das requisições estão retornando erros 5xx."
+
+      - alert: HighHttpLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_server_requests_seconds_bucket[5m])
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latência HTTP p95 alta ({{ $labels.instance }})"
+          description: "Latência p95 em {{ $value | printf \"%.2f\" }}s para {{ $labels.uri }}."
+
+      - alert: TooManyThreads
+        expr: jvm_threads_live_threads > 200
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Muitas threads JVM ({{ $labels.instance }})"
+          description: "{{ $value }} threads ativas. Verifique thread leaks ou congestionamento."
+
+  - name: postgresql
+    rules:
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL fora do ar"
+          description: "O PostgreSQL ({{ $labels.instance }}) não está respondendo."
+
+      - alert: PostgresTooManyConnections
+        expr: |
+          pg_stat_activity_count > pg_settings_max_connections * 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL com muitas conexões"
+          description: "{{ $value }} conexões ativas (80% do máximo)."
+
+      - alert: PostgresDeadlocks
+        expr: rate(pg_stat_database_deadlocks[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Deadlocks detectados no PostgreSQL"
+          description: "{{ $value }} deadlocks/s no banco {{ $labels.datname }}."
+
+      - alert: PostgresSlowQueries
+        expr: |
+          pg_stat_activity_max_tx_duration{state="active"} > 60
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Query lenta no PostgreSQL ({{ $labels.instance }})"
+          description: "Transação ativa há {{ $value | printf \"%.0f\" }}s."
+
+  - name: mongodb
+    rules:
+      - alert: MongodbDown
+        expr: mongodb_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MongoDB fora do ar"
+          description: "O MongoDB ({{ $labels.instance }}) não está respondendo."
+
+      - alert: MongodbTooManyConnections
+        expr: |
+          mongodb_ss_connections{conn_type="current"} /
+          mongodb_ss_connections{conn_type="available"} * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MongoDB com muitas conexões"
+          description: "{{ $value | printf \"%.1f\" }}% das conexões disponíveis em uso."
+
+  - name: infrastructure
+    rules:
+      - alert: HighCpuUsage
+        expr: |
+          100 - (avg by (instance) (
+            rate(node_cpu_seconds_total{mode="idle"}[5m])
+          ) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU alta no host ({{ $labels.instance }})"
+          description: "Uso de CPU em {{ $value | printf \"%.1f\" }}%."
+
+      - alert: CriticalCpuUsage
+        expr: |
+          100 - (avg by (instance) (
+            rate(node_cpu_seconds_total{mode="idle"}[5m])
+          ) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU crítica no host ({{ $labels.instance }})"
+          description: "Uso de CPU em {{ $value | printf \"%.1f\" }}%. Sistema sobrecarregado."
+
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memória alta no host ({{ $labels.instance }})"
+          description: "{{ $value | printf \"%.1f\" }}% da memória em uso."
+
+      - alert: LowDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} /
+           node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Espaço em disco baixo ({{ $labels.instance }})"
+          description: "Apenas {{ $value | printf \"%.1f\" }}% livre em {{ $labels.mountpoint }}."
+
+      - alert: CriticalDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} /
+           node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}) * 100 < 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disco quase cheio! ({{ $labels.instance }})"
+          description: "Apenas {{ $value | printf \"%.1f\" }}% livre em {{ $labels.mountpoint }}."
+
+  - name: containers
+    rules:
+      - alert: ContainerHighCpu
+        expr: |
+          (rate(container_cpu_usage_seconds_total{name!=""}[5m]) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container com CPU alta: {{ $labels.name }}"
+          description: "Container {{ $labels.name }} usando {{ $value | printf \"%.1f\" }}% de CPU."
+
+      - alert: ContainerHighMemory
+        expr: |
+          (container_memory_usage_bytes{name!=""} /
+           container_spec_memory_limit_bytes{name!=""}) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container com memória alta: {{ $labels.name }}"
+          description: "Container {{ $labels.name }} usando {{ $value | printf \"%.1f\" }}% da memória limite."
+
+      - alert: ContainerRestarting
+        expr: |
+          rate(container_last_seen{name!=""}[15m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container sumiu: {{ $labels.name }}"
+          description: "O container {{ $labels.name }} não foi visto nos últimos 15 minutos."

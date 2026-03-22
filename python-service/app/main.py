@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from prometheus_fastapi_instrumentator import Instrumentator
 from db.noSQL import mongo, connect, close
 
 
@@ -38,6 +39,9 @@ app = FastAPI(
     description="Microserviço Python para gerenciar perfis no MongoDB",
     lifespan=lifespan
 )
+
+# Prometheus metrics endpoint /metrics
+Instrumentator().instrument(app).expose(app)
 
 cors_origins = os.getenv("CORS_ORIGINS", "*")
 allowed_origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
