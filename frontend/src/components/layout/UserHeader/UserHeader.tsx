@@ -36,31 +36,38 @@ export const UserHeader = () => {
   return (
     <section className="user-header">
       <div className="profile-section">
-        <div className="profile-left">
-          <Avatar />
-          <span className="mentor-badge">Pessoa Mentora</span>
-          <span className="profile-name">Olá, <strong>{userData.nome || 'usuário'}</strong>!</span>
+        <div className="header-info">
+          <div className="header-avatar">
+           <Avatar />
+          </div>
+        </div>
+        <div className="header-info">
+          <span className="profile-badge">Pessoa Mentora</span>
+          <span className="profile-user-name">{userData.nome || 'Nome do usuário'}</span>
+          <span className="profile-details">@{userData.username || 'username'} | {userData.cargo || 'Cargo'}</span>
         </div>
       </div>
-      <div className="profile-stats">
-        <InputGroup
-          placeholder="Nível"
-          value={userData.level || '0'}
-          isEditing={false}
-          onChange={() => {}}
-        />
-        <InputGroup
-          placeholder="XP"
-          value={`${userData.xp || '0'} XP`}
-          isEditing={false}
-          onChange={() => {}}
-        />
-        <InputGroup
-          placeholder="Dias ensinando"
-          value={"XX Dias Ensinando 🔥"}
-          isEditing={false}
-          onChange={() => {}}
-        />
+      <div className="profile-stats-bg">
+        <div className="profile-stats-container">
+          <InputGroup
+            placeholder="Nível"
+            value={userData.level || '0'}
+            isEditing={false}
+            onChange={() => {}}
+          />
+          <InputGroup
+            placeholder="XP"
+            value={`${userData.xp || '0'} XP`}
+            isEditing={false}
+            onChange={() => {}}
+          />
+          <InputGroup
+            placeholder="Dias ensinando"
+            value={"XX Dias Ensinando 🔥"}
+            isEditing={false}
+            onChange={() => {}}
+          />
+        </div>
       </div>
     </section>
   )
