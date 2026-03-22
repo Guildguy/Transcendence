@@ -61,11 +61,11 @@ function HomeLogged() {
             <div className="requests-list">
               {activeTab === 'pending' && requests.map((req) => (
                 <div key={req.id} className="request-card">
-                  <div className="request-avatar">
-                    <Avatar />
+                  <div className="request-avatar img">
+                    <Avatar size={80}/>
                   </div>                  
                   <p className="request-text">
-                    <strong>{req.name}</strong> solicitou realizar mentoria com você, aceita?
+                    <strong>{req.name}</strong> solicitou realizar mentoria. Aceita?
                   </p>
                   <div className="request-actions">
                     <Button onClick={() => handleAccept(req.id)} className="icon-button" aria-label="Accept">
@@ -77,6 +77,9 @@ function HomeLogged() {
                   </div>
                 </div>
               ))}
+               {activeTab === 'pending' && requests.length === 0 && (
+                <div className="empty-state">Sem novas solicitações.</div>
+              )}
               {activeTab === 'notifications' && (
                 <div className="empty-state">Sem novas notificações.</div>
               )}
