@@ -1,0 +1,6 @@
+.book-session-with-mentor {
+background-color: var(--purple-bg);
+  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-dark);
+}

@@ -167,8 +167,8 @@ public class GamificationService
 
     private Integer safeTotalXp(Long userId)
     {
-        Integer total = xpHistoryRepository.sumXpByUserId(userId);
-        return total != null ? total : 0;
+        Long total = xpHistoryRepository.sumXpByUserId(userId);
+        return total != null ? total.intValue() : 0;
     }
 
     private int registerXp(Long userId, int xp, String reason)
