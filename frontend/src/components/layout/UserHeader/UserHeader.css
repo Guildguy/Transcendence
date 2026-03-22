@@ -2,81 +2,107 @@
    USER HEADER
    ============================================================ */
 .user-header {
+  display: grid;
   background-color: var(--white);
   width: 100%;
-  padding: 40px;
   box-shadow: 0 2px 8px rgba(91, 79, 207, 0.08);
 }
 
 .profile-section {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 6fr;
   gap: 40px;
+  align-items: center;
+  justify-content: center;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 40px 40px;
+  height: fit-content;
 }
 
-.profile-left {
-  display: flex;
+.profile-user-name {
+  color: var(--text-dark);
+  font-size: 2.5rem;
+  font-weight: 800;
+  padding-top: 4px;
+}
+
+.profile-details {
+  color: var(--purple-primary);
+  font-size: 1rem;
+}
+
+.header-info {
+  display: grid;
   flex-direction: column;
-  align-items: center;
   gap: 12px;
 }
 
-.mentor-badge {
+.header-avatar {
+  display: block;
+}
+
+.profile-badge {
   background-color: var(--badge-bg);
   color: var(--badge-text);
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
-  padding: 5px 18px;
+  padding: 8px 20px;
   border-radius: 20px;
+  width: fit-content;
   white-space: nowrap;
 }
 
 /* Stats pills */
-.profile-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  justify-content: flex-start;
-  padding-top: 8px;
+.profile-stats-bg {
+  display: grid;
+  background-color: var(--purple-medium);
+  justify-content: center;
+  justify-items: center;
+  align-content: center;
+  align-items: center;
+  padding-top: 28px;
+  padding-bottom: 10px;
 }
 
-.stat-pill {
-  background-color: var(--cor-cinza-fundo);
-  border-radius: 20px;
-  padding: 0.6rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  /* width: 12rem; */
-  width: fit-content;
-  text-align: left;
-  color: var(--text-dark);
-  border-radius: var(--borda-raio-redondo);
+.profile-stats-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  background-color: transparent;
+  width: 85vh;
+  gap: 1rem;
 }
 
-.stat-pill.level {
-  min-width: 120px;
-  margin-left: 20px;
-}
-
-.stat-pill.xp {
-  min-width: 160px;
-  margin-left: 40px;
-}
-
-.stat-pill.days {
-  min-width: 200px;
-  margin-left: 60px;
-}
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
     .profile-section {
-        align-items: center;
-        gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
+
+    .header-avatar {
+      padding: unset;
+      align-content: center;
+    }
+
+    .profile-user-name {
+      font-size: 2.25rem;
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      padding: unset;
+    }
+
+    .profile-stats-container {
+      grid-template-columns: 1fr;
+      gap: 0rem;
+      width: 300px;
+      text-align: center;
+    }
+
 }
