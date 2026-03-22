@@ -1,21 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, User, Circle } from 'lucide-react';
+import type { MentorCardData } from '../../services/mentorService';
+import mentorService from '../../services/mentorService';
 import MentorCard from '../../components/common/MentorCard/Mentorcard'; // Ajuste o caminho conforme seu projeto
 import './MentoriasPage.css';
-
-// Interfaces baseadas no que você me passou sobre o backend
-interface Profile {
-  id: number;
-  role: string;
-  position: string;
-  bio: string;
-  xp: number;
-  skills?: string[]; // Adicionado para o Front
-  isActive?: boolean; // Adicionado para o Front
-  user: {
-    name: string;
-  };
-}
 
 // Subcomponente exclusivo para a seção "Meus Mentores" (menor e com data)
 const MiniMentorCard = ({ name, startDate, isActive }: { name: string, startDate: string, isActive: boolean }) => (
@@ -35,7 +23,7 @@ const MiniMentorCard = ({ name, startDate, isActive }: { name: string, startDate
 );
 
 const MentoriasPage = () => {
-  const [mentoresDisponiveis, setMentoresDisponiveis] = useState<any[]>([]);
+  const [mentoresDisponiveis, setMentoresDisponiveis] = useState<MentorCardData[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Mocks para a seção "Meus Mentores"
@@ -45,61 +33,78 @@ const MentoriasPage = () => {
   ];
 
   useEffect(() => {
-    // Função simulando a busca no backend
+    // Função para buscar mentores no backend
     const fetchMentores = async () => {
       try {
-        // Quando o backend funcionar, você fará algo como:
-        // const response = await fetch('http://localhost:8080/profiles');
-        // const data: Profile[] = await response.json();
-        // const apenasMentores = data.filter(p => p.role === 'MENTOR');
-        // setMentoresDisponiveis(apenasMentores);
-
-        throw new Error("Forçando o erro para usar o Mock (Docker offline)");
+        // Usar o serviço para buscar e mapear os mentores
+        const mentores = await mentorService.getAllMentorsForCards();
+        setMentoresDisponiveis(mentores);
+        setLoading(false);
       } catch (error) {
-        // MOCK DATA (Simulando o retorno filtrado onde role === 'MENTOR')
-        const mockProfiles = [
+        console.error('Erro ao buscar mentores:', error);
+        setLoading(false);
+        
+        // Fallback para mock data se o backend não estiver disponível
+        const mockProfiles: MentorCardData[] = [
           {
             id: 1,
-            role: "MENTOR",
+            name: "João Silva",
             position: "Front-end Developer",
-            xp: 6,
-            skills: ["React", "HTML", "UX", "Scrum"],
+            skills: [
+              { id: "sk_001", name: "JavaScript" },
+              { id: "sk_005", name: "React" },
+              { id: "sk_010", name: "TypeScript" },
+              { id: "sk_019", name: "CSS Pure / Flexbox" },
+              { id: "sk_020", name: "RESTful APIs" }
+            ],
+            experience: 6,
             isActive: true,
-            user: { name: "Ciclano" }
+            avatarUrl: undefined
           },
           {
             id: 2,
-            role: "MENTOR",
-            position: "Front-end Developer",
-            xp: 6,
-            skills: ["React", "HTML", "UX", "Scrum"],
+            name: "Maria Santos",
+            position: "Back-end Developer",
+            skills: [
+              { id: "sk_004", name: "Java" },
+              { id: "sk_007", name: "Spring Boot" },
+              { id: "sk_016", name: "PostgreSQL" },
+              { id: "sk_008", name: "Docker" }
+            ],
+            experience: 8,
             isActive: true,
-            user: { name: "Ciclano" }
+            avatarUrl: undefined
           },
           {
             id: 3,
-            role: "MENTOR",
-            position: "Front-end Developer",
-            xp: 6,
-            skills: ["React", "HTML", "UX", "Scrum"],
-            isActive: false, // Simulando o status Indisponível/Fila de espera
-            user: { name: "Ciclano" }
+            name: "Pedro Costa",
+            position: "Full Stack Developer",
+            skills: [
+              { id: "sk_001", name: "JavaScript" },
+              { id: "sk_005", name: "React" },
+              { id: "sk_012", name: "Node.js" },
+              { id: "sk_017", name: "MongoDB" },
+              { id: "sk_008", name: "Docker" }
+            ],
+            experience: 5,
+            isActive: false,
+            avatarUrl: undefined
           },
           {
             id: 4,
-            role: "MENTOR",
-            position: "Front-end Developer",
-            xp: 6,
-            skills: ["React", "HTML", "UX", "Scrum"],
+            name: "Ana Oliveira",
+            position: "DevOps Engineer",
+            skills: [
+              { id: "sk_008", name: "Docker" },
+              { id: "sk_009", name: "Kubernetes" },
+              { id: "sk_018", name: "AWS" }
+            ],
+            experience: 7,
             isActive: true,
-            user: { name: "Ciclano" }
+            avatarUrl: undefined
           }
         ];
-
-        // Lógica de filtro que será usada com o backend real
-        const apenasMentores = mockProfiles.filter(profile => profile.role === "MENTOR");
-        setMentoresDisponiveis(apenasMentores);
-        setLoading(false);
+        setMentoresDisponiveis(mockProfiles);
       }
     };
 
@@ -144,11 +149,12 @@ const MentoriasPage = () => {
             {mentoresDisponiveis.map(profile => (
               <MentorCard
                 key={profile.id}
-                name={profile.user.name}
+                name={profile.name}
                 position={profile.position}
-                skills={profile.skills || []}
-                experience={profile.xp}
-                isActive={profile.isActive || false}
+                skills={profile.skills}
+                experience={profile.experience}
+                isActive={profile.isActive}
+                avatarUrl={profile.avatarUrl}
               />
             ))}
           </div>
