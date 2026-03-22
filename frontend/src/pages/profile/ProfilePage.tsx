@@ -197,7 +197,88 @@ const handleSaveAll = async () => {
     setUserSkills(newSkills);
   };
 
+  /**
+   * Converte arquivo para Base64
+   */
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
+  /**
+   * Faz upload da imagem para o backend
+   */
+  const handleImageUpload = async (file: File) => {
+    if (!userData.id) {
+      alert("Erro: ID do usuário não encontrado");
+      return;
+    }
+
+    try {
+      const imageBase64 = await fileToBase64(file);
+      
+      const response = await fetch('http://localhost:8080/profiles/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId: userData.profile_id,
+          imageBase64: imageBase64,
+          imageFileName: file.name
+        })
+      });
+
+      if (response.ok) {
+        alert('Imagem atualizada com sucesso!');
+        // Recarrega a imagem
+        loadProfileImage(Number(userData.profile_id));
+      } else {
+        const errors = await response.json();
+        console.error('Erro ao salvar imagem:', errors);
+        alert('Erro ao atualizar imagem!');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      alert('Erro de conexão ao atualizar imagem!');
+    }
+  };
+
+  /**
+   * Recupera a imagem do perfil do backend
+   */
+  const loadProfileImage = async (profileId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/profiles/image/${profileId}`);
+      
+      if (response.ok) {
+        const imageData = await response.json();
+        
+        // Se a imagem foi encontrada, atualiza o state
+        if (imageData && imageData.image_base64) {
+          setUserData(prev => ({
+            ...prev,
+            avatarUrl: imageData.image_base64
+          }));
+        }
+      } else {
+        console.log('Nenhuma imagem encontrada para este perfil');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar imagem:', error);
+    }
+  };
+
+  /**
+   * Carrega a imagem ao montar o componente
+   */
+  useEffect(() => {
+    if (userData.profile_id) {
+      loadProfileImage(Number(userData.profile_id));
+    }
+  }, [userData.id]);
   return (
     <div className="perfil-container">
       <div className="perfil-header">
@@ -205,9 +286,7 @@ const handleSaveAll = async () => {
           avatarUrl={userData.avatarUrl} 
           size={128} 
           isEditable={true} 
-          onImageChange={(file) => {
-            console.log("Arquivo selecionado para upload:", file);
-          }}
+          onImageChange={(file) => handleImageUpload(file)}
         />
         <div className="perfil-badges">
           <div className="perfil-badge">Level: {userData.level}</div>

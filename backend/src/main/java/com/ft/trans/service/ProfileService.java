@@ -1,8 +1,14 @@
 package com.ft.trans.service;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import com.ft.trans.dto.ProfileImageDTO;
 import com.ft.trans.dto.UpdateProfileDTO;
@@ -16,13 +22,15 @@ import com.ft.trans.validation.ValidationResult;
 public class ProfileService {
 
     private final UserRepository userRepository;
-
-    private ProfileRepository   profileRepository;
+    private final ProfileRepository profileRepository;
+    private final RestTemplate restTemplate;
+    private static final String PYTHON_SERVICE_URL = "http://python-profile-service:8000";
 
     public ProfileService(ProfileRepository pr, UserRepository userRepository)
     {
         this.profileRepository = pr;
         this.userRepository = userRepository;
+        this.restTemplate = new RestTemplate();
     }
 
 	public List<Profile>	list()
@@ -57,7 +65,6 @@ public class ProfileService {
 
 	public Result saveProfileImage(ProfileImageDTO imageDTO)
 	{
-		Profile savedProfile = null;
 		ValidationResult result = new ValidationResult();
 
 		if (imageDTO.profileId == null) {
@@ -78,14 +85,71 @@ public class ProfileService {
 				return new Result(null, result);
 			}
 
-			// Salva a URL da imagem (Base64 ou URL remota)
-			profile.avatarUrl = imageDTO.imageBase64;
-			
-			savedProfile = this.profileRepository.save(profile);
+			// Cria um Map com os dados da imagem
+			Map<String, String> imagePayload = new HashMap<>();
+			imagePayload.put("profile_id", imageDTO.profileId.toString());
+			imagePayload.put("image_base64", imageDTO.imageBase64);
+			imagePayload.put("image_file_name", imageDTO.imageFileName != null ? imageDTO.imageFileName : "avatar.png");
+
+			// Envia para o serviço Python usando RestTemplate com Map
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Map<String, String>> entity = new HttpEntity<>(imagePayload, headers);
+
+			String pythonResponse = restTemplate.postForObject(
+				PYTHON_SERVICE_URL + "/profile/image",
+				entity,
+				String.class
+			);
+
+			if (pythonResponse == null || pythonResponse.isEmpty()) {
+				result.addError("global", "Erro ao processar imagem no serviço Python.");
+				return new Result(null, result);
+			}
+
+			// Após salvar no Python, retorna sucesso
+			return new Result(profile, result);
+
 		} catch (Exception e) {
-			result.addError("global", "Ocorreu um erro ao salvar a imagem do perfil.");
+			result.addError("global", "Ocorreu um erro ao salvar a imagem do perfil: " + e.getMessage());
+			return new Result(null, result);
+		}
+	}
+
+	public Result getProfileImage(Long profileId)
+	{
+		ValidationResult result = new ValidationResult();
+
+		if (profileId == null) {
+			result.addError("profileId", "ID do perfil é obrigatório.");
+			return new Result(null, result);
 		}
 
-		return new Result(savedProfile, result);
+		try {
+			Profile profile = this.profileRepository.findById(profileId).orElse(null);
+			
+			if (profile == null) {
+				result.addError("Profile", "Perfil não encontrado.");
+				return new Result(null, result);
+			}
+
+			// Busca a imagem no serviço Python
+			String pythonImageResponse = restTemplate.getForObject(
+				PYTHON_SERVICE_URL + "/profile/image/" + profileId,
+				String.class
+			);
+
+			if (pythonImageResponse == null || pythonImageResponse.isEmpty()) {
+				result.addError("Image", "Imagem não encontrada para este perfil.");
+				return new Result(null, result);
+			}
+
+			// Retorna a resposta do Python como resposta
+			return new Result(profile, result);
+
+		} catch (Exception e) {
+			result.addError("global", "Ocorreu um erro ao buscar a imagem do perfil: " + e.getMessage());
+			return new Result(null, result);
+		}
 	}
 }
