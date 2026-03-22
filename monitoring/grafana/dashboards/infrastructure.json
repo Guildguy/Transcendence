@@ -1,0 +1,179 @@
+{
+  "uid": "transcendence-infra",
+  "title": "Transcendence — Infraestrutura",
+  "tags": ["transcendence", "infrastructure", "containers"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "CPU Host (%)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "area" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 }] }
+        }
+      },
+      "targets": [
+        { "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU %", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Memória Usada (%)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "area" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 }] }
+        }
+      },
+      "targets": [
+        { "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100", "legendFormat": "Mem %", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Disco Livre (%)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": 0 }, { "color": "yellow", "value": 15 }, { "color": "green", "value": 30 }] }
+        }
+      },
+      "targets": [
+        { "expr": "(node_filesystem_avail_bytes{fstype!~\"tmpfs|fuse.lxcfs|squashfs\",mountpoint=\"/\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|fuse.lxcfs|squashfs\",mountpoint=\"/\"}) * 100", "legendFormat": "Disco /", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Memória Total",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "targets": [
+        { "expr": "node_memory_MemTotal_bytes", "legendFormat": "Total RAM", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "CPU Host — Por Modo",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": { "lineWidth": 2, "fillOpacity": 15 },
+          "max": 1
+        }
+      },
+      "targets": [
+        { "expr": "avg(rate(node_cpu_seconds_total{mode=\"user\"}[5m]))", "legendFormat": "user", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } },
+        { "expr": "avg(rate(node_cpu_seconds_total{mode=\"system\"}[5m]))", "legendFormat": "system", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } },
+        { "expr": "avg(rate(node_cpu_seconds_total{mode=\"iowait\"}[5m]))", "legendFormat": "iowait", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Memória Host",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      },
+      "targets": [
+        { "expr": "node_memory_MemTotal_bytes", "legendFormat": "Total", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } },
+        { "expr": "node_memory_MemAvailable_bytes", "legendFormat": "Disponível", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } },
+        { "expr": "node_memory_Buffers_bytes + node_memory_Cached_bytes", "legendFormat": "Buffer+Cache", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "CPU Containers",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "targets": [
+        { "expr": "rate(container_cpu_usage_seconds_total{name!=\"\",name!~\".*pause.*\"}[5m])", "legendFormat": "{{ name }}", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Memória Containers",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "targets": [
+        { "expr": "container_memory_usage_bytes{name!=\"\",name!~\".*pause.*\"}", "legendFormat": "{{ name }}", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "I/O de Rede Host",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "targets": [
+        { "expr": "rate(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[5m]) * 8", "legendFormat": "RX {{ device }}", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } },
+        { "expr": "rate(node_network_transmit_bytes_total{device!~\"lo|veth.*\"}[5m]) * 8", "legendFormat": "TX {{ device }}", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "I/O de Disco",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "targets": [
+        { "expr": "rate(node_disk_read_bytes_total[5m])", "legendFormat": "Read {{ device }}", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } },
+        { "expr": "rate(node_disk_written_bytes_total[5m])", "legendFormat": "Write {{ device }}", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" } }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "DS_PROMETHEUS",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "label": "Datasource"
+      }
+    ]
+  }
+}
