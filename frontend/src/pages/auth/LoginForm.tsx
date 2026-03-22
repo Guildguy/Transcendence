@@ -38,11 +38,18 @@ function LoginForm() {
       }
 
       console.log('Login realizado com sucesso:', data);
+      console.log('Estrutura completa da resposta:', JSON.stringify(data, null, 2));
       
       // Armazenar o ID do usuário logado no localStorage
-      const userId = data.user?.id || data.id;
+      // Tenta vários caminhos possíveis para encontrar o ID
+      const userId = data.user?.id || data.id || data.user || data.userId;
+      console.log('ID encontrado:', userId);
+      
       if (userId) {
         localStorage.setItem('userId', userId.toString());
+        console.log('userId salvo no localStorage:', localStorage.getItem('userId'));
+      } else {
+        console.error('Nenhum ID encontrado na resposta do servidor');
       }
       
       // Redirecionar para a página inicial logada
