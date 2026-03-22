@@ -1,0 +1,175 @@
+/* Container principal da página */
+.mentorias-page-container {
+  background-color: #f4f5fa; /* Cor de fundo clarinha inspirada no print */
+  min-height: 100vh;
+  padding: 40px;
+  font-family: sans-serif;
+  color: #374151;
+}
+
+/* Títulos das seções */
+.section-title {
+  color: #5b4eb1; /* Roxo padrão do projeto */
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.mentorias-section {
+  margin-bottom: 50px;
+}
+
+/* =========================================
+   SEÇÃO: MEUS MENTORES (Cards Menores)
+   ========================================= */
+.meus-mentores-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.mini-mentor-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 280px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.mini-avatar-container {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+}
+
+.mini-info p {
+  margin: 0 0 6px 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.mini-status {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* =========================================
+   SEÇÃO: ENCONTRAR MENTORES
+   ========================================= */
+   
+/* Barra de Filtros */
+.filtros-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filtro-btn {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: #5b4eb1;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filtro-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #5b4eb1;
+}
+
+.filtro-search-btn {
+  background-color: #6366f1;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+}
+
+.filtro-search-btn:hover {
+  background-color: #4f46e5;
+}
+
+/* Grid Principal (2 colunas como na imagem) */
+.encontrar-mentores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+/* =========================================
+   PAGINAÇÃO
+   ========================================= */
+.paginacao-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: #5b4eb1;
+  font-weight: 600;
+}
+
+.page-link {
+  cursor: pointer;
+}
+
+.page-link:hover {
+  text-decoration: underline;
+}
+
+.page-number {
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.page-number:hover {
+  color: #5b4eb1;
+}
+
+.page-dots {
+  color: #9ca3af;
+}
+
+.page-number.active {
+    color: #5b4eb1; /* Cor de destaque */
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.page-link {
+    cursor: pointer;
+    user-select: none;
+}
+
+.page-link:hover {
+    opacity: 0.7;
+}
