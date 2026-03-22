@@ -30,8 +30,14 @@ public class GamificationController
         GamificationService.EventResult result = gamificationService.processEvent(request);
 
         if (!result.success())
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.message());
+        {
+            String message = result.message();
 
+            if (message != null && message.toLowerCase().contains("usuario nao encontrado"))
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+        }
         return ResponseEntity.ok(result.response());
     }
 
