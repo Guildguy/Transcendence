@@ -2,8 +2,8 @@ import { useState } from 'react';
 // import { useMentoring } from '@/context/MentoringContext';
 // import { TimeBlock, DAY_NAMES_FULL, DayOfWeek } from '@/types/mentoring';
 import Button from '../Button/Button';
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 // import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Clock, Save } from 'lucide-react';
 // import { toast } from '@/hooks/use-toast';
@@ -26,11 +26,11 @@ interface TestCalendarProps {
 }
 
 export function TestCalendar({ mentorId }: TestCalendarProps) {
-  const { mentors, updateAvailability } = useMentoring();
-  const mentor = mentors.find(m => m.id === mentorId);
+  // const { mentors, updateAvailability } = useMentoring();
+  // const mentor = mentors.find(m => m.id === mentorId);
 
-  const [blocks, setBlocks] = useState<TimeBlock[]>(mentor?.availability || []);
-  const [slotDuration, setSlotDuration] = useState(mentor?.slotDuration || 60);
+  // const [blocks, setBlocks] = useState<TimeBlock[]>(mentor?.availability || []);
+  // const [slotDuration, setSlotDuration] = useState(mentor?.slotDuration || 60);
   const [addingDay, setAddingDay] = useState<DayOfWeek | null>(null);
   const [newStart, setNewStart] = useState('08:00');
   const [newEnd, setNewEnd] = useState('12:00');
@@ -80,9 +80,9 @@ export function TestCalendar({ mentorId }: TestCalendarProps) {
     `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="font-display text-xl">Minha Disponibilidade</CardTitle>
+    <CalendarCard>
+      <CalendarCardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CalendarCardTitle className="font-display text-xl">Minha Disponibilidade</CalendarCardTitle>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -104,8 +104,8 @@ export function TestCalendar({ mentorId }: TestCalendarProps) {
             <Save className="h-4 w-4 mr-1" /> Salvar
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
+      </CalendarCardHeader>
+      <CalendarCardContent>
         <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
           {([0, 1, 2, 3, 4, 5, 6] as DayOfWeek[]).map(day => (
             <div key={day} className="rounded-lg border bg-secondary/30 p-3 min-h-[140px]">
@@ -161,7 +161,7 @@ export function TestCalendar({ mentorId }: TestCalendarProps) {
             {blocks.length} bloco(s) definido(s)
           </Badge>
         </div>
-      </CardContent>
-    </Card>
+      </CalendarCardContent>
+    </CalendarCard>
   );
 }
