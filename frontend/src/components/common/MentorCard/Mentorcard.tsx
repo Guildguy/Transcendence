@@ -11,7 +11,7 @@ interface MentorCardProps {
   name: string;
   position: string;
   skills: Skill[];
-  experience: string | number;
+  anosExperiencia:number;
   isActive: boolean;
   avatarUrl?: string;
 }
@@ -20,7 +20,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
   name, 
   position, 
   skills, 
-  experience, 
+  anosExperiencia, 
   isActive, 
   avatarUrl 
 }) => {
@@ -63,7 +63,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
       </div>
 
       <div className="mentor-footer">
-        <p className="mentor-xp"><strong>Nível de Experiência:</strong> {experience} anos</p>
+        <p className="mentor-xp"><strong>Nível de Experiência:</strong> {anosExperiencia} anos</p>
         
         <div className="mentor-status">
           <strong>Status:</strong> {isActive ? 'Ativo' : 'Indisponível'}
