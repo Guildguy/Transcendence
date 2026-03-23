@@ -1,9 +1,8 @@
 import { useState } from 'react';
 // import { useMentoring } from '@/context/MentoringContext';
-// import { TimeBlock, DAY_NAMES_FULL, DayOfWeek } from '@/types/mentoring';
 import Button from '../Button/Button';
-import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../ui/CalendarCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/Select';
 // import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Clock, Save } from 'lucide-react';
 // import { toast } from '@/hooks/use-toast';

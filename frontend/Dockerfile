@@ -22,8 +22,8 @@ FROM node:20-slim
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install
-RUN npm install clsx tailwind-merge
+RUN npm install && \
+    npm install clsx tailwind-merge @radix-ui/react-select lucide-react date-fns
 
 COPY . .
 
