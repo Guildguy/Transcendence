@@ -5,6 +5,7 @@ interface IconButtonProps {
   variant?: 'primary' | 'secondary' | 'withdraw';
   className?: string;
   children: React.ReactNode;
+  icon?: React.ReactNode;
   onClick?: () => void;
 }
 
@@ -12,6 +13,7 @@ const IconButton: React.FC<IconButtonProps> = ({
   variant = 'primary',
   className = '',
   children,
+  icon,
   onClick,
 }) => {
   return (
@@ -19,7 +21,8 @@ const IconButton: React.FC<IconButtonProps> = ({
       className={`icon-button icon-button--${variant} ${className}`}
       onClick={onClick}
     >
-      {children}
+      {icon && <span className="icon-button-icon">{icon}</span>}
+      <span className="icon-button-text">{children}</span>
     </button>
   );
 };
