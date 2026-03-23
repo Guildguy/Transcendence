@@ -42,7 +42,7 @@ function LoginForm() {
       
       // Armazenar o ID do usuário logado no localStorage
       // Tenta vários caminhos possíveis para encontrar o ID
-      const userId = data.user?.id || data.id || data.user || data.userId;
+      const userId = data.user_id;
       console.log('ID encontrado:', userId);
       
       if (userId) {

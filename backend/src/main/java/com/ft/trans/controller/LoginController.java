@@ -29,7 +29,7 @@ public class LoginController
         User    user = userService.findLogin(login);
 		String	token = login.getToken(user);
         if (token != null)
-			return ResponseEntity.ok(new LoginResponse(token, "Bearer", 86400000L));
+			return ResponseEntity.ok(new LoginResponse(token, "Bearer", 86400000L, user.id));
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }
