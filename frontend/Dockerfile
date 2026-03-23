@@ -23,7 +23,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm install
-RUN npm install react-day-picker
+RUN npm install clsx tailwind-merge
 
 COPY . .
 
