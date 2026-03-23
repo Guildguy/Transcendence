@@ -45,6 +45,7 @@ function App() {
             sidebar={null}
             header={<Header isAuthenticated={true} />}
             footer={<Footer />}
+            children={null}
           />
         }
       >
