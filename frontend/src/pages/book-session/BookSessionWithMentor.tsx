@@ -27,8 +27,8 @@ export function BookSessionWithMentor() {
             />
           </div>
           <div className="calendar-container">
-            <BookingCalendar />
-            {/* <Calendar /> */}
+            {/* <BookingCalendar /> */}
+            <Calendar />
           </div>
         </div>
     </AppShell>
