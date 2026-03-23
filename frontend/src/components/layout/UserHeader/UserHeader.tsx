@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
+import { apiFetch } from '../../../services/api'
 import './UserHeader.css'
 
 interface UserData {
@@ -22,7 +23,7 @@ export const UserHeader = () => {
       if (!loggedUserId) return
 
       try {
-        const res = await fetch(`http://localhost:8080/users/${loggedUserId}`)
+        const res = await apiFetch(`/users/${loggedUserId}`)
         if (!res.ok) throw new Error('no user')
         const data = await res.json()
         const profile = data.profiles && data.profiles.length > 0 ? data.profiles[0] : {}

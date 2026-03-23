@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import './RegisterPage.css'
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
+import { loginFetch, saveAuthToken } from '../../services/api'
 
 type Errors = {
   name?: string
@@ -107,11 +108,8 @@ function RegisterPage() {
     };
 
     try {
-      const response = await fetch('http://localhost:8080/users', {
+      const response = await loginFetch('/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       });
 
@@ -129,9 +127,15 @@ function RegisterPage() {
       //trazer as respostas do backened se der erro
 
       console.log('Usuário cadastrado com sucesso:', data);
-      navigate('/home-logged');
-      // Redirecionar ou limpar formulário aqui
       
+      // Salvar o JWT se vindo na resposta de registro
+      const token = data.token || data.jwt || data.accessToken || data.access_token;
+      if (token) {
+        saveAuthToken(token);
+        console.log('JWT salvo no localStorage após registro');
+      }
+      
+      navigate('/home-logged');
     } catch (error) {
       console.error('Erro na requisição:', error);
     }

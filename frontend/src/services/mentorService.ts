@@ -1,3 +1,5 @@
+import { apiFetch } from './api';
+
 const API_BASE_URL = 'http://localhost:8080';
 
 export interface User {
@@ -39,7 +41,7 @@ class MentorService {
    */
   async fetchAllUsers(): Promise<any[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`);
+      const response = await apiFetch('/users');
       if (!response.ok) {
         throw new Error(`Erro ao buscar usuários: ${response.statusText}`);
       }
@@ -56,7 +58,7 @@ class MentorService {
    */
   async fetchUserById(id: number): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${id}`);
+      const response = await apiFetch(`/users/${id}`);
       if (!response.ok) {
         throw new Error(`Erro ao buscar usuário: ${response.statusText}`);
       }
