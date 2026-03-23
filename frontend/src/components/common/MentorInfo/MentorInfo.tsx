@@ -1,7 +1,6 @@
 import React from 'react';
-import { User, Circle, Star, Users, Icon } from 'lucide-react';
+import { User, Circle, Star, Users, MessageCircle, X, LogOut } from 'lucide-react';
 import './MentorInfo.css';
-import Button from '../Button/Button';
 import IconButton from '../IconButton/IconButton';
 
 interface Skill {
@@ -84,9 +83,9 @@ const MentorCard: React.FC<MentorCardProps> = ({
       <div className="mentor-info-divider" />
 
       <div className="mentor-info-footer">
-        <IconButton variant="primary" className="btn-talk">Conversar</IconButton>
-        <IconButton variant="secondary" className="btn-evaluate">Avaliar</IconButton>
-        <IconButton variant="withdraw" className="btn-withdraw">Deixar Mentoria</IconButton>
+        <IconButton variant="primary" icon={<MessageCircle size={18} />}>Conversar</IconButton>
+        <IconButton variant="secondary" icon={<Star size={18} />}>Avaliar</IconButton>
+        <IconButton variant="withdraw" icon={<LogOut size={18} />}>Deixar Mentoria</IconButton>
       </div>
     </div>
   );

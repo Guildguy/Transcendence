@@ -4,7 +4,7 @@
   border-radius: 20px;
   padding: 24px;
   width: 100%;
-  width: 800px;
+  width: 728px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   font-family: sans-serif;
   color: #374151;
@@ -138,7 +138,14 @@
 }
 
 .mentor-info-footer {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 10px;
+  display: flex;
+  gap: 12px;
+  justify-content: left;
 }
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 728px) {
+  .mentor-info-card {
+    width: auto;
+    padding: 16px;
+  }
