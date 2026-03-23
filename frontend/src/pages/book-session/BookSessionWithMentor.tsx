@@ -1,15 +1,13 @@
 import { useState } from 'react'
-import { Outlet, useSearchParams } from 'react-router-dom'
 import AppShell from '../../components/layout/AppShell/AppShell'
 import Header from '../../components/layout/Header/Header'
 import Footer from '../../components/layout/Footer/Footer'
 import './BookSessionWithMentor.css'
-import UserHeader from '../../components/layout/UserHeader/UserHeader'
+// import { TestCalendar } from '../../components/common/TestCalendar/TestCalendar'
+// import { Calendar } from '../../components/common/Calendar/Calendar'
+import MentorInfo from '../../components/common/MentorInfo/MentorInfo'
 
-function BookSessionWithMentor() {
-  const [searchParams] = useSearchParams()
-  const [activeTab, setActiveTab] = useState<'pending' | 'notifications'>('pending')
-
+export function BookSessionWithMentor() {
   return (
     <AppShell
       sidebar={null}
@@ -17,7 +15,16 @@ function BookSessionWithMentor() {
       footer={<Footer />}
     >
         <div className="book-session-with-mentor">
-            <CalendarWidget />
+          <div className="mentor-info-container">
+            <MentorInfo
+              name={"Ciclano da Silva"}
+              position={"Desenvolvedor Frontend"}
+              skills={"React, TypeScript, CSS".split(', ').map((s, i) => ({ id: `skill-${i}`, name: s }))}
+              experience={5}
+              isActive={true}
+              avatarUrl={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1Nsuios8Nv0L9GmLu_9SRyaEuRnf8IeZuZckLv5Ch7w&s"}
+            />
+          </div>
         </div>
     </AppShell>
   )

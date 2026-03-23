@@ -1,7 +1,8 @@
 /* ---- Outer wrapper ---- */
 .home-logged {
   background-color: var(--purple-bg);
-  width: 100%;
+  width: 100vh;
+  height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-dark);
 }
