@@ -2,6 +2,7 @@ import { useState } from 'react'; // Importante para capturar os dados
 import { useNavigate } from 'react-router-dom';
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
+import { loginFetch, saveAuthToken } from '../../services/api';
 
 function LoginForm() {
   const navigate = useNavigate();
@@ -20,11 +21,8 @@ function LoginForm() {
     };
 
     try {
-      const response = await fetch('http://localhost:8080/login', {
+      const response = await loginFetch('/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       });
 
@@ -40,8 +38,19 @@ function LoginForm() {
       console.log('Login realizado com sucesso:', data);
       console.log('Estrutura completa da resposta:', JSON.stringify(data, null, 2));
       
+      // Salvar o JWT no localStorage
+      // Verifica vários caminhos possíveis para encontrar o token
+      const token = data.token || data.jwt || data.accessToken || data.access_token;
+      
+      if (token) {
+        saveAuthToken(token);
+        console.log('JWT salvo no localStorage');
+      } else {
+        console.warn('Nenhum token encontrado na resposta do servidor');
+        console.warn('Estrutura completa:', data);
+      }
+      
       // Armazenar o ID do usuário logado no localStorage
-      // Tenta vários caminhos possíveis para encontrar o ID
       const userId = data.user_id;
       console.log('ID encontrado:', userId);
       

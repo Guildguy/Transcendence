@@ -6,6 +6,7 @@ import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
+import { apiFetch } from "../../services/api";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
@@ -63,7 +64,7 @@ export const ProfilePage = () => {
       // REMOVIDO: A trava de redirecionamento if (!loggedUserId) navigate('/auth')
 
       try {
-        const response = await fetch(`http://localhost:8080/users/${loggedUserId}`);
+        const response = await apiFetch(`/users/${loggedUserId}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -153,9 +154,8 @@ const handleSaveAll = async () => {
     try {
       // Faz a requisição PUT para o endpoint de profile
       // Ajuste a URL e o método HTTP se o seu backend for diferente
-      const response = await fetch(`http://localhost:8080/profiles`, {
+      const response = await apiFetch(`/profiles`, {
         method: "PUT", 
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profilePayload)
       });
 
@@ -221,9 +221,8 @@ const handleSaveAll = async () => {
     try {
       const imageBase64 = await fileToBase64(file);
       
-      const response = await fetch('http://localhost:8080/profiles/image', {
+      const response = await apiFetch('/profiles/image', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileId: userData.profile_id,
           imageBase64: imageBase64,
@@ -251,7 +250,7 @@ const handleSaveAll = async () => {
    */
   const loadProfileImage = async (profileId: number) => {
     try {
-      const response = await fetch(`http://localhost:8080/profiles/image/${profileId}`);
+      const response = await apiFetch(`/profiles/image/${profileId}`);
       
       if (response.ok) {
         const data = await response.json();
