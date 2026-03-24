@@ -1,3 +1,4 @@
+// src/services/mentorService.ts
 const API_BASE_URL = 'http://localhost:8080';
 
 export interface User {
@@ -43,8 +44,7 @@ class MentorService {
       if (!response.ok) {
         throw new Error(`Erro ao buscar usuários: ${response.statusText}`);
       }
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       console.error('Erro ao buscar usuários do backend:', error);
       throw error;
@@ -60,8 +60,7 @@ class MentorService {
       if (!response.ok) {
         throw new Error(`Erro ao buscar usuário: ${response.statusText}`);
       }
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       console.error(`Erro ao buscar usuário ${id}:`, error);
       throw error;
@@ -70,34 +69,51 @@ class MentorService {
 
   /**
    * Mapeia dados do backend para o formato esperado pelo MentorCard
+   * Resolve o problema da imagem JSON stringificada
    */
-  mapUserProfileToCardData(user: any, profile: MentorProfile): MentorCardData {
+  mapUserProfileToCardData(user: any, profile: any): MentorCardData {
+    // --- TRATAMENTO DO AVATAR ---
+    let finalAvatar = "";
+    const rawAvatar = profile.avatarUrl || user.avatarUrl || "";
+
+    if (rawAvatar && rawAvatar !== "") {
+      try {
+        // Se for o JSON stringificado do banco: {"image_base64": "data:..."}
+        const parsed = JSON.parse(rawAvatar);
+        finalAvatar = parsed.image_base64 || parsed.avatarUrl || rawAvatar;
+      } catch (e) {
+        // Se for a string direta (URL ou Base64 pura)
+        finalAvatar = rawAvatar;
+      }
+    }
+
     return {
       id: profile.id,
-      name: user.name,
-      position: profile.position || 'Mentor',
+      name: user.name || "Mentor",
+      position: profile.position || 'Pessoa Mentora',
       skills: this.extractSkills(profile.stacks),
       anosExperiencia: profile.anosExperiencia || 0,
-      isActive: true,
-      avatarUrl: profile.avatarUrl
+      isActive: true, // Pode ser expandido para checar status real futuramente
+      avatarUrl: finalAvatar
     };
   }
 
   /**
-   * Extrai habilidades do campo stacks do backend
-   * Limita a 5 primeiras habilidades
+   * Extrai habilidades e garante que o formato esteja correto para o Card
    */
-  private extractSkills(stacks?: Array<{ id: string; name: string }>): Array<{ id: string; name: string }> {
-    if (!stacks || stacks.length === 0) {
-      return [];
-    }
+  private extractSkills(stacks?: any[]): Array<{ id: string; name: string }> {
+    if (!stacks || !Array.isArray(stacks)) return [];
     
-    return stacks.slice(0, 5);
+    // Mapeia e limita às 5 primeiras habilidades como o MentorCard exige
+    return stacks.slice(0, 5).map(s => ({
+      id: s.id?.toString() || Math.random().toString(),
+      name: s.name || s.toString()
+    }));
   }
 
   /**
    * Busca e mapeia todos os mentores para o formato do MentorCard
-   * Filtra apenas usuários que têm perfil MENTOR
+   * Faz o filtro de ROLE e o mapeamento de imagem automaticamente
    */
   async getAllMentorsForCards(): Promise<MentorCardData[]> {
     try {
@@ -110,8 +126,10 @@ class MentorService {
           const user = userFullData.user;
           const profiles = userFullData.profiles || [];
 
-          // Filtrar apenas perfis MENTOR
-          const mentorProfiles = profiles.filter((p: any) => p.role === 'MENTOR');
+          // Filtra apenas perfis MENTOR (Case Insensitive)
+          const mentorProfiles = profiles.filter(
+            (p: any) => p.role?.toUpperCase() === 'MENTOR'
+          );
 
           for (const profile of mentorProfiles) {
             const cardData = this.mapUserProfileToCardData(user, profile);
@@ -119,7 +137,7 @@ class MentorService {
           }
         } catch (error) {
           console.warn(`Erro ao processar usuário ${userData.id}:`, error);
-          continue;
+          continue; // Pula para o próximo se um falhar
         }
       }
 
