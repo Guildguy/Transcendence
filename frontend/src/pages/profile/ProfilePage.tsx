@@ -346,7 +346,6 @@ const handleSaveAll = async () => {
                 <InputGroup
                   placeholder="Nome Completo"
                   value={userData.nome}
-                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, nome: val })}
                 />
                 <InputGroup
@@ -401,13 +400,11 @@ const handleSaveAll = async () => {
                 <InputGroup
                   placeholder="E-mail"
                   value={userData.email}
-                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, email: val })}
                 />
                 <InputGroup
                   placeholder="Telefone"
                   value={userData.telefone}
-                  isEditing={isEditing}
                   isNumeric={true}
                   onChange={(val) =>
                     setUserData({ ...userData, telefone: val })

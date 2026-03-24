@@ -13,7 +13,6 @@ import './HomeLogged.css'
 
 
 function HomeLogged() {
-  // request handlers are defined inside the component so they can update state
   useSearchParams()
   const [activeTab, setActiveTab] = useState<'pending' | 'notifications'>('pending')
   const [requests, setRequests] = useState(() => mockRequests)
