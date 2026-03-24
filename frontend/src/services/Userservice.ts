@@ -1,40 +1,52 @@
-// src/services/userService.ts
 const BASE_URL = 'http://localhost:8080';
 
 export const userService = {
-  
-  // GET /users/:id - Centraliza a busca e o tratamento de dados
   async getFullProfile(userId: string) {
+    // 1. Busca os dados básicos do usuário e profile
     const response = await fetch(`${BASE_URL}/users/${userId}`);
-    
-    if (!response.ok) throw new Error('Erro ao buscar perfil no servidor');
+    if (!response.ok) throw new Error('Erro ao buscar perfil');
     
     const data = await response.json();
     const user = data.user;
-    const profile = data.profiles && data.profiles.length > 0 ? data.profiles[0] : {};
+    const profile = data.profiles?.[0] || {};
+    const profileId = profile.id;
 
-    // 1. Tratamento do Avatar (extração da Base64 do JSON string)
+    // 2. Busca a imagem separadamente (igual ao loadProfileImage da sua ProfilePage)
     let finalAvatar = "";
-    if (user.avatarUrl) {
+    if (profileId) {
       try {
-        // Tenta parsear caso venha como JSON string do banco
+        const imgResponse = await fetch(`${BASE_URL}/profiles/image/${profileId}`);
+        if (imgResponse.ok) {
+          const imgData = await imgResponse.json();
+          // Aqui está o segredo: o seu backend retorna um JSON stringificado no campo avatarUrl
+          if (imgData && imgData.avatarUrl) {
+             const parsed = JSON.parse(imgData.avatarUrl);
+             finalAvatar = parsed.image_base64 || imgData.avatarUrl;
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar imagem no service:", error);
+      }
+    }
+
+    // 3. Se ainda estiver vazio, tenta o campo do objeto user (fallback)
+    if (!finalAvatar && user.avatarUrl) {
+      try {
         const parsed = JSON.parse(user.avatarUrl);
         finalAvatar = parsed.image_base64 || user.avatarUrl;
-      } catch (e){
-        // Se não for JSON, usa a string direta
+      } catch {
         finalAvatar = user.avatarUrl;
       }
     }
 
-    // 2. Retorno do objeto formatado (o que o componente espera receber)
     return {
       id: user.id,
-      profile_id: profile.id,
+      profile_id: profileId,
       nome: user.name || "Usuário",
       email: user.email || "",
       username: user.email ? user.email.split('@')[0] : 'username',
       cargo: profile.position || "Cargo não definido",
-      avatarUrl: finalAvatar,
+      avatarUrl: finalAvatar, // Agora vai preenchido!
       level: profile.level?.toString() || "0",
       xp: profile.xp?.toString() || "0",
       role: user.role || "MENTOR",
