@@ -33,6 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestPath = request.getRequestURI();
         String method = request.getMethod();
 
+        // Permite requisições OPTIONS (CORS preflight)
+        if ("OPTIONS".equals(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Endpoints que não precisam de autenticação
         if ((requestPath.equals("/login") && "POST".equals(method)) ||
             (requestPath.equals("/users") && "POST".equals(method))) {
