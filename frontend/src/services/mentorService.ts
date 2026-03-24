@@ -14,6 +14,7 @@ export interface MentorProfile {
   avatarUrl?: string;
   xp: number;
   level?: number;
+  anosExperiencia: number;
   linkedin?: string;
   github?: string;
   instagram?: string;
@@ -27,7 +28,7 @@ export interface MentorCardData {
   name: string;
   position: string;
   skills: Array<{ id: string; name: string }>;
-  experience: number;
+  anosExperiencia: number;
   isActive: boolean;
   avatarUrl?: string;
 }
@@ -76,7 +77,7 @@ class MentorService {
       name: user.name,
       position: profile.position || 'Mentor',
       skills: this.extractSkills(profile.stacks),
-      experience: Math.floor(profile.xp / 1000) || 0,
+      anosExperiencia: profile.anosExperiencia || 0,
       isActive: true,
       avatarUrl: profile.avatarUrl
     };

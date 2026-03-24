@@ -106,14 +106,14 @@ const MentoriasPage = () => {
                   name={profile.name}
                   position={profile.position}
                   skills={profile.skills}
-                  experience={profile.experience}
+                  anosExperiencia={profile.anosExperiencia}
                   isActive={profile.isActive}
                   avatarUrl={profile.avatarUrl}
                 />
               ))}
             </div>
           )}
-
+          
           {/* Paginação Dinâmica */}
           {!loading && totalPages > 1 && (
             <div className="paginacao-container">
