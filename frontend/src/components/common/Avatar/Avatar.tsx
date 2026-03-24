@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { User, Pencil } from 'lucide-react';
 import './Avatar.css';
+import { userService } from '../../../services/Userservice';
 
 interface AvatarProps {
   avatarUrl?: string;
@@ -9,13 +10,8 @@ interface AvatarProps {
   onImageChange?: (file: File) => void;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({ 
-  avatarUrl, 
-  size = 128, 
-  isEditable = false, 
-  onImageChange 
-}) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export const Avatar = ({ avatarUrl, size = 120, isEditable=false, onImageChange }: AvatarProps) => { 
+ const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePencilClick = () => {
     fileInputRef.current?.click();
@@ -36,9 +32,10 @@ export const Avatar: React.FC<AvatarProps> = ({
       <div className="perfil-avatar-base">
         {avatarUrl ? (
           <img 
-            src={avatarUrl} 
-            alt="Foto de perfil" 
-            className="avatar-img" 
+            src={avatarUrl && avatarUrl !== "" ? avatarUrl : defaultImage} 
+            alt="Avatar do usuário" 
+            className="avatar-img"
+            
           />
         ) : (
           <User size={size / 2} color="#e5e7eb" />
