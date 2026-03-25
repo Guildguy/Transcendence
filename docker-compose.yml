@@ -45,6 +45,8 @@ services:
       - "5173:5173"
     environment:
       USER_API: http://api:8080/users
+    env_file:
+      - .env
     depends_on:
       - api
     networks:
