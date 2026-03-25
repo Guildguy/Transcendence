@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ft.trans.dto.UserDTO;
 import com.ft.trans.dto.UserProfilesDTO;
@@ -20,6 +21,9 @@ public class UserService {
     private UserRepository		userRepository;
 	private ProfileService		profileService;
 	private ProfileRepository	profileRepository;
+	
+	@Autowired
+	private JWTService			jwtService;
 
     public				UserService(UserRepository ur, ProfileRepository pr, ProfileService ps)
     {
@@ -111,5 +115,63 @@ public class UserService {
 		dto.profiles = profileRepository.findByUserId(user_id);
 
 		return dto;
+	}
+
+	/**
+	 * Busca um usuário por email ou cria um novo se não existir
+	 * Usado para autenticação com Google
+	 */
+	public User findOrCreateByEmail(String email)
+	{
+		Optional<User> existingUser = userRepository.findByEmail(email);
+		
+		if (existingUser.isPresent()) {
+			return existingUser.get();
+		}
+
+		// Criar novo usuário
+		User newUser = new User();
+		newUser.email = email;
+		newUser.name = email.split("@")[0]; // Usar parte do email como nome inicial
+		newUser.phoneNumber = ""; // Será preenchido depois
+		newUser.status = true;
+		newUser.password = generateRandomPassword(); // Senha aleatória
+		newUser.encodePassword();
+
+		User savedUser = userRepository.save(newUser);
+
+		// Criar um perfil padrão para o novo usuário
+		if (savedUser != null) {
+			Profile profile = new Profile();
+			profile.user = savedUser;
+			profile.setRole("MENTORADO"); // Role padrão
+			profileService._persistProfile(profile);
+		}
+
+		return savedUser;
+	}
+
+	/**
+	 * Gera um token JWT para um usuário
+	 */
+	public String generateTokenForUser(User user)
+	{
+		if (jwtService != null && user != null) {
+			return jwtService.generateToken(user.email);
+		}
+		return null;
+	}
+
+	/**
+	 * Gera uma senha aleatória para usuários criados via OAuth
+	 */
+	private String generateRandomPassword()
+	{
+		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
+		StringBuilder password = new StringBuilder();
+		for (int i = 0; i < 16; i++) {
+			password.append(chars.charAt((int) (Math.random() * chars.length())));
+		}
+		return password.toString();
 	}
 }
