@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
-import { userService } from '../../../services/Userservice' // Importe o service
+import { userService } from '../../../services/Userservice' 
 import './UserHeader.css'
 
 export const UserHeader = () => {
@@ -16,22 +16,17 @@ export const UserHeader = () => {
     role: 'MENTOR'
   });
 
-  useEffect(() => {
+useEffect(() => {
     const loadData = async () => {
       const loggedUserId = localStorage.getItem('userId') || "1";
-      const data = await userService.getFullProfile(loggedUserId);
-console.log("Dados que chegaram no Header:", data.avatarUrl); // Veja se aparece "data:image/..." no console
-setUserData(data);
       try {
         const data = await userService.getFullProfile(loggedUserId);
         setUserData(data);
       } catch (error) {
         console.error("Erro no UserHeader:", error);
-        // Fallback para manter o layout bonito se o backend falhar
-        setUserData(prev => ({ ...prev, nome: "Usuário Offline", xp: "0" }));
+        setUserData(prev => ({ ...prev, nome: "Usuário Offline" }));
       }
     };
-
     loadData();
   }, []);
 
