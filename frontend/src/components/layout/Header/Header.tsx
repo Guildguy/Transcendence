@@ -1,12 +1,24 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './Header.css'
 import logo from '../../images/jpg/logo.png'
+import { clearAuthToken } from '../../../services/api'
 
 interface HeaderProps {
   isAuthenticated?: boolean
 }
 
 function Header({ isAuthenticated = false }: HeaderProps) {
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    // Limpa o token do localStorage
+    clearAuthToken()
+    // Limpa também o userId
+    localStorage.removeItem('userId')
+    // Redireciona para a página inicial
+    navigate('/')
+  }
+
   return (
     // Adicionamos uma classe dinâmica para mudar o comportamento via CSS
     <header className={`header ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`}>
@@ -29,12 +41,18 @@ function Header({ isAuthenticated = false }: HeaderProps) {
         )}
       </nav>
 
-      {/* Lado direito (apenas quando NÃO autenticado) */}
-      {!isAuthenticated && (
+      {/* Lado direito */}
+      {!isAuthenticated ? (
         <div className="header-right">
           <Link to="/login" className="header-login-btn">
             Logar
           </Link>
+        </div>
+      ) : (
+        <div className="header-right">
+          <button onClick={handleLogout} className="header-logout-btn">
+            Sair
+          </button>
         </div>
       )}
     </header>
