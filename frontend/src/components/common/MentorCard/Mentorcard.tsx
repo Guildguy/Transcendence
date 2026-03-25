@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, Circle } from 'lucide-react';
+import { Avatar } from '../../common/Avatar/Avatar'
 import './Mentorcard.css';
 
 interface Skill {
@@ -31,13 +32,8 @@ const MentorCard: React.FC<MentorCardProps> = ({
     <div className="mentor-card">
       <div className="mentor-card-header">
         <div className="mentor-avatar-container">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={name} className="mentor-avatar-img" />
-          ) : (
-            <User size={40} className="mentor-avatar-icon" />
-          )}
+          <Avatar avatarUrl={avatarUrl} size={90} /> 
         </div>
-        
         <div className="mentor-info-basic">
           <h3 className="mentor-name">{name}</h3>
           <p className="mentor-position"><strong>Cargo:</strong> {position}</p>
