@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react' // Import opcional para um ícone legal
 import './Header.css'
 import logo from '../../images/jpg/logo.png'
 
@@ -7,8 +8,22 @@ interface HeaderProps {
 }
 
 function Header({ isAuthenticated = false }: HeaderProps) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // 1. Limpa todos os dados de autenticação
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 2. Redireciona para a página de login
+    // Como seu app roda no localhost:5173, o path "/login" é o suficiente
+    navigate('/login');
+    
+    // Opcional: Recarregar a página para resetar estados globais do React
+    // window.location.reload(); 
+  };
+
   return (
-    // Adicionamos uma classe dinâmica para mudar o comportamento via CSS
     <header className={`header ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`}>
       
       <img src={logo} alt="Transcendence logo" className="header-logo" />
@@ -25,11 +40,29 @@ function Header({ isAuthenticated = false }: HeaderProps) {
             <Link to="/home-logged">Home</Link>
             <Link to="/mentorias">Mentoria</Link>
             <Link to="/profile">Perfil</Link>
+            
+            {/* Botão de Logout para usuários logados */}
+            <button 
+              onClick={handleLogout} 
+              className="header-logout-btn"
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center',
+                gap: '5px',
+                color: 'inherit',
+                font: 'inherit'
+              }}
+            >
+              <LogOut size={18} />
+              Sair
+            </button>
           </>
         )}
       </nav>
 
-      {/* Lado direito (apenas quando NÃO autenticado) */}
       {!isAuthenticated && (
         <div className="header-right">
           <Link to="/login" className="header-login-btn">

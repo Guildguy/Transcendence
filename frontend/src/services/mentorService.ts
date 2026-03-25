@@ -1,28 +1,5 @@
-// src/services/mentorService.ts
 const API_BASE_URL = 'http://localhost:8080';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-export interface MentorProfile {
-  id: number;
-  user: User;
-  position: string;
-  bio: string;
-  avatarUrl?: string;
-  xp: number;
-  level?: number;
-  anosExperiencia: number;
-  linkedin?: string;
-  github?: string;
-  instagram?: string;
-  createdAt?: string;
-  role: string;
-  stacks?: Array<{ id: string; name: string }>;
-}
+const PYTHON_API_URL = 'http://localhost:8000';
 
 export interface MentorCardData {
   id: number;
@@ -35,115 +12,103 @@ export interface MentorCardData {
 }
 
 class MentorService {
-  /**
-   * Busca todos os usuários do backend
-   */
-  async fetchAllUsers(): Promise<any[]> {
+  
+    //BUSCA A IMAGEM 
+  private async fetchProfileImage(profileId: number): Promise<string> {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`);
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar usuários: ${response.statusText}`);
+      const response = await fetch(`${API_BASE_URL}/profiles/image/${profileId}`);
+      if (!response.ok) return "";
+
+      const imgData = await response.json();
+      
+      if (imgData && imgData.avatarUrl) {
+        try {
+          const parsed = JSON.parse(imgData.avatarUrl);
+          const base64 = parsed.image_base64 || imgData.avatarUrl;
+          
+          // Garante o prefixo para o navegador renderizar
+          if (base64 && !base64.startsWith('data:')) {
+            return `data:image/png;base64,${base64}`;
+          }
+          return base64;
+        } catch {
+          // Se não for JSON, retorna o valor puro 
+          return imgData.avatarUrl.startsWith('data:') 
+            ? imgData.avatarUrl 
+            : `data:image/png;base64,${imgData.avatarUrl}`;
+        }
       }
-      return await response.json();
+      return "";
     } catch (error) {
-      console.error('Erro ao buscar usuários do backend:', error);
-      throw error;
+      console.error(`Erro ao buscar imagem do perfil ${profileId}:`, error);
+      return "";
     }
   }
 
-  /**
-   * Busca um usuário específico pelo ID
-   */
-  async fetchUserById(id: number): Promise<any> {
+
+//BUSCA SKILLS NO PYTHON
+  private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${id}`);
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar usuário: ${response.statusText}`);
+      const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.stacks || [];
       }
-      return await response.json();
+      return [];
     } catch (error) {
-      console.error(`Erro ao buscar usuário ${id}:`, error);
-      throw error;
+      return [];
     }
   }
 
-  /**
-   * Mapeia dados do backend para o formato esperado pelo MentorCard
-   * Resolve o problema da imagem JSON stringificada
-   */
-  mapUserProfileToCardData(user: any, profile: any): MentorCardData {
-    // --- TRATAMENTO DO AVATAR ---
-    let finalAvatar = "";
-    const rawAvatar = profile.avatarUrl || user.avatarUrl || "";
-
-    if (rawAvatar && rawAvatar !== "") {
-      try {
-        // Se for o JSON stringificado do banco: {"image_base64": "data:..."}
-        const parsed = JSON.parse(rawAvatar);
-        finalAvatar = parsed.image_base64 || parsed.avatarUrl || rawAvatar;
-      } catch (e) {
-        // Se for a string direta (URL ou Base64 pura)
-        finalAvatar = rawAvatar;
-      }
-    }
-
-    return {
-      id: profile.id,
-      name: user.name || "Mentor",
-      position: profile.position || 'Pessoa Mentora',
-      skills: this.extractSkills(profile.stacks),
-      anosExperiencia: profile.anosExperiencia || 0,
-      isActive: true, // Pode ser expandido para checar status real futuramente
-      avatarUrl: finalAvatar
-    };
-  }
-
-  /**
-   * Extrai habilidades e garante que o formato esteja correto para o Card
-   */
-  private extractSkills(stacks?: any[]): Array<{ id: string; name: string }> {
-    if (!stacks || !Array.isArray(stacks)) return [];
-    
-    // Mapeia e limita às 5 primeiras habilidades como o MentorCard exige
-    return stacks.slice(0, 5).map(s => ({
-      id: s.id?.toString() || Math.random().toString(),
-      name: s.name || s.toString()
-    }));
-  }
-
-  /**
-   * Busca e mapeia todos os mentores para o formato do MentorCard
-   * Faz o filtro de ROLE e o mapeamento de imagem automaticamente
-   */
+ 
+   //ORQUESTRA A BUSCA DE TODOS OS MENTORES
   async getAllMentorsForCards(): Promise<MentorCardData[]> {
     try {
-      const users = await this.fetchAllUsers();
+      // 1. Busca lista simplificada de usuários
+      const response = await fetch(`${API_BASE_URL}/users`);
+      const users = await response.json();
       const mentorCards: MentorCardData[] = [];
 
       for (const userData of users) {
         try {
-          const userFullData = await this.fetchUserById(userData.id);
-          const user = userFullData.user;
-          const profiles = userFullData.profiles || [];
+          //Busca dados para pegar o Profile ID
+          const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
+          const fullData = await detailRes.json();
+          
+          const user = fullData.user;
+          const profiles = fullData.profiles || [];
 
-          // Filtra apenas perfis MENTOR (Case Insensitive)
+          //Filtra MENTOR
           const mentorProfiles = profiles.filter(
             (p: any) => p.role?.toUpperCase() === 'MENTOR'
           );
 
           for (const profile of mentorProfiles) {
-            const cardData = this.mapUserProfileToCardData(user, profile);
-            mentorCards.push(cardData);
+            const finalAvatar = await this.fetchProfileImage(profile.id);
+
+            //Busca as habilidades no Python
+            const pythonStacks = await this.fetchSkillsFromPython(profile.id);
+
+            //Monta o objeto final do Card
+            mentorCards.push({
+              id: profile.id,
+              name: user.name || "Mentor",
+              position: profile.position || 'Pessoa Mentora',
+              skills: pythonStacks.map((s, i) => ({ id: `py_${profile.id}_${i}`, name: s })),
+              anosExperiencia: profile.anosExperiencia || 0,
+              isActive: true,
+              avatarUrl: finalAvatar // Injetando imagem
+            });
           }
-        } catch (error) {
-          console.warn(`Erro ao processar usuário ${userData.id}:`, error);
-          continue; // Pula para o próximo se um falhar
+        } catch (err) {
+          console.error(`Erro no usuário ${userData.id}:`, err);
+          continue;
         }
       }
 
       return mentorCards;
     } catch (error) {
-      console.error('Erro ao obter mentores para cards:', error);
+      console.error('Erro ao obter mentores:', error);
       throw error;
     }
   }
