@@ -1,11 +1,10 @@
 import React, { useRef } from 'react';
 import { User, Pencil } from 'lucide-react';
 import './Avatar.css';
-import { userService } from '../../../services/Userservice';
 
 interface AvatarProps {
   avatarUrl?: string;
-  size?: number; // Tamanho em pixels (ex: 128)
+  size?: number; 
   isEditable?: boolean;
   onImageChange?: (file: File) => void;
 }
