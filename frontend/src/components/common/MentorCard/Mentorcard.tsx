@@ -32,9 +32,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
     <div className="mentor-card">
       <div className="mentor-card-header">
         <div className="mentor-avatar-container">
-          {/* A forma correta de chamar é passando a prop avatarUrl do componente */}
-          {/* O size 120 (ou o valor que preferir) controla o tamanho do círculo */}
-          <Avatar avatarUrl={avatarUrl} size={80} /> 
+          <Avatar avatarUrl={avatarUrl} size={90} /> 
         </div>
         <div className="mentor-info-basic">
           <h3 className="mentor-name">{name}</h3>

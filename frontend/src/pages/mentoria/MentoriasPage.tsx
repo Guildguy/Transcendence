@@ -3,8 +3,8 @@ import { Search, SlidersHorizontal, User, Circle } from 'lucide-react';
 import type { MentorCardData } from '../../services/mentorService';
 import mentorService from '../../services/mentorService';
 import MentorCard from '../../components/common/MentorCard/Mentorcard';
-import Header from '../../components/layout/Header/Header'; // Certifique-se que o caminho está correto
-import Footer from '../../components/layout/Footer/Footer'; // Certifique-se que o caminho está correto
+import Header from '../../components/layout/Header/Header';
+import Footer from '../../components/layout/Footer/Footer';
 import './MentoriasPage.css';
 
 const MiniMentorCard = ({ name, startDate, isActive }: { name: string, startDate: string, isActive: boolean }) => (
@@ -43,7 +43,7 @@ const MentoriasPage = () => {
         setMentoresDisponiveis(mentores);
       } catch (error) {
         console.error('Erro ao buscar mentores:', error);
-        // Fallback Mock... (mantido conforme seu código original)
+        // Fallback Mock
       } finally {
         setLoading(false);
       }
