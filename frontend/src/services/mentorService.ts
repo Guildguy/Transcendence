@@ -13,40 +13,29 @@ export interface MentorCardData {
 
 class MentorService {
   
-    //BUSCA A IMAGEM 
   private async fetchProfileImage(profileId: number): Promise<string> {
     try {
       const response = await fetch(`${API_BASE_URL}/profiles/image/${profileId}`);
       if (!response.ok) return "";
-
       const imgData = await response.json();
       
       if (imgData && imgData.avatarUrl) {
         try {
           const parsed = JSON.parse(imgData.avatarUrl);
           const base64 = parsed.image_base64 || imgData.avatarUrl;
-          
-          // Garante o prefixo para o navegador renderizar
-          if (base64 && !base64.startsWith('data:')) {
-            return `data:image/png;base64,${base64}`;
-          }
-          return base64;
+          return base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`;
         } catch {
-          // Se não for JSON, retorna o valor puro 
           return imgData.avatarUrl.startsWith('data:') 
             ? imgData.avatarUrl 
             : `data:image/png;base64,${imgData.avatarUrl}`;
         }
       }
       return "";
-    } catch (error) {
-      console.error(`Erro ao buscar imagem do perfil ${profileId}:`, error);
+    } catch {
       return "";
     }
   }
 
-
-//BUSCA SKILLS NO PYTHON
   private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
     try {
       const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
@@ -55,58 +44,56 @@ class MentorService {
         return data.stacks || [];
       }
       return [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
 
- 
-   //ORQUESTRA A BUSCA DE TODOS OS MENTORES
+  // NOVA FUNÇÃO: Processa um único usuário e seus perfis de uma vez
+  private async processUser(userData: any): Promise<MentorCardData[]> {
+    try {
+      const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
+      const fullData = await detailRes.json();
+      
+      const user = fullData.user;
+      const mentorProfiles = (fullData.profiles || []).filter(
+        (p: any) => p.role?.toUpperCase() === 'MENTOR'
+      );
+
+      // Aqui está o segredo: Processa todos os perfis desse usuário em paralelo
+      return await Promise.all(mentorProfiles.map(async (profile: any) => {
+        // Dispara imagem e skills simultaneamente para este perfil
+        const [finalAvatar, pythonStacks] = await Promise.all([
+          this.fetchProfileImage(profile.id),
+          this.fetchSkillsFromPython(profile.id)
+        ]);
+
+        return {
+          id: profile.id,
+          name: user.name || "Mentor",
+          position: profile.position || 'Pessoa Mentora',
+          skills: pythonStacks.map((s: string, i: number) => ({ id: `py_${profile.id}_${i}`, name: s })),
+          anosExperiencia: profile.anosExperiencia || 0,
+          isActive: true,
+          avatarUrl: finalAvatar
+        };
+      }));
+    } catch (err) {
+      console.error(`Erro ao processar usuário ${userData.id}:`, err);
+      return [];
+    }
+  }
+
   async getAllMentorsForCards(): Promise<MentorCardData[]> {
     try {
-      // 1. Busca lista simplificada de usuários
       const response = await fetch(`${API_BASE_URL}/users`);
       const users = await response.json();
-      const mentorCards: MentorCardData[] = [];
 
-      for (const userData of users) {
-        try {
-          //Busca dados para pegar o Profile ID
-          const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
-          const fullData = await detailRes.json();
-          
-          const user = fullData.user;
-          const profiles = fullData.profiles || [];
+      // Dispara o processamento de TODOS os usuários ao mesmo tempo
+      const results = await Promise.all(users.map((u: any) => this.processUser(u)));
 
-          //Filtra MENTOR
-          const mentorProfiles = profiles.filter(
-            (p: any) => p.role?.toUpperCase() === 'MENTOR'
-          );
-
-          for (const profile of mentorProfiles) {
-            const finalAvatar = await this.fetchProfileImage(profile.id);
-
-            //Busca as habilidades no Python
-            const pythonStacks = await this.fetchSkillsFromPython(profile.id);
-
-            //Monta o objeto final do Card
-            mentorCards.push({
-              id: profile.id,
-              name: user.name || "Mentor",
-              position: profile.position || 'Pessoa Mentora',
-              skills: pythonStacks.map((s, i) => ({ id: `py_${profile.id}_${i}`, name: s })),
-              anosExperiencia: profile.anosExperiencia || 0,
-              isActive: true,
-              avatarUrl: finalAvatar // Injetando imagem
-            });
-          }
-        } catch (err) {
-          console.error(`Erro no usuário ${userData.id}:`, err);
-          continue;
-        }
-      }
-
-      return mentorCards;
+      // Como results é um Array de Arrays (devido ao map), usamos flat() para juntar tudo
+      return results.flat();
     } catch (error) {
       console.error('Erro ao obter mentores:', error);
       throw error;
