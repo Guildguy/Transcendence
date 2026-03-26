@@ -467,6 +467,7 @@ useEffect(() => {
               isEditable={true} 
               title="Habilidades apresentadas para mentorar"
             />
+            
             ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>
