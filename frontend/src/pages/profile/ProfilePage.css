@@ -9,6 +9,12 @@
   --borda-raio-padrao: 8px;
   --borda-raio-redondo: 9999px;
 }
+textarea.custom-input,
+input[type="text"].custom-input:not(.dropdown-select),
+input[type="number"].custom-input {
+  background-image: none !important; /* Força a remoção da imagem de fundo */
+  padding-right: 12px !important; /* Ajusta o padding para não sobrar espaço da seta */
+}
 
 .perfil-container {
   width: 100%;
