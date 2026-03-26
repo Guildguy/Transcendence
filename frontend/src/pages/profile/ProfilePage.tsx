@@ -6,6 +6,8 @@ import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
+import DropdownList from "../../components/common/Dropdown/Dropdown";
+import professionsData from "../../components/common/Dropdown/Profession.json";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
@@ -51,6 +53,8 @@ export const ProfilePage = () => {
   // Estados de Senha
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+
+  const professionsOptions = professionsData.professions;
 
   useEffect(() => {
     const loadFullProfile = async () => {
@@ -389,10 +393,11 @@ useEffect(() => {
                   value={userData.nome}
                   onChange={(val) => setUserData({ ...userData, nome: val })}
                 />
-                <InputGroup
-                  placeholder="Cargo"
+                <DropdownList
+                  options={professionsOptions}
                   value={userData.cargo}
                   isEditing={isEditing}
+                  placeholder="Selecione seu cargo"
                   onChange={(val) => setUserData({ ...userData, cargo: val })}
                 />
                 <InputGroup
