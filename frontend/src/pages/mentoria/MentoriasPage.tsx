@@ -31,6 +31,12 @@ const MiniMentorCard = ({ name, startDate, isActive }: { name: string, startDate
 const MentoriasPage = () => {
   const [mentoresDisponiveis, setMentoresDisponiveis] = useState<MentorCardData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // --- DADOS DOS MEUS MENTORES (Adicione aqui) ---
+  const meusMentores = [
+    { id: 101, name: "Ciclano", startDate: "03/03/2026", isActive: true },
+    { id: 102, name: "Fulano", startDate: "05/03/2026", isActive: true },
+  ];
   
   // --- ESTADOS DE FILTRO ---
   const [filtroExp, setFiltroExp] = useState("");
@@ -101,7 +107,19 @@ const MentoriasPage = () => {
   return (
     <div className="page-wrapper">
       <Header isAuthenticated={true} />
-      
+      <section className="mentorias-section">
+          <h2 className="section-title title-meus-mentores">Meus Mentores</h2>
+          <div className="meus-mentores-grid">
+            {meusMentores.map(mentor => (
+              <MiniMentorCard 
+                key={mentor.id} 
+                name={mentor.name} 
+                startDate={mentor.startDate} 
+                isActive={mentor.isActive} 
+              />
+            ))}
+          </div>
+        </section>
       <main className="mentorias-page-container">
         <section className="mentorias-section">
           <h2 className="section-title">Encontrar Mentores</h2>

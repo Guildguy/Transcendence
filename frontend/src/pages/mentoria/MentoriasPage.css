@@ -22,10 +22,14 @@
 /* =========================================
    SEÇÃO: MEUS MENTORES (Cards Menores)
    ========================================= */
+.section-title.title-meus-mentores {
+  margin-left: 40px; /* Ajuste o valor conforme necessário para alinhar com o grid */
+}
 .meus-mentores-grid {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
+  padding-left: 5vh;
 }
 
 .mini-mentor-card {
