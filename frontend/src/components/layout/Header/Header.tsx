@@ -11,11 +11,8 @@ function Header({ isAuthenticated = false }: HeaderProps) {
   const navigate = useNavigate()
 
   const handleLogout = () => {
-    // Limpa o token do localStorage
     clearAuthToken()
-    // Limpa também o userId
     localStorage.removeItem('userId')
-    // Redireciona para a página inicial
     navigate('/')
   }
 
