@@ -1,0 +1,13 @@
+mentor_availability
+
+PK  mentor_availability_id
+FK  mentor_id (user_id)
+
+day_of_week
+start_time
+end_time
+
+created_at
+created_by
+last_update_at
+last_update_by
