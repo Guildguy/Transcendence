@@ -17,7 +17,6 @@ function Header({ isAuthenticated = false }: HeaderProps) {
   }
 
   return (
-    // Adicionamos uma classe dinâmica para mudar o comportamento via CSS
     <header className={`header ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`}>
       
       <img src={logo} alt="Transcendence logo" className="header-logo" />
@@ -34,6 +33,25 @@ function Header({ isAuthenticated = false }: HeaderProps) {
             <Link to="/home-logged">Home</Link>
             <Link to="/mentorias">Mentoria</Link>
             <Link to="/profile">Perfil</Link>
+            
+            {/* Botão de Logout para usuários logados */}
+            <button 
+              onClick={handleLogout} 
+              className="header-logout-btn"
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center',
+                gap: '5px',
+                color: 'inherit',
+                font: 'inherit'
+              }}
+            >
+              <LogOut size={18} />
+              Sair
+            </button>
           </>
         )}
       </nav>

@@ -20,7 +20,8 @@ DOCKER_COMPOSE		:= $(shell \
 	fi) --project-directory $(PROJECT_DIRECTORY)
 
 VOLUMES				:= postgres_data \
-						mongo_data
+						mongo_data \
+						grafana_data
 
 VOLUMES_DIRECTORY   := $(VOLUMES:%=./data/%)
 
@@ -28,7 +29,13 @@ SERVICES			:= api \
 					   db \
 					   frontend \
 					   python-service \
-					   mongodb
+					   mongodb \
+					   prometheus \
+					   grafana \
+					   node-exporter \
+					   cadvisor \
+					   postgres-exporter \
+					   mongodb-exporter
 
 ifdef SERVICE
 	SERVICES 		:= $(SERVICE)

@@ -5,23 +5,20 @@ import InputGroup from '../../common/InputGroup/InputGroup'
 import { apiFetch } from '../../../services/api'
 import './UserHeader.css'
 
-interface UserData {
-  level?: string
-  xp?: string
-  cargo?: string
-  nome?: string
-  username?: string
-  profile?: string //MENTOR OU MENTORADO
-}
-
 export const UserHeader = () => {
-  const [userData, setUserData] = useState<UserData>({ level: '0', xp: '0' })
+  const [userData, setUserData] = useState({
+    nome: 'Carregando...',
+    username: '...',
+    cargo: '...',
+    avatarUrl: '',
+    level: '0',
+    xp: '0',
+    role: 'MENTOR'
+  });
 
-  useEffect(() => {
-    const load = async () => {
-      const loggedUserId = localStorage.getItem('userId')
-      if (!loggedUserId) return
-
+useEffect(() => {
+    const loadData = async () => {
+      const loggedUserId = localStorage.getItem('userId') || "1";
       try {
         const res = await apiFetch(`/users/${loggedUserId}`)
         if (!res.ok) throw new Error('no user')
@@ -39,41 +36,44 @@ export const UserHeader = () => {
         // fallback mock when backend is unavailable
         setUserData({ level: '0', xp: '500' })
       }
-    }
-    load()
-  }, [])
+    };
+    loadData();
+  }, []);
 
   return (
     <section className="user-header">
       <div className="profile-section">
         <div className="header-info">
           <div className="header-avatar">
-           <Avatar />
+            <Avatar avatarUrl={userData.avatarUrl} size={120} />
           </div>
         </div>
         <div className="header-info">
-          <ProfileBadge text={userData.nome || 'Mentor'} />
-          <span className="profile-user-name">{userData.nome || 'Nome do usuário'}</span>
-          <span className="profile-details">@{userData.username || 'username'} | {userData.cargo || 'Cargo'}</span>
+          <ProfileBadge text={userData.role === 'MENTOR' ? 'Pessoa Mentora' : 'Mentorada'} />
+          <span className="profile-user-name">{userData.nome}</span>
+          <span className="profile-details">
+            @{userData.username} | {userData.cargo}
+          </span>
         </div>
       </div>
+
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
           <InputGroup
-            placeholder="Nível"
-            value={userData.level || '0'}
+            label="Nível"
+            value={userData.level}
             isEditing={false}
             onChange={() => {}}
           />
           <InputGroup
-            placeholder="XP"
-            value={`${userData.xp || '0'} XP`}
+            label="XP"
+            value={`${userData.xp} XP`}
             isEditing={false}
             onChange={() => {}}
           />
           <InputGroup
-            placeholder="Dias ensinando"
-            value={"XX Dias Ensinando 🔥"}
+            label="Status"
+            value={userData.role === 'MENTOR' ? "Ensinando 🔥" : "Aprendendo 🚀"}
             isEditing={false}
             onChange={() => {}}
           />

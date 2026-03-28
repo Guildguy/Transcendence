@@ -1,29 +1,7 @@
 import { apiFetch } from './api';
 
 const API_BASE_URL = 'http://localhost:8080';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-export interface MentorProfile {
-  id: number;
-  user: User;
-  position: string;
-  bio: string;
-  avatarUrl?: string;
-  xp: number;
-  level?: number;
-  anosExperiencia: number;
-  linkedin?: string;
-  github?: string;
-  instagram?: string;
-  createdAt?: string;
-  role: string;
-  stacks?: Array<{ id: string; name: string }>;
-}
+const PYTHON_API_URL = 'http://localhost:8000';
 
 export interface MentorCardData {
   id: number;
@@ -36,98 +14,94 @@ export interface MentorCardData {
 }
 
 class MentorService {
-  /**
-   * Busca todos os usuários do backend
-   */
-  async fetchAllUsers(): Promise<any[]> {
+  
+  private async fetchProfileImage(profileId: number): Promise<string> {
     try {
-      const response = await apiFetch('/users');
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar usuários: ${response.statusText}`);
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Erro ao buscar usuários do backend:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Busca um usuário específico pelo ID
-   */
-  async fetchUserById(id: number): Promise<any> {
-    try {
-      const response = await apiFetch(`/users/${id}`);
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar usuário: ${response.statusText}`);
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error(`Erro ao buscar usuário ${id}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Mapeia dados do backend para o formato esperado pelo MentorCard
-   */
-  mapUserProfileToCardData(user: any, profile: MentorProfile): MentorCardData {
-    return {
-      id: profile.id,
-      name: user.name,
-      position: profile.position || 'Mentor',
-      skills: this.extractSkills(profile.stacks),
-      anosExperiencia: profile.anosExperiencia || 0,
-      isActive: true,
-      avatarUrl: profile.avatarUrl
-    };
-  }
-
-  /**
-   * Extrai habilidades do campo stacks do backend
-   * Limita a 5 primeiras habilidades
-   */
-  private extractSkills(stacks?: Array<{ id: string; name: string }>): Array<{ id: string; name: string }> {
-    if (!stacks || stacks.length === 0) {
-      return [];
-    }
-    
-    return stacks.slice(0, 5);
-  }
-
-  /**
-   * Busca e mapeia todos os mentores para o formato do MentorCard
-   * Filtra apenas usuários que têm perfil MENTOR
-   */
-  async getAllMentorsForCards(): Promise<MentorCardData[]> {
-    try {
-      const users = await this.fetchAllUsers();
-      const mentorCards: MentorCardData[] = [];
-
-      for (const userData of users) {
+      // const response = await fetch(`${API_BASE_URL}/profiles/image/${profileId}`);
+      const response = await apiFetch(`/profiles/image/${profileId}`);
+      if (!response.ok) return "";
+      const imgData = await response.json();
+      
+      if (imgData && imgData.avatarUrl) {
         try {
-          const userFullData = await this.fetchUserById(userData.id);
-          const user = userFullData.user;
-          const profiles = userFullData.profiles || [];
-
-          // Filtrar apenas perfis MENTOR
-          const mentorProfiles = profiles.filter((p: any) => p.role === 'MENTOR');
-
-          for (const profile of mentorProfiles) {
-            const cardData = this.mapUserProfileToCardData(user, profile);
-            mentorCards.push(cardData);
-          }
-        } catch (error) {
-          console.warn(`Erro ao processar usuário ${userData.id}:`, error);
-          continue;
+          const parsed = JSON.parse(imgData.avatarUrl);
+          const base64 = parsed.image_base64 || imgData.avatarUrl;
+          return base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`;
+        } catch {
+          return imgData.avatarUrl.startsWith('data:') 
+            ? imgData.avatarUrl 
+            : `data:image/png;base64,${imgData.avatarUrl}`;
         }
       }
+      return "";
+    } catch {
+      return "";
+    }
+  }
 
-      return mentorCards;
+  private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
+    try {
+      const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
+      // const response = await apiFetch(`profile/${profileId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.stacks || [];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
+
+  // NOVA FUNÇÃO: Processa um único usuário e seus perfis de uma vez
+  private async processUser(userData: any): Promise<MentorCardData[]> {
+    try {
+      // const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
+      const detailRes = await apiFetch(`users/${userData.id}`);
+      const fullData = await detailRes.json();
+      
+      const user = fullData.user;
+      const mentorProfiles = (fullData.profiles || []).filter(
+        (p: any) => p.role?.toUpperCase() === 'MENTOR'
+      );
+
+      // Aqui está o segredo: Processa todos os perfis desse usuário em paralelo
+      return await Promise.all(mentorProfiles.map(async (profile: any) => {
+        // Dispara imagem e skills simultaneamente para este perfil
+        const [finalAvatar, pythonStacks] = await Promise.all([
+          this.fetchProfileImage(profile.id),
+          this.fetchSkillsFromPython(profile.id)
+        ]);
+
+        return {
+          id: profile.id,
+          name: user.name || "Mentor",
+          position: profile.position || 'Pessoa Mentora',
+          skills: pythonStacks.map((s: string, i: number) => ({ id: `py_${profile.id}_${i}`, name: s })),
+          anosExperiencia: profile.anosExperiencia || 0,
+          isActive: true,
+          avatarUrl: finalAvatar
+        };
+      }));
+    } catch (err) {
+      console.error(`Erro ao processar usuário ${userData.id}:`, err);
+      return [];
+    }
+  }
+
+  async getAllMentorsForCards(): Promise<MentorCardData[]> {
+    try {
+      // const response = await fetch(`${API_BASE_URL}/users`);
+      const response = await apiFetch('/users');
+      const users = await response.json();
+
+      // Dispara o processamento de TODOS os usuários ao mesmo tempo
+      const results = await Promise.all(users.map((u: any) => this.processUser(u)));
+
+      // Como results é um Array de Arrays (devido ao map), usamos flat() para juntar tudo
+      return results.flat();
     } catch (error) {
-      console.error('Erro ao obter mentores para cards:', error);
+      console.error('Erro ao obter mentores:', error);
       throw error;
     }
   }

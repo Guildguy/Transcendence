@@ -126,7 +126,22 @@ function RegisterPage() {
 
       //trazer as respostas do backened se der erro
 
-      console.log('Usuário cadastrado com sucesso:', data);
+      if (response.ok) {
+        console.log('Usuário cadastrado com sucesso:', data);
+
+        //quando implementar autenticação real (JWT), você salvará o token 
+        //em vez do ID puro para evitar que alguém mude o ID manualmente 
+        // no console e veja o perfil de outra pessoa.
+        if (data && data.id) {
+          localStorage.setItem('userId', data.id.toString());
+        } else if (data && data.user && data.user.id) {
+          localStorage.setItem('userId', data.user.id.toString());
+        }
+
+
+        navigate('/home-logged'); 
+      }
+      // Redirecionar ou limpar formulário aqui
       
       // Salvar o JWT se vindo na resposta de registro
       const token = data.token || data.jwt || data.accessToken || data.access_token;

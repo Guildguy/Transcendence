@@ -6,7 +6,9 @@ import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
-import { apiFetch } from "../../services/api";
+import { apiFetch, loginFetch } from "../../services/api";
+import DropdownList from "../../components/common/Dropdown/Dropdown";
+import professionsData from "../../components/common/Dropdown/Profession.json";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
@@ -53,10 +55,12 @@ export const ProfilePage = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
+  const professionsOptions = professionsData.professions;
+
   useEffect(() => {
     const loadFullProfile = async () => {
       // 1. Pega o ID salvo ou força o ID "1" para visualização sem login
-      const loggedUserId = localStorage.getItem('userId') || "1";
+      const loggedUserId = localStorage.getItem('userId');
       
       console.log('=== ProfilePage useEffect ===');
       console.log('ID do usuário sendo buscado:', loggedUserId);
@@ -93,6 +97,9 @@ export const ProfilePage = () => {
           const loadedSkills: Skill[] = profile.stacks || [];
 
           setUserData(unifiedData);
+          if (profile.id) {
+          loadProfileImage(profile.id);
+        }
           setBackupData(unifiedData);
           setUserSkills(loadedSkills);
           setBackupSkills(loadedSkills);
@@ -135,47 +142,54 @@ export const ProfilePage = () => {
   }, []); // Removi o `navigate` do array de dependências, já que não o usamos mais dentro do useEffect
 
 const handleSaveAll = async () => {
-    if (!userData || !userData.id) return;
+  if (!userData || !userData.id) return;
 
-    // 1. Montamos o Payload apenas com os dados da tabela PROFILE
-    const profilePayload = {
-      user_id: userData.id,
-      profile_id: userData.profile_id,
-      position: userData.cargo,
-      bio: userData.presentationText,
-      github: userData.github,
-      linkedin: userData.linkedin,
-      instagram: userData.instagram,
-      xp: userData.xp || 0,
-      anosExperiencia: parseInt(userData.anosExperiencia) || 0,
-      role: userData.role?.toUpperCase()
-    };
-
-    try {
-      // Faz a requisição PUT para o endpoint de profile
-      // Ajuste a URL e o método HTTP se o seu backend for diferente
-      const response = await apiFetch(`/profiles`, {
-        method: "PUT", 
-        body: JSON.stringify(profilePayload)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Perfil atualizado com sucesso!");
-        setBackupData(userData);
-        setBackupSkills(userSkills);
-        setIsEditing(false);
-        
-      } else {
-        const errorData = await response.json().catch(() => null);
-        alert(`Erro ao salvar perfil: ${errorData?.message || "Tente novamente."}`);
-      }
-    } catch (e) {
-      console.error("Erro de conexão:", e);
-      alert("Erro de conexão com o servidor. Os dados não foram salvos.");
-    }
+  // 1. Payload para o Backend Principal (Dados Pessoais)
+  const profilePayload = {
+    user_id: userData.id,
+    profile_id: userData.profile_id,
+    position: userData.cargo,
+    bio: userData.presentationText,
+    github: userData.github,
+    linkedin: userData.linkedin,
+    instagram: userData.instagram,
+    xp: userData.xp || 0,
+    anosExperiencia: parseInt(userData.anosExperiencia) || 0,
+    role: userData.role?.toUpperCase()
   };
+
+  // 2. Payload para o Microserviço Python (Skills/Stacks)
+  // Mapeamos o array de objetos [{id, name}] para ['name1', 'name2']
+  const pythonStacksPayload = {
+    profile_id: userData.profile_id?.toString() || userData.id.toString(),
+    stacks: userSkills.map(skill => skill.name) 
+  };
+
+  try {
+    const resProfile = await loginFetch('/users', {
+      method: 'POST',
+      body: JSON.stringify(profilePayload)
+    });
+
+    const resStacks = await fetch(`http://localhost:8000/profile`, { // Verifique se a porta do Python é 8000
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pythonStacksPayload)
+    });
+
+    if (resProfile.ok && resStacks.ok) {
+      alert("Perfil e habilidades atualizados com sucesso!");
+      setBackupData(userData);
+      setBackupSkills(userSkills);
+      setIsEditing(false);
+    } else {
+      alert("Erro ao salvar um dos componentes do perfil.");
+    }
+  } catch (e) {
+    console.error("Erro de conexão:", e);
+    alert("Erro de conexão com os servidores.");
+  }
+};
 
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword) {
@@ -251,36 +265,64 @@ const handleSaveAll = async () => {
   const loadProfileImage = async (profileId: number) => {
     try {
       const response = await apiFetch(`/profiles/image/${profileId}`);
-      
+    
       if (response.ok) {
         const data = await response.json();
-        
-
-        // Se a imagem foi encontrada, atualiza o state
-        const image = JSON.parse(data.avatarUrl).image_base64;
-
+      
         if (data && data.avatarUrl) {
-          setUserData(prev => ({
-            ...prev,
-            avatarUrl: image
-          }));
+          let finalImage = "";
+          try {
+            // Se o backend enviar como string JSON: {"image_base64": "..."}
+            const parsed = JSON.parse(data.avatarUrl);
+            finalImage = parsed.image_base64 || parsed.avatarUrl;
+          } catch (e) {
+          // Se o backend já enviar a string direta (Base64 pura)
+          finalImage = data.avatarUrl;
         }
-      } else {
-        console.log('Nenhuma imagem encontrada para este perfil');
+
+        setUserData((prev: any) => ({
+          ...prev,
+          avatarUrl: finalImage
+        }));
       }
-    } catch (error) {
-      console.error('Erro ao carregar imagem:', error);
     }
-  };
+  } catch (error) {
+    console.error('Erro ao carregar imagem:', error);
+  }
+};
 
   /**
    * Carrega a imagem ao montar o componente
    */
-  useEffect(() => {
-    if (userData.profile_id) {
-      loadProfileImage(Number(userData.profile_id));
+useEffect(() => {
+  const loadSkills = async () => {
+    // Só prossegue se o userData já tiver o profile_id real vindo do backend principal
+    if (!userData.profile_id) return;
+
+    const idParaBusca = userData.profile_id.toString();
+    console.log("Buscando skills para o ID consolidado:", idParaBusca);
+
+    try {
+      const response = await fetch(`http://localhost:8000/profile/${idParaBusca}`);
+      if (response.ok) {
+        const data = await response.json();
+        const formatted = data.stacks.map((s: string, i: number) => ({
+          id: `sk_py_${i}`,
+          name: s
+        }));
+        setUserSkills(formatted);
+        setBackupSkills(formatted);
+      }
+    } catch (err) {
+      console.error("Erro ao conectar com o Python:", err);
     }
-  }, [userData.id]);
+  };
+
+  loadSkills();
+}, [userData.profile_id]);
+
+
+
   return (
     <div className="perfil-container">
       <div className="perfil-header">
@@ -321,7 +363,7 @@ const handleSaveAll = async () => {
               {isEditing ? (
                 <div className="botoes-edicao-topo">
                   <Save
-                    size={22}
+                    size={22}DropdownList
                     className="perfil-icone-salvar"
                     onClick={handleSaveAll}
                   />
@@ -345,13 +387,13 @@ const handleSaveAll = async () => {
                 <InputGroup
                   placeholder="Nome Completo"
                   value={userData.nome}
-                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, nome: val })}
                 />
-                <InputGroup
-                  placeholder="Cargo"
+                <DropdownList
+                  options={professionsOptions}
                   value={userData.cargo}
                   isEditing={isEditing}
+                  placeholder="Selecione seu cargo"
                   onChange={(val) => setUserData({ ...userData, cargo: val })}
                 />
                 <InputGroup
@@ -400,13 +442,11 @@ const handleSaveAll = async () => {
                 <InputGroup
                   placeholder="E-mail"
                   value={userData.email}
-                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, email: val })}
                 />
                 <InputGroup
                   placeholder="Telefone"
                   value={userData.telefone}
-                  isEditing={isEditing}
                   isNumeric={true}
                   onChange={(val) =>
                     setUserData({ ...userData, telefone: val })
@@ -423,6 +463,7 @@ const handleSaveAll = async () => {
               isEditable={true} 
               title="Habilidades apresentadas para mentorar"
             />
+            
             ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>
