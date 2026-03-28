@@ -38,11 +38,13 @@ public class Profile implements IEntity
 	public User			user;
 	public String		avatarUrl;
 	public String		position;
+	@Column(length = 1024)
 	public String		bio;
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	public ProfileType	role;
 	public Long			xp;
+	public Integer		anosExperiencia;
 	public Integer		level;
 	public String		linkedin;
 	public String		github;

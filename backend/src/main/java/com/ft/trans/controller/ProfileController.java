@@ -5,9 +5,12 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
+import com.ft.trans.dto.ProfileImageDTO;
 import com.ft.trans.dto.UpdateProfileDTO;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.service.ProfileService;
@@ -44,6 +47,36 @@ public class ProfileController {
 		}
 		return ResponseEntity
             .status(HttpStatus.CREATED)
+            .body(result.entity());
+    }
+
+    @PostMapping("/image")
+    public ResponseEntity<?> uploadProfileImage(@RequestBody ProfileImageDTO imageDTO) {
+        Result result = this.profileService.saveProfileImage(imageDTO);
+
+        if (result.validationResult().hasErrors())
+        {
+            return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(result.validationResult().getErrors());
+        }
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(result.entity());
+    }
+
+    @GetMapping("/image/{profileId}")
+    public ResponseEntity<?> getProfileImage(@PathVariable Long profileId) {
+        Result result = this.profileService.getProfileImage(profileId);
+
+        if (result.validationResult().hasErrors())
+        {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(result.validationResult().getErrors());
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
             .body(result.entity());
     }
 }

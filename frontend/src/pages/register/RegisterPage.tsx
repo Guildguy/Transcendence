@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import './RegisterPage.css'
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
@@ -11,27 +11,32 @@ type Errors = {
   confirmEmail?: string
   password?: string
   confirmPassword?: string
-  stacks?: string
   privacy?: string
   terms?: string
+  profileType?: string
 }
 
-const USERS_API = 'http://localhost:8080/users'
-const PROFILE_API = 'http://localhost:8000/profile'
-
 function RegisterPage() {
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [name, setName] = useState('')
-  const [phone_number, setPhone] = useState('')
+  const [phoneNumber, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [confirmEmail, setConfirmEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [stacks, setStacks] = useState('')
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  const [profileType, setProfileType] = useState('') // Added state for profileType
 
   const [errors, setErrors] = useState<Errors>({})
+
+  useEffect(() => {
+    const type = searchParams.get('type');
+    if (type) {
+      setProfileType(type.toUpperCase());
+    }
+  }, [searchParams]);
 
   function formatPhone(value: string) {
     const numbers = value.replace(/\D/g, '').slice(0, 11)
@@ -53,9 +58,13 @@ function RegisterPage() {
 
     if (!name) newErrors.name = 'Nome completo é obrigatório.'
 
-    if (!phone_number) {
+    if (!profileType) {
+      newErrors.profileType = 'Tipo de perfil é obrigatório.'
+    }
+
+    if (!phoneNumber) {
       newErrors.phone = 'Celular é obrigatório.'
-    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phone_number)) {
+    } else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(phoneNumber)) {
       newErrors.phone = 'Use o formato (xx) xxxxx-xxxx.'
     }
 
@@ -69,10 +78,6 @@ function RegisterPage() {
     if (!confirmPassword) newErrors.confirmPassword = 'Confirme a senha.'
     if (password && confirmPassword && password !== confirmPassword) {
       newErrors.confirmPassword = 'As senhas não coincidem.'
-    }
-
-    if (!stacks.trim()) {
-      newErrors.stacks = 'Informe pelo menos uma stack (ex: React, Java).'
     }
 
     if (!acceptPrivacy) {
@@ -94,19 +99,15 @@ function RegisterPage() {
 
     const payload = {
       name,
-      phone_number,
+      profileType,
+      phoneNumber, // Ajustado para bater com o campo da sua entidade/DTO
       email,
       password,
-      status: true
+      status: true // No Java definimos como boolean
     };
 
-    const parsedStacks = stacks
-      .split(',')
-      .map((stack: string) => stack.trim())
-      .filter((stack: string) => stack.length > 0)
-
     try {
-      const response = await fetch(USERS_API, {
+      const response = await fetch('http://localhost:8080/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,38 +126,32 @@ function RegisterPage() {
         throw new Error('Falha ao cadastrar usuário');
       }
 
-      const profilePayload = {
-        profile_id: String(data.id ?? email),
-        stacks: parsedStacks,
-      }
+      //trazer as respostas do backened se der erro
 
-      const profileResponse = await fetch(PROFILE_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(profilePayload),
-      })
+      if (response.ok) {
+        console.log('Usuário cadastrado com sucesso:', data);
 
-      if (!profileResponse.ok) {
-        throw new Error('Usuário criado, mas falha ao salvar stacks no perfil')
-      }
+        //quando implementar autenticação real (JWT), você salvará o token 
+        //em vez do ID puro para evitar que alguém mude o ID manualmente 
+        // no console e veja o perfil de outra pessoa.
+        if (data && data.id) {
+          localStorage.setItem('userId', data.id.toString());
+        } else if (data && data.user && data.user.id) {
+          localStorage.setItem('userId', data.user.id.toString());
+        }
 
-      console.log('Usuário cadastrado com sucesso:', data);
-      
-      // Salvar o ID do usuário no localStorage
-      const userId = data.id || data.user?.id;
-      if (userId) {
-        localStorage.setItem('userId', userId.toString());
+
+        navigate('/home-logged'); 
       }
-      
-      // Redirecionar para a página inicial logada
-      navigate('/home-logged');
+      // Redirecionar ou limpar formulário aqui
       
     } catch (error) {
       console.error('Erro na requisição:', error);
     }
+
+    console.log('JSON enviado para o backend:', payload)
   }
+  
 
   return (
     <main className="register-form-wrapper">
@@ -173,7 +168,7 @@ function RegisterPage() {
         <input
           type="tel"
           placeholder="Celular"
-          value={phone_number}
+          value={phoneNumber}
           onChange={handlePhoneChange}
           className={errors.phone ? 'error' : ''}
         />
@@ -231,17 +226,6 @@ function RegisterPage() {
         />
         {errors.confirmPassword && (
           <span className="input-error">{errors.confirmPassword}</span>
-        )}
-
-        <input
-          type="text"
-          placeholder="Stacks (ex: React, Java, Python)"
-          value={stacks}
-          onChange={(e) => setStacks(e.target.value)}
-          className={errors.stacks ? 'error' : ''}
-        />
-        {errors.stacks && (
-          <span className="input-error">{errors.stacks}</span>
         )}
 
         <label className="checkbox">

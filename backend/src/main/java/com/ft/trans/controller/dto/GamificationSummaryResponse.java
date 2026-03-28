@@ -4,7 +4,7 @@ import java.util.List;
 
 public record GamificationSummaryResponse(
     Long userId,
-    Integer totalXp,
+    Long totalXp,
     Integer currentLevel,
     Integer nextLevelXp,
     List<String> unlockedAchievements,
