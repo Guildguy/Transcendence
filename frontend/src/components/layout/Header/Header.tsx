@@ -34,7 +34,7 @@ function Header({ isAuthenticated = false }: HeaderProps) {
             <Link to="/mentorias">Mentoria</Link>
             <Link to="/profile">Perfil</Link>
             
-            {/* Botão de Logout para usuários logados */}
+            {/* Botão de Logout para usuários logados
             <button 
               onClick={handleLogout} 
               className="header-logout-btn"
@@ -51,7 +51,7 @@ function Header({ isAuthenticated = false }: HeaderProps) {
             >
               <LogOut size={18} />
               Sair
-            </button>
+            </button> */}
           </>
         )}
       </nav>
