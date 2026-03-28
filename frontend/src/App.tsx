@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate} from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet} from 'react-router-dom'
 
 import AppShell from './components/layout/AppShell/AppShell'
 import Header from './components/layout/Header/Header'
@@ -26,7 +26,9 @@ function App() {
             sidebar={null}
             header={<Header isAuthenticated={false} />}
             footer={<Footer />}
-          />
+          >
+            <Outlet />
+          </AppShell>
         }
       >
         <Route path="/" element={<Home />} />
