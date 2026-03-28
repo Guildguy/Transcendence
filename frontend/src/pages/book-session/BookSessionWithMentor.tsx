@@ -3,11 +3,11 @@ import Header from '../../components/layout/Header/Header'
 import Footer from '../../components/layout/Footer/Footer'
 import './BookSessionWithMentor.css'
 import MentorInfo from '../../components/common/MentorInfo/MentorInfo'
-import BookingCalendar from '../../components/common/BookingCalendar/BookingCalendar'
 import { MentoringProvider, useMentoring } from '../../components/common/BookingCalendar/MentoringContext'
+import { SlotSelector } from '../../components/common/BookingCalendar/SlotSelector'
 
 function BookSessionContent() {
-  const { mentors } = useMentoring();
+  const { mentors, currentUserId } = useMentoring();
   // Find the mentor by id from our mock data
   const mentor = mentors.find(m => m.id === 'm1') || mentors[0];
   
@@ -38,7 +38,10 @@ function BookSessionContent() {
         />
       </div>
       <div className="calendar-container">
-        <BookingCalendar mentorId={mentor.id} />
+        {/* Slot Selector with integrated calendar */}
+        {mentor.status === 'available' && (
+          <SlotSelector mentorId={mentor.id} menteeId={currentUserId} />
+        )}
       </div>
     </div>
   );
