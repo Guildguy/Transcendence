@@ -1,6 +1,7 @@
 package com.ft.trans.service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +12,11 @@ import org.springframework.stereotype.Service;
 import com.ft.trans.dto.CreateSessionDTO;
 import com.ft.trans.dto.MentorNotesDTO;
 import com.ft.trans.dto.UpdateSessionDTO;
+import com.ft.trans.entity.DayOfWeekEnum;
+import com.ft.trans.entity.MentorAvailability;
 import com.ft.trans.entity.MentorshipSession;
 import com.ft.trans.entity.MentorshipSession.SessionStatus;
+import com.ft.trans.repository.MentorAvailabilityRepository;
 import com.ft.trans.repository.MentorshipSessionRepository;
 import com.ft.trans.validation.Result;
 import com.ft.trans.validation.ValidationResult;
@@ -23,10 +27,15 @@ public class MentorshipSessionService
 	private static final int MAX_RECURRENCE = 10;
 
 	private final MentorshipSessionRepository sessionRepository;
+	private final MentorAvailabilityRepository mentorAvailabilityRepository;
 
-	public MentorshipSessionService(MentorshipSessionRepository sessionRepository)
+	public MentorshipSessionService(
+		MentorshipSessionRepository sessionRepository,
+		MentorAvailabilityRepository mentorAvailabilityRepository
+	)
 	{
 		this.sessionRepository = sessionRepository;
+		this.mentorAvailabilityRepository = mentorAvailabilityRepository;
 	}
 
 	public Result createSession(CreateSessionDTO dto)
@@ -41,6 +50,15 @@ public class MentorshipSessionService
 		if (sessionRepository.existsByConnectionIdAndScheduledDate(dto.connectionId, dto.scheduledDate))
 		{
 			result.addError("scheduledDate", "Já existe uma sessão agendada neste horário para esta conexão.");
+			return new Result(null, result);
+		}
+
+		if (!_isWithinMentorAvailability(dto.createdBy, dto.scheduledDate, dto.durationMinutes))
+		{
+			result.addError(
+				"scheduledDate",
+				"Sessão fora da disponibilidade do mentor. Ajuste para um bloco disponível."
+			);
 			return new Result(null, result);
 		}
 
@@ -68,6 +86,15 @@ public class MentorshipSessionService
 			{
 				result.addError("scheduledDate",
 					"Conflito de horário na semana " + (i + 1) + " (" + sessionDate.toLocalDate() + ").");
+				return new RecurrenceResult(null, result);
+			}
+
+			if (!_isWithinMentorAvailability(dto.createdBy, sessionDate, dto.durationMinutes))
+			{
+				result.addError(
+					"scheduledDate",
+					"Sessão da semana " + (i + 1) + " fora da disponibilidade do mentor."
+				);
 				return new RecurrenceResult(null, result);
 			}
 
@@ -168,6 +195,19 @@ public class MentorshipSessionService
 			session.durationMinutes = dto.durationMinutes;
 		}
 
+		if (dto.scheduledDate != null || dto.durationMinutes != null)
+		{
+			Long mentorId = dto.lastUpdateBy != null ? dto.lastUpdateBy : session.createdBy;
+			if (!_isWithinMentorAvailability(mentorId, session.scheduledDate, session.durationMinutes))
+			{
+				result.addError(
+					"scheduledDate",
+					"Sessão fora da disponibilidade do mentor. Ajuste para um bloco disponível."
+				);
+				return new Result(null, result);
+			}
+		}
+
 		if (dto.status != null)
 		{
 			try
@@ -222,6 +262,49 @@ public class MentorshipSessionService
 		String part2 = UUID.randomUUID().toString().substring(0, 4);
 		String part3 = UUID.randomUUID().toString().substring(0, 3);
 		return "https://meet.google.com/" + part1 + "-" + part2 + "-" + part3;
+	}
+
+	private boolean _isWithinMentorAvailability(Long mentorId, LocalDateTime scheduledDate, Integer durationMinutes)
+	{
+		if (mentorId == null || scheduledDate == null || durationMinutes == null)
+			return false;
+
+		List<MentorAvailability> availability = mentorAvailabilityRepository
+			.findByMentor_IdOrderByDayOfWeekAscStartTimeAsc(mentorId);
+
+		if (availability.isEmpty())
+			return false;
+
+		DayOfWeekEnum targetDay = _toDayOfWeekEnum(scheduledDate);
+		LocalTime sessionStart = scheduledDate.toLocalTime();
+		LocalTime sessionEnd = sessionStart.plusMinutes(durationMinutes);
+
+		for (MentorAvailability slot : availability)
+		{
+			if (slot.dayOfWeek != targetDay)
+				continue;
+
+			boolean startsInside = !sessionStart.isBefore(slot.startTime);
+			boolean endsInside = !sessionEnd.isAfter(slot.endTime);
+
+			if (startsInside && endsInside)
+				return true;
+		}
+
+		return false;
+	}
+
+	private DayOfWeekEnum _toDayOfWeekEnum(LocalDateTime date)
+	{
+		return switch (date.getDayOfWeek()) {
+			case MONDAY -> DayOfWeekEnum.MONDAY;
+			case TUESDAY -> DayOfWeekEnum.TUESDAY;
+			case WEDNESDAY -> DayOfWeekEnum.WEDNESDAY;
+			case THURSDAY -> DayOfWeekEnum.THURSDAY;
+			case FRIDAY -> DayOfWeekEnum.FRIDAY;
+			case SATURDAY -> DayOfWeekEnum.SATURDAY;
+			case SUNDAY -> DayOfWeekEnum.SUNDAY;
+		};
 	}
 
 	private Result _persistSession(MentorshipSession session)
