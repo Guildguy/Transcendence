@@ -18,14 +18,10 @@
 }
 
 .mentor-avatar-container {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 2px solid #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  /* Removido: width, height, border e overflow daqui */
 }
 
 .mentor-avatar-icon {

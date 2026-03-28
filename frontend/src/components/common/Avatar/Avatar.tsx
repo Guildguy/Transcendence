@@ -4,18 +4,16 @@ import './Avatar.css';
 
 interface AvatarProps {
   avatarUrl?: string;
-  size?: number; // Tamanho em pixels (ex: 128)
+  size?: number; 
   isEditable?: boolean;
   onImageChange?: (file: File) => void;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({ 
-  avatarUrl, 
-  size = 128, 
-  isEditable = false, 
-  onImageChange 
-}) => {
+export const Avatar = ({ avatarUrl, size = 120, isEditable=false, onImageChange }: AvatarProps) => { 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Verificação de segurança para a URL
+  const hasValidUrl = avatarUrl && avatarUrl.length > 10; 
 
   const handlePencilClick = () => {
     fileInputRef.current?.click();
@@ -29,16 +27,17 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   return (
-    <div 
-      className="avatar-wrapper" 
-      style={{ width: size, height: size }}
-    >
+    <div className="avatar-wrapper" style={{ width: size, height: size }}>
       <div className="perfil-avatar-base">
-        {avatarUrl ? (
+        {hasValidUrl ? (
           <img 
             src={avatarUrl} 
-            alt="Foto de perfil" 
-            className="avatar-img" 
+            alt="Avatar" 
+            className="avatar-img"
+            onError={(e) => {
+              // Se a imagem falhar mostra o ícone de fallback
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
           />
         ) : (
           <User size={size / 2} color="#e5e7eb" />
