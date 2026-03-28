@@ -5,6 +5,7 @@ import './BookSessionWithMentor.css'
 import MentorInfo from '../../components/common/MentorInfo/MentorInfo'
 import { MentoringProvider, useMentoring } from '../../components/common/BookingCalendar/MentoringContext'
 import { SlotSelector } from '../../components/common/BookingCalendar/SlotSelector'
+import { SessionList } from '../../components/common/BookingCalendar/SessionList'
 
 function BookSessionContent() {
   const { mentors, currentUserId } = useMentoring();
@@ -26,22 +27,24 @@ function BookSessionContent() {
 
   return (
     <div className="book-session-with-mentor">
-      <div className="mentor-info-container">
-        <MentorInfo
-          name={mentor.name}
-          position={mentor.role}
-          skills={mappedSkills}
-          experience={experienceYears || mentor.xp}
-          isActive={mentor.status === 'available'}
-          avatarUrl={mentor.avatar}
-          bio={mentor.bio}
-        />
-      </div>
+          <MentorInfo
+            name={mentor.name}
+            position={mentor.role}
+            skills={mappedSkills}
+            experience={experienceYears || mentor.xp}
+            isActive={mentor.status === 'available'}
+            avatarUrl={mentor.avatar}
+            bio={mentor.bio}
+            />
+
       <div className="calendar-container">
         {/* Slot Selector with integrated calendar */}
         {mentor.status === 'available' && (
           <SlotSelector mentorId={mentor.id} menteeId={currentUserId} />
         )}
+      </div>
+      <div className="calendar-container">
+          <SessionList mentorId={mentor.id} menteeId={currentUserId} />
       </div>
     </div>
   );

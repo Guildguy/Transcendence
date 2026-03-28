@@ -2,10 +2,9 @@
   background-color: var(--white, #ffffff);
   border: 1px solid var(--purple-medium, #e5e7eb);
   border-radius: 20px;
-  padding: 24px;
-  width: 100%;
-  width: 728px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  max-width: 80%;
   font-family: sans-serif;
   color: #374151;
 }
@@ -149,3 +148,4 @@
     width: auto;
     padding: 16px;
   }
+}

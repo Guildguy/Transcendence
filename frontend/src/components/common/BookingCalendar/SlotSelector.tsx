@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useMentoring } from './MentoringContext';
 import BookingCalendar from './BookingCalendar';
-import { Button } from '../Button/Button';
+import Button from '../Button/Button';
 import { Badge } from '../ui/Badge';
 import { Switch } from '../ui/Switch';
 import { Label } from '../ui/Label';
