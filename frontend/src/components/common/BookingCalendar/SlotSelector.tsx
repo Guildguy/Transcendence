@@ -131,7 +131,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
   return (
     <CalendarCard>
       <CalendarCardHeader>
-        <CalendarCardTitle className="font-display text-lg flex items-center gap-2">
+        <CalendarCardTitle >
           <CalendarIcon 
             size={18}
             color="var(--purple-primary)"
@@ -140,8 +140,6 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
         </CalendarCardTitle>
       </CalendarCardHeader>
       <CalendarCardContent>
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Calendar */}
           <div>
             <BookingCalendar
               mentorId={mentorId}
@@ -268,7 +266,6 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
               </div>
             ) : null}
           </div>
-        </div>
 
         {/* Confirmation Dialog */}
         <Dialog open={showConfirm} onOpenChange={setShowConfirm}>

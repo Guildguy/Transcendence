@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useMentoring } from './MentoringContext';
-import { Clock } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

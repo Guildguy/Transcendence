@@ -1,24 +1,39 @@
 import * as React from "react";
 import * as SwitchPrimitives from "@radix-ui/react-switch";
 
-import { cn } from "./lib/utils";
-
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
 >(({ className, ...props }, ref) => (
   <SwitchPrimitives.Root
-    className={cn(
-      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-      className,
-    )}
-    {...props}
     ref={ref}
+    style={{
+      display: "inline-flex",
+      height: "1.5rem",
+      width: "2.75rem",
+      flexShrink: 0,
+      cursor: "pointer",
+      alignItems: "center",
+      borderRadius: "9999px",
+      border: "2px solid transparent",
+      transition: "background-color 0.2s",
+      backgroundColor: props.checked ? "#3b82f6" : "#e5e7eb",
+      outline: "none",
+    }}
+    {...props}
   >
     <SwitchPrimitives.Thumb
-      className={cn(
-        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0",
-      )}
+      style={{
+        pointerEvents: "none",
+        display: "block",
+        height: "1.25rem",
+        width: "1.25rem",
+        borderRadius: "9999px",
+        backgroundColor: "#ffffff",
+        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+        transform: props.checked ? "translateX(1.25rem)" : "translateX(0)",
+        transition: "transform 0.2s",
+      }}
     />
   </SwitchPrimitives.Root>
 ));

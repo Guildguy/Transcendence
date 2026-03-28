@@ -1,42 +1,103 @@
 import * as React from "react";
-import { cn } from "./lib/utils.ts";
 
-const CalendarCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
-));
+const CalendarCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      style={{
+        borderRadius: "0.5rem",
+        border: "1px solid #e5e7eb",
+        backgroundColor: "#ffffff",
+        color: "#111827",
+        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+      }}
+      {...props}
+    />
+  )
+);
 CalendarCard.displayName = "CalendarCard";
 
-const  CalendarCardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+const CalendarCardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
-  ),
+    <div
+      ref={ref}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.375rem",
+        padding: "1.5rem",
+      }}
+      {...props}
+    />
+  )
 );
 CalendarCardHeader.displayName = "CalendarCardHeader";
 
 const CalendarCardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight", className)} {...props} />
-  ),
+    <h3
+      ref={ref}
+      style={{
+        fontSize: "1.5rem",
+        fontWeight: 600,
+        lineHeight: 1.2,
+        letterSpacing: "-0.02em",
+      }}
+      {...props}
+    />
+  )
 );
 CalendarCardTitle.displayName = "CalendarCardTitle";
 
 const CalendarCardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
-  ),
+    <p
+      ref={ref}
+      style={{
+        fontSize: "0.875rem",
+        color: "#6b7280",
+      }}
+      {...props}
+    />
+  )
 );
 CalendarCardDescription.displayName = "CalendarCardDescription";
 
 const CalendarCardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />,
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      style={{
+        padding: "1.5rem",
+        paddingTop: 0,
+      }}
+      {...props}
+    />
+  )
 );
 CalendarCardContent.displayName = "CalendarCardContent";
 
 const CalendarCardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
-  ),
+    <div
+      ref={ref}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "1.5rem",
+        paddingTop: 0,
+      }}
+      {...props}
+    />
+  )
 );
 CalendarCardFooter.displayName = "CalendarCardFooter";
 
-export { CalendarCard, CalendarCardHeader, CalendarCardFooter, CalendarCardTitle, CalendarCardDescription, CalendarCardContent };
+export {
+  CalendarCard,
+  CalendarCardHeader,
+  CalendarCardFooter,
+  CalendarCardTitle,
+  CalendarCardDescription,
+  CalendarCardContent,
+};
