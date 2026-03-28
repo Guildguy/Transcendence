@@ -108,3 +108,24 @@ header.authenticated .header-nav {
 .header-login-btn:hover {
   opacity: 0.9;
 }
+
+/* =====================
+   LOGOUT BUTTON
+===================== */
+
+.header-logout-btn {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-logout-btn:hover {
+  background-color: #ffffff;
+  color: #685AD6;
+}

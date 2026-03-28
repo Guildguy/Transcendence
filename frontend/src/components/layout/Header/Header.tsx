@@ -1,27 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut } from 'lucide-react' // Import opcional para um ícone legal
 import './Header.css'
 import logo from '../../images/jpg/logo.png'
+import { clearAuthToken } from '../../../services/api'
 
 interface HeaderProps {
   isAuthenticated?: boolean
 }
 
 function Header({ isAuthenticated = false }: HeaderProps) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const handleLogout = () => {
-    // 1. Limpa todos os dados de autenticação
-    localStorage.clear();
-    sessionStorage.clear();
-
-    // 2. Redireciona para a página de login
-    // Como seu app roda no localhost:5173, o path "/login" é o suficiente
-    navigate('/login');
-    
-    // Opcional: Recarregar a página para resetar estados globais do React
-    // window.location.reload(); 
-  };
+    clearAuthToken()
+    localStorage.removeItem('userId')
+    navigate('/')
+  }
 
   return (
     <header className={`header ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`}>
@@ -41,7 +34,7 @@ function Header({ isAuthenticated = false }: HeaderProps) {
             <Link to="/mentorias">Mentoria</Link>
             <Link to="/profile">Perfil</Link>
             
-            {/* Botão de Logout para usuários logados */}
+            {/* Botão de Logout para usuários logados
             <button 
               onClick={handleLogout} 
               className="header-logout-btn"
@@ -58,16 +51,23 @@ function Header({ isAuthenticated = false }: HeaderProps) {
             >
               <LogOut size={18} />
               Sair
-            </button>
+            </button> */}
           </>
         )}
       </nav>
 
-      {!isAuthenticated && (
+      {/* Lado direito */}
+      {!isAuthenticated ? (
         <div className="header-right">
           <Link to="/login" className="header-login-btn">
             Logar
           </Link>
+        </div>
+      ) : (
+        <div className="header-right">
+          <button onClick={handleLogout} className="header-logout-btn">
+            Sair
+          </button>
         </div>
       )}
     </header>

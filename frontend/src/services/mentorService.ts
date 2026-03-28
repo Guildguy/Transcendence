@@ -1,3 +1,5 @@
+import { apiFetch } from './api';
+
 const API_BASE_URL = 'http://localhost:8080';
 const PYTHON_API_URL = 'http://localhost:8000';
 
@@ -15,7 +17,8 @@ class MentorService {
   
   private async fetchProfileImage(profileId: number): Promise<string> {
     try {
-      const response = await fetch(`${API_BASE_URL}/profiles/image/${profileId}`);
+      // const response = await fetch(`${API_BASE_URL}/profiles/image/${profileId}`);
+      const response = await apiFetch(`/profiles/image/${profileId}`);
       if (!response.ok) return "";
       const imgData = await response.json();
       
@@ -39,6 +42,7 @@ class MentorService {
   private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
     try {
       const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
+      // const response = await apiFetch(`profile/${profileId}`);
       if (response.ok) {
         const data = await response.json();
         return data.stacks || [];
@@ -52,7 +56,8 @@ class MentorService {
   // NOVA FUNÇÃO: Processa um único usuário e seus perfis de uma vez
   private async processUser(userData: any): Promise<MentorCardData[]> {
     try {
-      const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
+      // const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
+      const detailRes = await apiFetch(`users/${userData.id}`);
       const fullData = await detailRes.json();
       
       const user = fullData.user;
@@ -86,7 +91,8 @@ class MentorService {
 
   async getAllMentorsForCards(): Promise<MentorCardData[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`);
+      // const response = await fetch(`${API_BASE_URL}/users`);
+      const response = await apiFetch('/users');
       const users = await response.json();
 
       // Dispara o processamento de TODOS os usuários ao mesmo tempo
