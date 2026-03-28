@@ -23,7 +23,16 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm install && \
-    npm install clsx tailwind-merge @radix-ui/react-select lucide-react date-fns cva class-variance-authority
+    npm install clsx \
+        tailwind-merge \
+        @radix-ui/react-select \
+        @radix-ui/react-switch \
+        @radix-ui/react-label \
+        @radix-ui/react-dialog \
+        lucide-react \
+        date-fns \
+        cva \
+        class-variance-authority
 
 COPY . .
 

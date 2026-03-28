@@ -10,41 +10,63 @@ import 'react-day-picker/dist/style.css';
 
 interface BookingCalendarProps {
   mentorId: string;
+  mode?: 'single' | 'multiple' | 'range';
+  selected?: Date;
+  onSelect?: (date: Date | undefined) => void;
+  disabled?: (date: Date) => boolean;
+  modifiers?: Record<string, (date: Date) => boolean>;
+  modifiersClassNames?: Record<string, string>;
+  locale?: any;
+  className?: string;
 }
 
-export default function BookingCalendar({ mentorId }: BookingCalendarProps) {
+export default function BookingCalendar({ 
+  mentorId, 
+  mode = 'single',
+  selected,
+  onSelect,
+  disabled,
+  modifiers,
+  modifiersClassNames,
+  locale = ptBR,
+  className
+}: BookingCalendarProps) {
   const { mentors, getAvailableBlocksForDate } = useMentoring();
   const mentor = mentors.find(m => m.id === mentorId);
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(selected);
 
   if (!mentor) return <div>Mentor não encontrado.</div>;
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
+    onSelect?.(date);
   };
 
   const availableSlots = selectedDate 
     ? getAvailableBlocksForDate(mentorId, format(selectedDate, 'yyyy-MM-dd'))
     : [];
 
+    
   return (
     <CalendarCard className="w-full">
       <CalendarCardHeader className="border-b mb-4 pb-4">
         <CalendarCardTitle className="font-display text-xl flex items-center gap-2 text-primary font-bold">
-          <CalendarIcon className="h-5 w-5" /> Agendar Próxima Mentoria
+          <CalendarIcon size={18} color="var(--purple-primary)" className="mr-2" /> Agendar Próxima Mentoria
         </CalendarCardTitle>
       </CalendarCardHeader>
       <CalendarCardContent>
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-shrink-0">
             <DayPicker
-              mode="single"
+              mode={mode}
               selected={selectedDate}
               onSelect={handleDateSelect}
-              locale={ptBR}
-              disabled={(date) => isBefore(date, startOfDay(new Date()))}
-              className="border rounded-xl p-3 shadow-sm bg-white"
+              locale={locale}
+              disabled={disabled || ((date: Date) => isBefore(date, startOfDay(new Date())))}
+              className={className || "border rounded-xl p-3 shadow-sm bg-white"}
+              modifiers={modifiers}
+              modifiersClassNames={modifiersClassNames}
             />
           </div>
           
