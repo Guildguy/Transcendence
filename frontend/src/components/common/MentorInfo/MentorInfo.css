@@ -1,0 +1,151 @@
+.mentor-info-card {
+  background-color: var(--white, #ffffff);
+  border: 1px solid var(--purple-medium, #e5e7eb);
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  max-width: 80%;
+  font-family: sans-serif;
+  color: #374151;
+}
+
+.mentor-info-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.mentor-info-avatar-container {
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
+  border-radius: 50%;
+  border: 3px solid #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mentor-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mentor-avatar-icon {
+  color: #1f2937;
+}
+
+.mentor-info-basic {
+  flex: 1;
+}
+
+.mentor-info-name {
+  margin: 0 0 4px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.mentor-info-details {
+  margin: 0 0 8px 0;
+  color: var(--purple-primary);
+  font-size: 1rem;
+}
+
+.mentor-info-status {
+  margin: 0;
+  display: flex;
+  gap: 6px;
+  font-size: 0.825rem;
+}
+.mentor-info-bio {
+  padding: unset;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.mentor-info-skills-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: unset;
+  padding: unset;
+}
+
+.skill-tag {
+  border: 1px solid #dee2e6;
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: #6366f1;
+  background-color: #f3f4f6;
+  font-weight: 500;
+  display: inline-block;
+  cursor: default;
+}
+
+.skill-tag.btn-ver-mais {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-color: #c7d2fe;
+  background-color: #c7d2fe;
+  color: #4338ca;
+}
+
+.skill-tag.btn-ver-mais:hover {
+  background-color: #b4c7fc;
+  border-color: #b4c7fc;
+}
+
+.no-skills-message {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+}
+
+.mentor-info-stats-section {
+  display: flex;
+  gap: 24px;
+  padding: 20px 0 0 0;
+  font-size: 0.825rem;
+}
+
+.mentor-info-rating,
+.mentor-info-mentorships {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.mentor-info-divider {
+  height: 1px;
+  background-color: var(--purple-light);
+  margin: 20px 0;
+}
+
+.mentor-info-rating svg,
+.mentor-info-mentorships svg {
+  flex-shrink: 0;
+}
+
+.mentor-info-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: left;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 728px) {
+  .mentor-info-card {
+    width: auto;
+    padding: 16px;
+  }
+}
