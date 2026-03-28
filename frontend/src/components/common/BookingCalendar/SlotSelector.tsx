@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { CalendarIcon, Clock, Video, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-// import { toast } from '@/hooks/use-toast';
 
 interface SlotSelectorProps {
   mentorId: string;
@@ -133,7 +132,10 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
     <CalendarCard>
       <CalendarCardHeader>
         <CalendarCardTitle className="font-display text-lg flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5 text-primary" />
+          <CalendarIcon 
+            size={18}
+            color="var(--purple-primary)"
+          />
           Agendar Próxima Mentoria
         </CalendarCardTitle>
       </CalendarCardHeader>
@@ -155,13 +157,19 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
           <div className="flex-1 min-w-[280px]">
             {selectedDate ? (
               <div className="space-y-4">
-                <p className="text-sm font-medium">
-                  Horários disponíveis em{' '}
-                  <span className="text-primary font-semibold">
-                    {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
-                  </span>
+                <h4 className="font-semibold text-lg">Horários Disponíveis</h4>
+                <p className="text-sm text-muted-foreground capitalize">
+                  {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
                 </p>
-
+              </div>
+            ) : !selectedDate ? (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                <p>Selecione uma data no calendário</p>
+              </div>
+            ) : null}
+            
+            {selectedDate ? (
+              <div className="mt-4">
                 {blocks.length > 0 ? (
                   <>
                     {/* Available Blocks */}
@@ -176,7 +184,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
                               : 'border-border hover:border-primary/50 hover:bg-muted/50'
                           }`}
                         >
-                          <Clock className="h-4 w-4 text-primary shrink-0" />
+                          <Clock color="var(--purple-primary)"/>
                           <div>
                             <p className="text-sm font-medium">{block.startTime} – {block.endTime}</p>
                             <p className="text-xs text-muted-foreground">
@@ -258,11 +266,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
                   <p className="text-sm text-muted-foreground">Nenhum horário disponível nesta data.</p>
                 )}
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                Selecione uma data no calendário
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
 
