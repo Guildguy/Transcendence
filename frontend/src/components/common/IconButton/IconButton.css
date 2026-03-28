@@ -1,0 +1,81 @@
+.icon-button {
+  border: none;
+  border-radius: 40px;
+  padding: 8px 20px;
+  font-size: 0.825rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.icon-button-icon {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  flex-shrink: 0;
+}
+
+.icon-button-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.5;
+}
+
+.icon-button-text {
+  display: flex;
+  align-items: center;
+}
+
+.icon-button--primary {
+  background-color: #a78bfa;
+  color: white;
+  border: none;
+}
+
+.icon-button--primary:hover {
+  background-color: #9f7aea;
+  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+}
+
+.icon-button--primary:active {
+  background-color: #9370db;
+  transform: scale(0.98);
+}
+
+.icon-button--secondary {
+  background-color: transparent;
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.icon-button--secondary:hover {
+  border-color: #9ca3af;
+  color: #374151;
+  background-color: #f9fafb;
+}
+
+.icon-button--secondary:active {
+  transform: scale(0.98);
+}
+
+.icon-button--withdraw {
+  background-color: transparent;
+  color: #ef4444;
+  border: 2px solid #fecaca;
+}
+
+.icon-button--withdraw:hover {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.icon-button--withdraw:active {
+  transform: scale(0.98);
+}

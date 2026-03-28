@@ -1,0 +1,28 @@
+.book-session-with-mentor {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  background-color: var(--purple-bg);
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 20px;
+}
+
+.calendar-container {
+  background-color: var(--white, #ffffff);
+  border: 1px solid var(--purple-medium, #e5e7eb);
+  border-radius: 20px;
+  padding: 40px;
+  min-width: 80%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+  color: #374151;
+}
+
+/* RESPONSIVE DESIGN */
+  @media (max-width: 768px) {
+    .calendar-container {
+      width: auto;
+    }
+}

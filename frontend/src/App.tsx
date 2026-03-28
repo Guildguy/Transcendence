@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate} from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet} from 'react-router-dom'
 
 import AppShell from './components/layout/AppShell/AppShell'
 import Header from './components/layout/Header/Header'
@@ -11,6 +11,7 @@ import RegisterPage from './pages/register/RegisterPage'
 import RegisterLayout from './pages/register/RegisterLayout'
 import ProfilePage from './pages/profile/ProfilePage'
 import HomeLogged from './pages/logged/HomeLogged'
+import BookSessionWithMentor from './pages/book-session/BookSessionWithMentor'
 import MentoriasPage from './pages/mentoria/MentoriasPage'
 
 
@@ -25,7 +26,9 @@ function App() {
             sidebar={null}
             header={<Header isAuthenticated={false} />}
             footer={<Footer />}
-          />
+          >
+            <Outlet />
+          </AppShell>
         }
       >
         <Route path="/" element={<Home />} />
@@ -44,6 +47,7 @@ function App() {
             sidebar={null}
             header={<Header isAuthenticated={true} />}
             footer={<Footer />}
+            children={null}
           />
         }
       >
@@ -56,6 +60,11 @@ function App() {
       ===================== */}
       <Route path="/home-logged" element={<HomeLogged />} />
       <Route path="/mentorias" element={<MentoriasPage />} />
+
+      {/* =====================
+         BOOK SESSION WITH MENTOR
+      ===================== */}
+      <Route path="/book-session" element={<BookSessionWithMentor />} />
 
       {/* =====================
          INSTITUCIONAL (FORA DO APPSHELL)
