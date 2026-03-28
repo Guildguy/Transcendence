@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { Mentor, Mentee, Session, Slot, TimeBlock } from './types.ts';
-import { mockMentors, mockMentees, mockSessions, generateSlots } from '@/data/mockData';
+import { mockMentors, mockMentees, mockSessions, generateSlots } from './mock.ts';
 import { addDays, format } from 'date-fns';
 
 interface BookCustomSlotParams {
@@ -195,7 +195,7 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
     if (!mentor) return [];
 
     const dateObj = new Date(date + 'T12:00:00');
-    const dayOfWeek = dateObj.getDay() as import('@/types/mentoring').DayOfWeek;
+    const dayOfWeek = dateObj.getDay() as import('./types').DayOfWeek;
 
     const blocks = mentor.availability.filter(b => b.day === dayOfWeek);
     if (blocks.length === 0) return [];
