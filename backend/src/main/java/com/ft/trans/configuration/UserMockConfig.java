@@ -43,6 +43,7 @@ public class UserMockConfig
                 u.status = true;
 
                 u.createdAt = new Date(System.currentTimeMillis());
+
                 u.createdBy = 1L;
 
                 repo.save(u);
