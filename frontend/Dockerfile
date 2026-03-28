@@ -25,6 +25,7 @@ COPY package.json package-lock.json ./
 RUN npm install && \
     npm install clsx \
         tailwind-merge \
+        tailwindcss \
         @radix-ui/react-select \
         @radix-ui/react-switch \
         @radix-ui/react-label \

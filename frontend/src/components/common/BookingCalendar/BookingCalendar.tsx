@@ -60,38 +60,6 @@ export default function BookingCalendar({
           modifiersClassNames={modifiersClassNames}
         />
       </div>
-      
-      {/* <div className="flex-1 min-h-[300px] flex flex-col">
-        {!selectedDate ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-            <p>Selecione uma data no calendário</p>
-          </div>
-        ) : availableSlots.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-secondary/10 rounded-lg border-dashed border-2">
-            <p className="text-sm font-medium">Nenhum horário disponível para esta data.</p>
-            <p className="text-xs mt-1">Por favor, selecione outro dia.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <h4 className="font-semibold text-lg">Horários Disponíveis</h4>
-            <p className="text-sm text-muted-foreground capitalize">
-              {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
-              {availableSlots.map((slot, idx) => (
-                <button
-                  key={idx}
-                  className="w-full flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors h-11 rounded-lg border border-input bg-background"
-                  onClick={() => console.log('Booking slot:', slot)}
-                >
-                  <Clock className="w-4 h-4" />
-                  {slot.startTime}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div> */}
     </div>
   );
 }
