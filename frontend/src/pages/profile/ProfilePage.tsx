@@ -6,6 +6,7 @@ import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
+import { apiFetch, loginFetch } from "../../services/api";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
 
@@ -67,7 +68,7 @@ export const ProfilePage = () => {
       // REMOVIDO: A trava de redirecionamento if (!loggedUserId) navigate('/auth')
 
       try {
-        const response = await fetch(`http://localhost:8080/users/${loggedUserId}`);
+        const response = await apiFetch(`/users/${loggedUserId}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -165,14 +166,11 @@ const handleSaveAll = async () => {
   };
 
   try {
-    // Requisição 1: Dados do Perfil
-    const resProfile = await fetch(`http://localhost:8080/profiles`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+    const resProfile = await loginFetch('/users', {
+      method: 'POST',
       body: JSON.stringify(profilePayload)
     });
 
-    // Requisição 2: Skills no Python/MongoDB
     const resStacks = await fetch(`http://localhost:8000/profile`, { // Verifique se a porta do Python é 8000
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -237,9 +235,8 @@ const handleSaveAll = async () => {
     try {
       const imageBase64 = await fileToBase64(file);
       
-      const response = await fetch('http://localhost:8080/profiles/image', {
+      const response = await apiFetch('/profiles/image', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileId: userData.profile_id,
           imageBase64: imageBase64,
@@ -266,20 +263,19 @@ const handleSaveAll = async () => {
    * Recupera a imagem do perfil do backend
    */
   const loadProfileImage = async (profileId: number) => {
-  try {
-    const response = await fetch(`http://localhost:8080/profiles/image/${profileId}`);
+    try {
+      const response = await apiFetch(`/profiles/image/${profileId}`);
     
-    if (response.ok) {
-      const data = await response.json();
+      if (response.ok) {
+        const data = await response.json();
       
-      // Verificamos se o dado existe e extraímos a string base64 corretamente
-      if (data && data.avatarUrl) {
-        let finalImage = "";
-        try {
-          // Se o backend enviar como string JSON: {"image_base64": "..."}
-          const parsed = JSON.parse(data.avatarUrl);
-          finalImage = parsed.image_base64 || parsed.avatarUrl;
-        } catch (e) {
+        if (data && data.avatarUrl) {
+          let finalImage = "";
+          try {
+            // Se o backend enviar como string JSON: {"image_base64": "..."}
+            const parsed = JSON.parse(data.avatarUrl);
+            finalImage = parsed.image_base64 || parsed.avatarUrl;
+          } catch (e) {
           // Se o backend já enviar a string direta (Base64 pura)
           finalImage = data.avatarUrl;
         }
@@ -367,7 +363,7 @@ useEffect(() => {
               {isEditing ? (
                 <div className="botoes-edicao-topo">
                   <Save
-                    size={22}
+                    size={22}DropdownList
                     className="perfil-icone-salvar"
                     onClick={handleSaveAll}
                   />
