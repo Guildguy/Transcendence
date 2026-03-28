@@ -6,6 +6,8 @@ import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
+import DropdownList from "../../components/common/Dropdown/Dropdown";
+import professionsData from "../../components/common/Dropdown/Profession.json";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
@@ -52,10 +54,12 @@ export const ProfilePage = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
+  const professionsOptions = professionsData.professions;
+
   useEffect(() => {
     const loadFullProfile = async () => {
       // 1. Pega o ID salvo ou força o ID "1" para visualização sem login
-      const loggedUserId = localStorage.getItem('userId') || "1";
+      const loggedUserId = localStorage.getItem('userId');
       
       console.log('=== ProfilePage useEffect ===');
       console.log('ID do usuário sendo buscado:', loggedUserId);
@@ -82,7 +86,7 @@ export const ProfilePage = () => {
             github: profile.github || "",
             linkedin: profile.linkedin || "",
             instagram: profile.instagram || "",
-            anosExperiencia: profile.xp?.toString() || "0",
+            anosExperiencia: profile.anosExperiencia?.toString() || "0",
             level: profile.level || 0,
             xp: profile.xp || 0,
             role: user.role || "mentor"
@@ -92,6 +96,9 @@ export const ProfilePage = () => {
           const loadedSkills: Skill[] = profile.stacks || [];
 
           setUserData(unifiedData);
+          if (profile.id) {
+          loadProfileImage(profile.id);
+        }
           setBackupData(unifiedData);
           setUserSkills(loadedSkills);
           setBackupSkills(loadedSkills);
@@ -134,47 +141,57 @@ export const ProfilePage = () => {
   }, []); // Removi o `navigate` do array de dependências, já que não o usamos mais dentro do useEffect
 
 const handleSaveAll = async () => {
-    if (!userData || !userData.id) return;
+  if (!userData || !userData.id) return;
 
-    // 1. Montamos o Payload apenas com os dados da tabela PROFILE
-    const profilePayload = {
-      user_id: userData.id,
-      profile_id: userData.profile_id,
-      position: userData.cargo,
-      bio: userData.presentationText,
-      github: userData.github,
-      linkedin: userData.linkedin,
-      instagram: userData.instagram,
-      xp: parseInt(userData.anosExperiencia) || 0,
-      role: userData.role?.toUpperCase()
-    };
-
-    try {
-      // Faz a requisição PUT para o endpoint de profile
-      // Ajuste a URL e o método HTTP se o seu backend for diferente
-      const response = await fetch(`http://localhost:8080/profiles`, {
-        method: "PUT", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profilePayload)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Perfil atualizado com sucesso!");
-        setBackupData(userData);
-        setBackupSkills(userSkills);
-        setIsEditing(false);
-        
-      } else {
-        const errorData = await response.json().catch(() => null);
-        alert(`Erro ao salvar perfil: ${errorData?.message || "Tente novamente."}`);
-      }
-    } catch (e) {
-      console.error("Erro de conexão:", e);
-      alert("Erro de conexão com o servidor. Os dados não foram salvos.");
-    }
+  // 1. Payload para o Backend Principal (Dados Pessoais)
+  const profilePayload = {
+    user_id: userData.id,
+    profile_id: userData.profile_id,
+    position: userData.cargo,
+    bio: userData.presentationText,
+    github: userData.github,
+    linkedin: userData.linkedin,
+    instagram: userData.instagram,
+    xp: userData.xp || 0,
+    anosExperiencia: parseInt(userData.anosExperiencia) || 0,
+    role: userData.role?.toUpperCase()
   };
+
+  // 2. Payload para o Microserviço Python (Skills/Stacks)
+  // Mapeamos o array de objetos [{id, name}] para ['name1', 'name2']
+  const pythonStacksPayload = {
+    profile_id: userData.profile_id?.toString() || userData.id.toString(),
+    stacks: userSkills.map(skill => skill.name) 
+  };
+
+  try {
+    // Requisição 1: Dados do Perfil
+    const resProfile = await fetch(`http://localhost:8080/profiles`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profilePayload)
+    });
+
+    // Requisição 2: Skills no Python/MongoDB
+    const resStacks = await fetch(`http://localhost:8000/profile`, { // Verifique se a porta do Python é 8000
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pythonStacksPayload)
+    });
+
+    if (resProfile.ok && resStacks.ok) {
+      alert("Perfil e habilidades atualizados com sucesso!");
+      setBackupData(userData);
+      setBackupSkills(userSkills);
+      setIsEditing(false);
+    } else {
+      alert("Erro ao salvar um dos componentes do perfil.");
+    }
+  } catch (e) {
+    console.error("Erro de conexão:", e);
+    alert("Erro de conexão com os servidores.");
+  }
+};
 
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword) {
@@ -196,6 +213,119 @@ const handleSaveAll = async () => {
     setUserSkills(newSkills);
   };
 
+  /**
+   * Converte arquivo para Base64
+   */
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  /**
+   * Faz upload da imagem para o backend
+   */
+  const handleImageUpload = async (file: File) => {
+    if (!userData.id) {
+      alert("Erro: ID do usuário não encontrado");
+      return;
+    }
+
+    try {
+      const imageBase64 = await fileToBase64(file);
+      
+      const response = await fetch('http://localhost:8080/profiles/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId: userData.profile_id,
+          imageBase64: imageBase64,
+          imageFileName: file.name
+        })
+      });
+
+      if (response.ok) {
+        alert('Imagem atualizada com sucesso!');
+        // Recarrega a imagem
+        loadProfileImage(Number(userData.profile_id));
+      } else {
+        const errors = await response.json();
+        console.error('Erro ao salvar imagem:', errors);
+        alert('Erro ao atualizar imagem!');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      alert('Erro de conexão ao atualizar imagem!');
+    }
+  };
+
+  /**
+   * Recupera a imagem do perfil do backend
+   */
+  const loadProfileImage = async (profileId: number) => {
+  try {
+    const response = await fetch(`http://localhost:8080/profiles/image/${profileId}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Verificamos se o dado existe e extraímos a string base64 corretamente
+      if (data && data.avatarUrl) {
+        let finalImage = "";
+        try {
+          // Se o backend enviar como string JSON: {"image_base64": "..."}
+          const parsed = JSON.parse(data.avatarUrl);
+          finalImage = parsed.image_base64 || parsed.avatarUrl;
+        } catch (e) {
+          // Se o backend já enviar a string direta (Base64 pura)
+          finalImage = data.avatarUrl;
+        }
+
+        setUserData((prev: any) => ({
+          ...prev,
+          avatarUrl: finalImage
+        }));
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar imagem:', error);
+  }
+};
+
+  /**
+   * Carrega a imagem ao montar o componente
+   */
+useEffect(() => {
+  const loadSkills = async () => {
+    // Só prossegue se o userData já tiver o profile_id real vindo do backend principal
+    if (!userData.profile_id) return;
+
+    const idParaBusca = userData.profile_id.toString();
+    console.log("Buscando skills para o ID consolidado:", idParaBusca);
+
+    try {
+      const response = await fetch(`http://localhost:8000/profile/${idParaBusca}`);
+      if (response.ok) {
+        const data = await response.json();
+        const formatted = data.stacks.map((s: string, i: number) => ({
+          id: `sk_py_${i}`,
+          name: s
+        }));
+        setUserSkills(formatted);
+        setBackupSkills(formatted);
+      }
+    } catch (err) {
+      console.error("Erro ao conectar com o Python:", err);
+    }
+  };
+
+  loadSkills();
+}, [userData.profile_id]);
+
+
 
   return (
     <div className="perfil-container">
@@ -204,9 +334,7 @@ const handleSaveAll = async () => {
           avatarUrl={userData.avatarUrl} 
           size={128} 
           isEditable={true} 
-          onImageChange={(file) => {
-            console.log("Arquivo selecionado para upload:", file);
-          }}
+          onImageChange={(file) => handleImageUpload(file)}
         />
         <div className="perfil-badges">
           <div className="perfil-badge">Level: {userData.level}</div>
@@ -263,13 +391,13 @@ const handleSaveAll = async () => {
                 <InputGroup
                   placeholder="Nome Completo"
                   value={userData.nome}
-                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, nome: val })}
                 />
-                <InputGroup
-                  placeholder="Cargo"
+                <DropdownList
+                  options={professionsOptions}
                   value={userData.cargo}
                   isEditing={isEditing}
+                  placeholder="Selecione seu cargo"
                   onChange={(val) => setUserData({ ...userData, cargo: val })}
                 />
                 <InputGroup
@@ -318,13 +446,11 @@ const handleSaveAll = async () => {
                 <InputGroup
                   placeholder="E-mail"
                   value={userData.email}
-                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, email: val })}
                 />
                 <InputGroup
                   placeholder="Telefone"
                   value={userData.telefone}
-                  isEditing={isEditing}
                   isNumeric={true}
                   onChange={(val) =>
                     setUserData({ ...userData, telefone: val })
@@ -341,6 +467,7 @@ const handleSaveAll = async () => {
               isEditable={true} 
               title="Habilidades apresentadas para mentorar"
             />
+            
             ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>

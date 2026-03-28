@@ -107,7 +107,7 @@ public class GamificationService
             }
         }
 
-        Integer totalXp = safeTotalXp(user.id);
+        Long totalXp = safeTotalXp(user.id);
         Level currentLevel = levelRepository.findTopByXpRequiredLessThanEqualOrderByXpRequiredDesc(totalXp);
         Level nextLevel = levelRepository.findTopByXpRequiredGreaterThanOrderByXpRequiredAsc(totalXp);
 
@@ -134,7 +134,7 @@ public class GamificationService
         if (user == null)
             return new SummaryResult(false, "Usuario nao encontrado.", null);
 
-        Integer totalXp = safeTotalXp(userId);
+        Long totalXp = safeTotalXp(userId);
         Level currentLevel = levelRepository.findTopByXpRequiredLessThanEqualOrderByXpRequiredDesc(totalXp);
         Level nextLevel = levelRepository.findTopByXpRequiredGreaterThanOrderByXpRequiredAsc(totalXp);
 
@@ -165,10 +165,10 @@ public class GamificationService
         return new SummaryResult(true, "Resumo carregado com sucesso.", response);
     }
 
-    private Integer safeTotalXp(Long userId)
+    private Long safeTotalXp(Long userId)
     {
         Long total = xpHistoryRepository.sumXpByUserId(userId);
-        return total != null ? total.intValue() : 0;
+        return total != null ? total : 0;
     }
 
     private int registerXp(Long userId, int xp, String reason)

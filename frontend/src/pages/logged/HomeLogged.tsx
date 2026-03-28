@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, useSearchParams } from 'react-router-dom'
+import {useSearchParams } from 'react-router-dom'
 import AppShell from '../../components/layout/AppShell/AppShell'
 import Header from '../../components/layout/Header/Header'
 import Footer from '../../components/layout/Footer/Footer'
@@ -13,7 +13,6 @@ import './HomeLogged.css'
 
 
 function HomeLogged() {
-  // request handlers are defined inside the component so they can update state
   useSearchParams()
   const [activeTab, setActiveTab] = useState<'pending' | 'notifications'>('pending')
   const [requests, setRequests] = useState(() => mockRequests)
