@@ -1,6 +1,6 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 45s
+  evaluation_interval: 45s
   external_labels:
     monitor: 'transcendence'
 
@@ -19,7 +19,7 @@ scrape_configs:
 
   - job_name: 'spring-boot-api'
     metrics_path: /actuator/prometheus
-    scrape_interval: 10s
+    scrape_interval: 45s
     static_configs:
       - targets: ['api:8080']
     relabel_configs:
@@ -29,7 +29,7 @@ scrape_configs:
 
   - job_name: 'python-profile-service'
     metrics_path: /metrics
-    scrape_interval: 10s
+    scrape_interval: 45s
     static_configs:
       - targets: ['python-service:8000']
     relabel_configs:
