@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Calendar, Video, RefreshCw, ArrowRightLeft, ExternalLink, History } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-// import { toast } from '@/hooks/use-toast';
+import { toast } from '../../../hooks/use-toast';
 
 interface SessionListProps {
   mentorId: string;
@@ -37,7 +37,7 @@ export function SessionList({ mentorId, menteeId }: SessionListProps) {
   const handleReschedule = () => {
     if (!rescheduleTarget || !newSlotId) return;
     rescheduleSession(rescheduleTarget.id, newSlotId);
-    // toast({ title: 'Sessão reagendada!', description: 'O horário foi atualizado.' });
+    toast({ title: 'Sessão reagendada!', description: 'O horário foi atualizado.' });
     setRescheduleTarget(null);
     setNewSlotId(null);
   };

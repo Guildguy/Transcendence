@@ -5,6 +5,7 @@ import AppShell from './components/layout/AppShell/AppShell'
 import Header from './components/layout/Header/Header'
 import Footer from './components/layout/Footer/Footer'
 import Home from './pages/Home'
+import { Toaster } from './components/common/ui/Toaster'
 
 // Lazy Loading for non-critical pages
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'))
@@ -19,8 +20,10 @@ const MentoriasPage = lazy(() => import('./pages/mentoria/MentoriasPage'))
 
 function App() {
   return (
+    <>
     <Suspense fallback={<div className="loading-state">Carregando...</div>}>
-      <Routes>
+    <Toaster />
+    <Routes>
 
         {/* HOME / LOGIN */}
         <Route
@@ -80,6 +83,7 @@ function App() {
 
       </Routes>
     </Suspense>
+  </>
   )
 }
 

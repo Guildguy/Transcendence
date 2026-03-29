@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { CalendarIcon, Clock, Video, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from '../../../hooks/use-toast';
+
 
 interface SlotSelectorProps {
   mentorId: string;
@@ -110,12 +112,12 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
       endTime,
       isRecurring,
     });
-    // toast({
-    //   title: 'Mentoria agendada!',
-    //   description: isRecurring
-    //     ? 'Agendamento recorrente criado (10 sessões semanais).'
-    //     : `Sessão agendada para ${format(selectedDate!, "dd/MM/yyyy")} das ${selectedStartTime} às ${endTime}.`,
-    // });
+    toast({
+      title: 'Mentoria agendada!',
+      description: isRecurring
+        ? 'Agendamento recorrente criado (10 sessões semanais).'
+        : `Sessão agendada para ${format(selectedDate!, "dd/MM/yyyy")} das ${selectedStartTime} às ${endTime}.`,
+    });
     setShowConfirm(false);
     setSelectedDate(undefined);
     resetSelection();
