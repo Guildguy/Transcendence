@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast";
-import { X } from "lucide-react";
 
 const ToastProvider = ToastPrimitives.Provider;
 
@@ -12,17 +11,15 @@ const ToastViewport = React.forwardRef<
     ref={ref}
     style={{
       position: "fixed",
-      top: "0",
+      top: "auto",
       zIndex: 100,
       display: "flex",
-      flexDirection: "column-reverse",
+      flexDirection: "column",
       maxHeight: "100vh",
       width: "100%",
       padding: "1rem",
       bottom: "0",
       right: "0",
-      top: "auto",
-      flexDirection: "column",
       maxWidth: "420px",
     }}
     {...props}
