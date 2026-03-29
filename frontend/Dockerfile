@@ -28,6 +28,7 @@ RUN npm install && \
         @radix-ui/react-switch \
         @radix-ui/react-label \
         @radix-ui/react-dialog \
+        @radix-ui/react-toast \
         lucide-react \
         date-fns
 
