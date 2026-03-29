@@ -13,10 +13,13 @@ import ProfilePage from './pages/profile/ProfilePage'
 import HomeLogged from './pages/logged/HomeLogged'
 import BookSessionWithMentor from './pages/book-session/BookSessionWithMentor'
 import MentoriasPage from './pages/mentoria/MentoriasPage'
+import { Toaster } from './components/common/ui/Toaster'
 
 
 function App() {
   return (
+    <>
+    <Toaster />
     <Routes>
 
       {/* HOME / LOGIN */}
@@ -76,6 +79,7 @@ function App() {
       <Route path="*" element={<Navigate to="/" />} />
 
     </Routes>
+  </>
   )
 }
 
