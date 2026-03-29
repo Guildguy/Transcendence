@@ -14,9 +14,12 @@ import com.ft.trans.dto.MentorNotesDTO;
 import com.ft.trans.dto.UpdateSessionDTO;
 import com.ft.trans.entity.DayOfWeekEnum;
 import com.ft.trans.entity.MentorAvailability;
+import com.ft.trans.entity.MentorshipConnection;
+import com.ft.trans.entity.MentorshipConnection.ConnectionStatus;
 import com.ft.trans.entity.MentorshipSession;
 import com.ft.trans.entity.MentorshipSession.SessionStatus;
 import com.ft.trans.repository.MentorAvailabilityRepository;
+import com.ft.trans.repository.MentorshipConnectionRepository;
 import com.ft.trans.repository.MentorshipSessionRepository;
 import com.ft.trans.validation.Result;
 import com.ft.trans.validation.ValidationResult;
@@ -28,19 +31,27 @@ public class MentorshipSessionService
 
 	private final MentorshipSessionRepository sessionRepository;
 	private final MentorAvailabilityRepository mentorAvailabilityRepository;
+	private final MentorshipConnectionRepository connectionRepository;
 
 	public MentorshipSessionService(
 		MentorshipSessionRepository sessionRepository,
-		MentorAvailabilityRepository mentorAvailabilityRepository
+		MentorAvailabilityRepository mentorAvailabilityRepository,
+		MentorshipConnectionRepository connectionRepository
 	)
 	{
 		this.sessionRepository = sessionRepository;
 		this.mentorAvailabilityRepository = mentorAvailabilityRepository;
+		this.connectionRepository = connectionRepository;
 	}
 
 	public Result createSession(CreateSessionDTO dto)
 	{
 		ValidationResult result = new ValidationResult();
+
+		// Validar que a conexão existe e está APPROVED
+		MentorshipConnection connection = _validateConnectionApproved(dto.connectionId, result);
+		if (result.hasErrors())
+			return new Result(null, result);
 
 		MentorshipSession baseSession = dto.toSession();
 		ValidationResult entityValidation = baseSession.validate();
@@ -53,7 +64,8 @@ public class MentorshipSessionService
 			return new Result(null, result);
 		}
 
-		if (!_isWithinMentorAvailability(dto.createdBy, dto.scheduledDate, dto.durationMinutes))
+		Long mentorId = connection.mentor.id;
+		if (!_isWithinMentorAvailability(mentorId, dto.scheduledDate, dto.durationMinutes))
 		{
 			result.addError(
 				"scheduledDate",
@@ -70,11 +82,17 @@ public class MentorshipSessionService
 	{
 		ValidationResult result = new ValidationResult();
 
+		// Validar que a conexão existe e está APPROVED
+		MentorshipConnection connection = _validateConnectionApproved(dto.connectionId, result);
+		if (result.hasErrors())
+			return new RecurrenceResult(null, result);
+
 		MentorshipSession baseSession = dto.toSession();
 		ValidationResult entityValidation = baseSession.validate();
 		if (entityValidation.hasErrors())
 			return new RecurrenceResult(null, entityValidation);
 
+		Long mentorId = connection.mentor.id;
 		UUID groupId = UUID.randomUUID();
 		List<MentorshipSession> sessions = new ArrayList<>();
 
@@ -89,7 +107,7 @@ public class MentorshipSessionService
 				return new RecurrenceResult(null, result);
 			}
 
-			if (!_isWithinMentorAvailability(dto.createdBy, sessionDate, dto.durationMinutes))
+			if (!_isWithinMentorAvailability(mentorId, sessionDate, dto.durationMinutes))
 			{
 				result.addError(
 					"scheduledDate",
@@ -305,6 +323,31 @@ public class MentorshipSessionService
 			case SATURDAY -> DayOfWeekEnum.SATURDAY;
 			case SUNDAY -> DayOfWeekEnum.SUNDAY;
 		};
+	}
+
+	private MentorshipConnection _validateConnectionApproved(Long connectionId, ValidationResult result)
+	{
+		if (connectionId == null)
+		{
+			result.addError("connectionId", "ID da conexão é obrigatório.");
+			return null;
+		}
+
+		MentorshipConnection connection = connectionRepository.findById(connectionId).orElse(null);
+		if (connection == null)
+		{
+			result.addError("connectionId", "Conexão de mentoria não encontrada.");
+			return null;
+		}
+
+		if (connection.status != ConnectionStatus.APPROVED)
+		{
+			result.addError("connectionId",
+				"Sessões só podem ser criadas em conexões aprovadas. Status atual: " + connection.status);
+			return null;
+		}
+
+		return connection;
 	}
 
 	private Result _persistSession(MentorshipSession session)
