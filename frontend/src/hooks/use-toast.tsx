@@ -7,7 +7,7 @@ const ToastProvider = ToastPrimitives.Provider;
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
->(({ className, ...props }, ref) => (
+>(({ style, ...props }, ref) => (
   <ToastPrimitives.Viewport
     ref={ref}
     style={{
@@ -33,7 +33,7 @@ ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>
->(({ className, ...props }, ref) => {
+>(({ style, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
       ref={ref}
