@@ -6,9 +6,12 @@ public record GamificationSummaryResponse(
     Long userId,
     Long totalXp,
     Integer currentLevel,
+    String  currentLevelIconUrl,
     Integer nextLevelXp,
-    List<String> unlockedAchievements,
+    List<AchievementItem> unlockedAchievements,
     List<HistoryItem> recentHistory
-) {
+)
+{
     public record HistoryItem(String reason, Integer xp) {}
+    public record AchievementItem(String name, String iconUrl) {}
 }

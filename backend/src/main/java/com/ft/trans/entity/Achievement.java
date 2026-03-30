@@ -18,15 +18,12 @@ public class Achievement
 
     public String description;
 
-    // MATCH / SESSION / STREAK / PROFILE / REVIEW / LEVEL
     @Column(nullable = false)
     public String type;
 
-    // qnt. necessária para desbloquear
     public Integer target;
-
-    // XP extra que ganha
     public Integer xp_reward;
+    public String iconUrl;
 
     public Date created_at;
     public String created_by;
