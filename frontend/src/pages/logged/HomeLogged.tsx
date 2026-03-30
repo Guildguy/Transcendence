@@ -107,7 +107,10 @@ function HomeLogged() {
           <h3 className="achievements-title">Conquistas</h3>
           <div className="achievements-grid">
             {mockAchievements.map((a) => (
-              <div key={a.id} className="achievement-card" />
+              <div key={a.id} className="achievement-card">
+                {a.icon && <img src={a.icon} alt={a.title} className="achievement-icon" style={{width: 48, height: 48, marginBottom: 8}} />}
+                <div className="achievement-title">{a.title}</div>
+              </div>
             ))}
           </div>
         </section>
