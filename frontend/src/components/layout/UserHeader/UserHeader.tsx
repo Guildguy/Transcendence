@@ -41,26 +41,26 @@ const DEFAULT_USER_DATA: UserHeaderData = {
   recentHistory: [],
 }
 
-const FALLBACK_USER_DATA: UserHeaderData = {
-  nome: 'Zezin 1',
-  username: 'ze1',
-  cargo: 'Mentor',
-  avatarUrl: '',
-  level: 1,
-  xp: 250,
-  nextLevelXp: 500,
-  role: 'MENTOR',
-  unlockedAchievements: [
-  { name: 'Identidade Transcendental', iconUrl: '/achievements/identidade_transcendental.png' },
-  { name: 'Chama Acesa',               iconUrl: '/achievements/chama_acessa.png' },
-  { name: 'Primeiro Match',            iconUrl: '/achievements/primeiro_aperto_de_mao.png' },
-  ],
-  recentHistory: [                          // ← estava faltando isso
-  { reason: 'PROFILE_COMPLETED', xp: 50 },
-  { reason: 'MATCH_ACCEPTED',    xp: 150 },
-  { reason: 'SESSION_COMPLETED', xp: 50 },
-  ],
-}
+// const FALLBACK_USER_DATA: UserHeaderData = {
+//   nome: 'luciano',
+//   username: 'ze1',
+//   cargo: 'Mentor',
+//   avatarUrl: '',
+//   level: 1,
+//   xp: 250,
+//   nextLevelXp: 500,
+//   role: 'MENTOR',
+//   unlockedAchievements: [
+//   { name: 'Identidade Transcendental', iconUrl: '/achievements/identidade_transcendental.png' },
+//   { name: 'Chama Acesa',               iconUrl: '/achievements/chama_acessa.png' },
+//   { name: 'Primeiro Match',            iconUrl: '/achievements/primeiro_aperto_de_mao.png' },
+//   ],
+//   recentHistory: [                          // ← estava faltando isso
+//   { reason: 'PROFILE_COMPLETED', xp: 50 },
+//   { reason: 'MATCH_ACCEPTED',    xp: 150 },
+//   { reason: 'SESSION_COMPLETED', xp: 50 },
+//   ],
+// }
 
 const REASON_LABELS: Record<string, string> = {
   PROFILE_COMPLETED: 'Perfil completo',
@@ -158,6 +158,7 @@ export const UserHeader = () => {
       </div>
 
       {/* Stats */}
+
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
           <InputGroup
@@ -179,21 +180,6 @@ export const UserHeader = () => {
             onChange={() => {}}
           />
         </div>
-
-        {/* Conquistas */}
-        {userData.unlockedAchievements.length > 0 && (
-          <div className="gamification-section">
-            <h3 className="gamification-title">🏅 Conquistas</h3>
-            <ul className="achievements-list">
-              {userData.unlockedAchievements.map((a) => (   // ← era (name)
-                <li key={a.name} className="achievement-badge">
-                  <img src={a.iconUrl} alt={a.name} className="achievement-icon" />
-                  <span>{a.name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {/* Histórico */}
         {userData.recentHistory.length > 0 && (
