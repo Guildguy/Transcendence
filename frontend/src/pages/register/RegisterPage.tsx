@@ -126,11 +126,8 @@ function RegisterPage() {
       if (response.ok) {
         console.log('Usuário cadastrado com sucesso:', data);
 
-        if (data && data.id) {
+        if (data && data.id)
           localStorage.setItem('userId', data.id.toString());
-        } else if (data && data.user && data.user.id) {
-          localStorage.setItem('userId', data.user.id.toString());
-        }
       }
       
       const loginPayload = {
