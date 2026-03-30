@@ -32,7 +32,6 @@ public class MentorshipConnectionController
 		this.connectionService = connectionService;
 	}
 
-	// ── POST: Mentorado solicita conexão ─────────────────────────
 	@PostMapping
 	public ResponseEntity<?> requestConnection(@RequestBody RequestConnectionDTO dto)
 	{
@@ -41,13 +40,12 @@ public class MentorshipConnectionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity.status(HttpStatus.CREATED).body(result.entity());
 	}
 
-	// ── PATCH: Mentor aceita ─────────────────────────────────────
 	@PatchMapping("/{id}/accept")
 	public ResponseEntity<?> acceptConnection(
 		@PathVariable Long id,
@@ -59,13 +57,12 @@ public class MentorshipConnectionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(result.entity());
 	}
 
-	// ── PATCH: Mentor rejeita ────────────────────────────────────
 	@PatchMapping("/{id}/reject")
 	public ResponseEntity<?> rejectConnection(
 		@PathVariable Long id,
@@ -77,13 +74,12 @@ public class MentorshipConnectionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(result.entity());
 	}
 
-	// ── DELETE: Encerrar mentoria ────────────────────────────────
 	@DeleteMapping("/{id}")
 	public ResponseEntity<?> endConnection(
 		@PathVariable Long id,
@@ -95,13 +91,12 @@ public class MentorshipConnectionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(result.entity());
 	}
 
-	// ── GET: Mentores do mentorado (ativos) ──────────────────────
 	@GetMapping("/mentee/{menteeId}")
 	public ResponseEntity<?> listMentorsByMentee(@PathVariable Long menteeId)
 	{
@@ -109,7 +104,6 @@ public class MentorshipConnectionController
 		return ResponseEntity.status(HttpStatus.OK).body(connections);
 	}
 
-	// ── GET: Mentorados do mentor (ativos) ───────────────────────
 	@GetMapping("/mentor/{mentorId}")
 	public ResponseEntity<?> listMenteesByMentor(@PathVariable Long mentorId)
 	{
@@ -117,7 +111,6 @@ public class MentorshipConnectionController
 		return ResponseEntity.status(HttpStatus.OK).body(connections);
 	}
 
-	// ── GET: Solicitações pendentes do mentor ────────────────────
 	@GetMapping("/mentor/{mentorId}/pending")
 	public ResponseEntity<?> listPendingByMentor(@PathVariable Long mentorId)
 	{
@@ -125,7 +118,6 @@ public class MentorshipConnectionController
 		return ResponseEntity.status(HttpStatus.OK).body(connections);
 	}
 
-	// ── GET: Capacidade do mentor ────────────────────────────────
 	@GetMapping("/mentor/{mentorId}/capacity")
 	public ResponseEntity<?> getMentorCapacity(@PathVariable Long mentorId)
 	{
@@ -133,7 +125,6 @@ public class MentorshipConnectionController
 		return ResponseEntity.status(HttpStatus.OK).body(capacity);
 	}
 
-	// ── POST: Configurar limite de mentorados ────────────────────
 	@PostMapping("/limit")
 	public ResponseEntity<?> saveLimitMentee(@RequestBody LimitMenteeDTO dto)
 	{
@@ -142,7 +133,7 @@ public class MentorshipConnectionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity.status(HttpStatus.CREATED).body(result.entity());

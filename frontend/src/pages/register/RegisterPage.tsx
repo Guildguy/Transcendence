@@ -101,10 +101,10 @@ function RegisterPage() {
     const payload = {
       name,
       profileType,
-      phoneNumber, // Ajustado para bater com o campo da sua entidade/DTO
+      phoneNumber,
       email,
       password,
-      status: true // No Java definimos como boolean
+      status: true
     };
 
     try {
