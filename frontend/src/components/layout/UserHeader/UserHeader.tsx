@@ -7,7 +7,12 @@ import './UserHeader.css'
 
 type HistoryItem = {
   reason: string
-  xp: string
+  xp: number
+}
+
+type AchievementItem = {
+  name: string
+  iconUrl: string
 }
 
 type UserHeaderData = {
@@ -15,11 +20,11 @@ type UserHeaderData = {
   username: string
   cargo: string
   avatarUrl: string
-  level: string
-  xp: string
-  nextLevelXp: string | null
+  level: number
+  xp: number
+  nextLevelXp: number | null
   role: 'MENTOR' | 'MENTORADO'
-  unlockedAchievements: string[]
+  unlockedAchievements: AchievementItem[]
   recentHistory: HistoryItem[]
 }
 
@@ -28,8 +33,8 @@ const DEFAULT_USER_DATA: UserHeaderData = {
   username: '...',
   cargo: '...',
   avatarUrl: '',
-  level: '0',
-  xp: '0',
+  level: 0,
+  xp: 0,
   nextLevelXp: null,
   role: 'MENTOR',
   unlockedAchievements: [],
@@ -41,16 +46,36 @@ const FALLBACK_USER_DATA: UserHeaderData = {
   username: 'ze1',
   cargo: 'Mentor',
   avatarUrl: '',
-  level: '1',
-  xp: '0',
-  nextLevelXp: '500',
+  level: 1,
+  xp: 250,
+  nextLevelXp: 500,
   role: 'MENTOR',
-  unlockedAchievements: ['Identidade Transcendental', 'Chama Acesa', 'Primeiro Match'],
-  recentHistory: [
-    { reason: 'PROFILE_COMPLETED', xp: '50' },
-    { reason: 'MATCH_ACCEPTED', xp: '150' },
-    { reason: 'SESSION_COMPLETED', xp: '50' },
+  unlockedAchievements: [
+  { name: 'Identidade Transcendental', iconUrl: '/achievements/identidade_transcendental.png' },
+  { name: 'Chama Acesa',               iconUrl: '/achievements/chama_acessa.png' },
+  { name: 'Primeiro Match',            iconUrl: '/achievements/primeiro_aperto_de_mao.png' },
   ],
+  recentHistory: [                          // ← estava faltando isso
+  { reason: 'PROFILE_COMPLETED', xp: 50 },
+  { reason: 'MATCH_ACCEPTED',    xp: 150 },
+  { reason: 'SESSION_COMPLETED', xp: 50 },
+  ],
+}
+
+const REASON_LABELS: Record<string, string> = {
+  PROFILE_COMPLETED: 'Perfil completo',
+  MATCH_ACCEPTED: 'Match aceito',
+  SESSION_COMPLETED: 'Sessão concluída',
+  CYCLE_COMPLETED: 'Ciclo fechado',
+  REVIEW_SENT: 'Avaliação enviada',
+  REVIEW_RECEIVED_5: 'Avaliação 5 estrelas recebida',
+  REVIEW_RECEIVED_4: 'Avaliação 4 estrelas recebida',
+  STREAK_7: 'Streak de 7 dias',
+  NO_SHOW_WAITING_BONUS: 'Bônus de espera',
+}
+
+function formatReason(reason: string): string {
+  return REASON_LABELS[reason] ?? reason
 }
 
 export const UserHeader = () => {
@@ -69,18 +94,18 @@ export const UserHeader = () => {
         const profiles = Array.isArray(data?.profiles) ? data.profiles : []
         const mentorProfile = profiles.find((p: any) => p?.role === 'MENTOR') || profiles[0] || {}
 
-        let level = mentorProfile?.level?.toString() || '0'
-        let xp = mentorProfile?.xp?.toString() || '0'
-        let nextLevelXp: null = null
-        let unlockedAchievements: string[] = []
+        let level: number = mentorProfile?.level ?? 0
+        let xp: number = mentorProfile?.xp ?? 0
+        let nextLevelXp: number | null = null
+        let unlockedAchievements: AchievementItem[] = []
         let recentHistory: HistoryItem[] = []
 
         try {
           const summaryRes = await apiFetch(`/gamification/users/${loggedUserId}/summary`)
           if (summaryRes.ok) {
             const summary = await summaryRes.json()
-            level = summary?.currentLevel?.toString() || level
-            xp = summary?.totalXp?.toString() || xp
+            level = summary?.currentLevel ?? level
+            xp = summary?.totalXp ?? xp
             nextLevelXp = summary?.nextLevelXp ?? null
             unlockedAchievements = Array.isArray(summary?.unlockedAchievements)
               ? summary.unlockedAchievements
@@ -90,7 +115,7 @@ export const UserHeader = () => {
               : []
           }
         } catch {
-          // Keep profile values if summary is unavailable.
+          // Mantém valores do perfil se gamification falhar
         }
 
         setUserData({
@@ -106,7 +131,6 @@ export const UserHeader = () => {
           role: mentorProfile?.role === 'MENTORADO' ? 'MENTORADO' : 'MENTOR',
         })
       } catch {
-        // Fallback to deterministic mock aligned with UserMockConfig seed.
         setUserData(FALLBACK_USER_DATA)
       }
     }
@@ -116,6 +140,8 @@ export const UserHeader = () => {
 
   return (
     <section className="user-header">
+
+      {/* Perfil */}
       <div className="profile-section">
         <div className="header-info">
           <div className="header-avatar">
@@ -131,11 +157,12 @@ export const UserHeader = () => {
         </div>
       </div>
 
+      {/* Stats */}
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
           <InputGroup
             label="Nível"
-            value={userData.level}
+            value={String(userData.level)}
             isEditing={false}
             onChange={() => {}}
           />
@@ -152,7 +179,38 @@ export const UserHeader = () => {
             onChange={() => {}}
           />
         </div>
+
+        {/* Conquistas */}
+        {userData.unlockedAchievements.length > 0 && (
+          <div className="gamification-section">
+            <h3 className="gamification-title">🏅 Conquistas</h3>
+            <ul className="achievements-list">
+              {userData.unlockedAchievements.map((a) => (   // ← era (name)
+                <li key={a.name} className="achievement-badge">
+                  <img src={a.iconUrl} alt={a.name} className="achievement-icon" />
+                  <span>{a.name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Histórico */}
+        {userData.recentHistory.length > 0 && (
+          <div className="gamification-section">
+            <h3 className="gamification-title">📈 Histórico de XP</h3>
+            <ul className="history-list">
+              {userData.recentHistory.map((item, i) => (
+                <li key={i} className="history-item">
+                  <span className="history-reason">{formatReason(item.reason)}</span>
+                  <span className="history-xp">+{item.xp} XP</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
+
     </section>
   )
 }
