@@ -19,6 +19,8 @@ public class Level
     @Column(name = "xp_required", nullable = false)
     public Integer xpRequired;
 
+    public String iconUrl;
+
     @Column(name = "created_at")
     public Date createdAt;
     public String created_by;

@@ -26,8 +26,7 @@ import com.ft.trans.repository.UserRepository;
 import com.ft.trans.repository.XpHistoryRepository;
 
 @Service
-public class GamificationService
-{
+public class GamificationService {
     private final UserRepository userRepository;
     private final AchievementRepository achievementRepository;
     private final UserAchievementRepository userAchievementRepository;
@@ -35,11 +34,11 @@ public class GamificationService
     private final LevelRepository levelRepository;
 
     public GamificationService(
-        UserRepository userRepository,
-        AchievementRepository achievementRepository,
-        UserAchievementRepository userAchievementRepository,
-        XpHistoryRepository xpHistoryRepository,
-        LevelRepository levelRepository
+            UserRepository userRepository,
+            AchievementRepository achievementRepository,
+            UserAchievementRepository userAchievementRepository,
+            XpHistoryRepository xpHistoryRepository,
+            LevelRepository levelRepository
     ) {
         this.userRepository = userRepository;
         this.achievementRepository = achievementRepository;
@@ -51,22 +50,23 @@ public class GamificationService
     public record EventResult(boolean success, String message, GamificationEventResponse response) {}
     public record SummaryResult(boolean success, String message, GamificationSummaryResponse response) {}
 
-    public EventResult processEvent(GamificationEventRequest request)
-    {
-        if (request == null || request.userId() == null || request.eventType() == null || request.eventType().isBlank())
+    public EventResult processEvent(GamificationEventRequest request) {
+        if (request == null || request.userId() == null || request.eventType() == null || request.eventType().isBlank()) {
             return new EventResult(false, "Payload invalido.", null);
+        }
 
         User user = userRepository.findById(request.userId()).orElse(null);
-        if (user == null)
+
+        if (user == null) {
             return new EventResult(false, "Usuario nao encontrado.", null);
+        }
 
         String eventType = request.eventType().trim().toUpperCase(Locale.ROOT);
         int awardedXp = 0;
         List<String> unlocked = new ArrayList<>();
         List<String> notes = new ArrayList<>();
 
-        switch (eventType)
-        {
+        switch (eventType) {
             case "PROFILE_COMPLETED" -> {
                 awardedXp = registerXp(user.id, 50, "PROFILE_COMPLETED");
                 unlockByName(user.id, "Identidade Transcendental", unlocked);
@@ -112,69 +112,71 @@ public class GamificationService
         Level nextLevel = levelRepository.findTopByXpRequiredGreaterThanOrderByXpRequiredAsc(totalXp);
 
         GamificationEventResponse response = new GamificationEventResponse(
-            user.id,
-            eventType,
-            awardedXp,
-            totalXp,
-            currentLevel != null ? currentLevel.level : 1,
-            nextLevel != null ? nextLevel.xpRequired : null,
-            unlocked,
-            notes
+                user.id,
+                eventType,
+                awardedXp,
+                totalXp,
+                currentLevel != null ? currentLevel.level : 1,
+                nextLevel != null ? nextLevel.xpRequired : null,
+                unlocked,
+                notes
         );
 
         return new EventResult(true, "Evento processado com sucesso.", response);
     }
 
-    public SummaryResult getSummary(Long userId)
-    {
-        if (userId == null)
+    public SummaryResult getSummary(Long userId) {
+        if (userId == null) {
             return new SummaryResult(false, "userId invalido.", null);
+        }
 
         User user = userRepository.findById(userId).orElse(null);
-        if (user == null)
+        if (user == null) {
             return new SummaryResult(false, "Usuario nao encontrado.", null);
+        }
 
         Long totalXp = safeTotalXp(userId);
         Level currentLevel = levelRepository.findTopByXpRequiredLessThanEqualOrderByXpRequiredDesc(totalXp);
         Level nextLevel = levelRepository.findTopByXpRequiredGreaterThanOrderByXpRequiredAsc(totalXp);
 
-        Map<Long, String> achievementNames = achievementRepository.findAll()
-            .stream()
-            .collect(Collectors.toMap(a -> a.id, a -> a.name));
+        Map<Long, Achievement> achievementMap = achievementRepository.findAll()
+                .stream()
+                .collect(Collectors.toMap(a -> a.id, a -> a));
 
-        List<String> unlocked = userAchievementRepository.findByUserId(userId)
-            .stream()
-            .map(ua -> achievementNames.get(ua.achievementId))
-            .filter(Objects::nonNull)
-            .toList();
+        List<GamificationSummaryResponse.AchievementItem> unlocked = userAchievementRepository.findByUserId(userId)
+                .stream()
+                .map(ua -> achievementMap.get(ua.achievementId))   // ← achivementMap, não achievementNames
+                .filter(Objects::nonNull)
+                .map(a -> new GamificationSummaryResponse.AchievementItem(a.name, a.iconUrl))  // ← mapeia para AchievementItem
+                .toList();
 
         List<GamificationSummaryResponse.HistoryItem> recent = xpHistoryRepository.findTop10ByUserIdOrderByIdDesc(userId)
-            .stream()
-            .map(h -> new GamificationSummaryResponse.HistoryItem(h.reason, h.xp))
-            .toList();
+                .stream()
+                .map(h -> new GamificationSummaryResponse.HistoryItem(h.reason, h.xp))
+                .toList();
 
         GamificationSummaryResponse response = new GamificationSummaryResponse(
-            userId,
-            totalXp,
-            currentLevel != null ? currentLevel.level : 1,
-            nextLevel != null ? nextLevel.xpRequired : null,
-            unlocked,
-            recent
+                userId,
+                totalXp,
+                currentLevel != null ? currentLevel.level : 1,
+                currentLevel != null ? currentLevel.iconUrl : "/levels/level1.png",
+                nextLevel != null ? nextLevel.xpRequired : null,
+                unlocked,
+                recent
         );
 
         return new SummaryResult(true, "Resumo carregado com sucesso.", response);
     }
 
-    private Long safeTotalXp(Long userId)
-    {
+    private Long safeTotalXp(Long userId) {
         Long total = xpHistoryRepository.sumXpByUserId(userId);
         return total != null ? total : 0;
     }
 
-    private int registerXp(Long userId, int xp, String reason)
-    {
-        if (xp <= 0)
+    private int registerXp(Long userId, int xp, String reason) {
+        if (xp <= 0) {
             return 0;
+        }
 
         XpHistory history = new XpHistory();
         history.userId = userId;
@@ -187,38 +189,36 @@ public class GamificationService
         return xp;
     }
 
-    private void unlockByName(Long userId, String achievementName, List<String> unlocked)
-    {
+    private void unlockByName(Long userId, String achievementName, List<String> unlocked) {
         Achievement achievement = achievementRepository.findByName(achievementName);
-        if (achievement == null)
+        if (achievement == null) {
             return;
+        }
         unlockAchievement(userId, achievement, unlocked);
     }
 
-    private void unlockByTarget(Long userId, String type, String counterReason, List<String> unlocked)
-    {
+    private void unlockByTarget(Long userId, String type, String counterReason, List<String> unlocked) {
         long count = xpHistoryRepository.countByUserIdAndReason(userId, counterReason);
 
-        for (Achievement achievement : achievementRepository.findByType(type))
-        {
-            if (achievement.target != null && count >= achievement.target)
+        for (Achievement achievement : achievementRepository.findByType(type)) {
+            if (achievement.target != null && count >= achievement.target) {
                 unlockAchievement(userId, achievement, unlocked);
+            }
         }
     }
 
-    private void unlockByTypeAndTarget(Long userId, String type, int target, List<String> unlocked)
-    {
-        for (Achievement achievement : achievementRepository.findByType(type))
-        {
-            if (achievement.target != null && achievement.target == target)
+    private void unlockByTypeAndTarget(Long userId, String type, int target, List<String> unlocked) {
+        for (Achievement achievement : achievementRepository.findByType(type)) {
+            if (achievement.target != null && achievement.target == target) {
                 unlockAchievement(userId, achievement, unlocked);
+            }
         }
     }
 
-    private void unlockAchievement(Long userId, Achievement achievement, List<String> unlocked)
-    {
-        if (userAchievementRepository.existsByUserIdAndAchievementId(userId, achievement.id))
+    private void unlockAchievement(Long userId, Achievement achievement, List<String> unlocked) {
+        if (userAchievementRepository.existsByUserIdAndAchievementId(userId, achievement.id)) {
             return;
+        }
 
         UserAchievement ua = new UserAchievement();
         ua.userId = userId;
