@@ -116,11 +116,10 @@ function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Aqui capturamos os erros do objeto Result/ValidationResult que criamos no Java
         if (data.result && data.result.errors) {
             console.error('Erros de validação:', data.result.errors);
-            // Exemplo: alert(data.result.errors.email);
-        }
+            alert('Erro ao cadastrar usuário: ' + data.result.errors.join(', ')); 
+        }   
         throw new Error('Falha ao cadastrar usuário');
       }
 
