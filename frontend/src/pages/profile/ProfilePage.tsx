@@ -363,7 +363,7 @@ useEffect(() => {
               {isEditing ? (
                 <div className="botoes-edicao-topo">
                   <Save
-                    size={22}DropdownList
+                    size={22}
                     className="perfil-icone-salvar"
                     onClick={handleSaveAll}
                   />
