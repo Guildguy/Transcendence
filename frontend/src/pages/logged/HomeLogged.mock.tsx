@@ -31,6 +31,10 @@ export const mockSchedule: ScheduleItem[] = [
 ]
 
 export const mockAchievements: Achievement[] = [
-  { id: 1 }, { id: 2 }, { id: 3 },
-  { id: 4 }, { id: 5 }, { id: 6 },
+  { id: 1, title: 'Identidade Transcendental', icon: '/achievements/identidade_transcendental.png' },
+  { id: 2, title: 'Chama Acesa', icon: '/achievements/chama_acessa.png' },
+  { id: 3, title: 'Imparável', icon: '/achievements/comeco_da_jornada.png' },
+  { id: 4, title: 'Primeiro Match', icon: '/achievements/primeiro_aperto_de_mao.png' },
+  { id: 5, title: 'Hub de Conexões', icon: '/achievements/hub_de_conexoes.png' },
+  { id: 6, title: 'Quebrando o Gelo', icon: '/achievements/quebrando_o-gelo.png' },
 ]
