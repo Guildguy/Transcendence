@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://0.0.0.0:8080';
+const API_BASE_URL = 'http://localhost:8080';
 
 /**
  * Obtém o JWT do localStorage
