@@ -1,6 +1,4 @@
-import React, { useState, useEffect, use } from "react";
-// Import do useNavigate mantido caso você precise usar em outro lugar
-import { useNavigate } from "react-router-dom"; 
+import React, { useState, useEffect } from "react";
 import { Pencil, Save, Trash2 } from "lucide-react";
 import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
@@ -34,7 +32,7 @@ interface Skill {
 }
 
 export const ProfilePage = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [abaAtiva, setAbaAtiva] = useState("gerais");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -153,12 +151,12 @@ const handleSaveAll = async () => {
 
   const pythonStacksPayload = {
     profile_id: userData.profile_id?.toString() || userData.id.toString(),
-    stacks: userSkills.map(skill => skill.name) 
+    stacks: userSkills.map((skill: { name: any; }) => skill.name) 
   };
 
   try {
-    const resProfile = await loginFetch('/users', {
-      method: 'POST',
+    const resProfile = await apiFetch('/profiles', {
+      method: 'PUT',
       body: JSON.stringify(profilePayload)
     });
 
