@@ -352,7 +352,6 @@ useEffect(() => {
                 <div className="botoes-edicao-topo">
                   <Save
                     size={22}
-                    DropdownList
                     className="perfil-icone-salvar"
                     onClick={handleSaveAll}
                   />
