@@ -43,7 +43,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Endpoints que não precisam de autenticação
         if ((requestPath.equals("/login") && "POST".equals(method)) ||
             (requestPath.equals("/login/google") && "POST".equals(method)) ||
-            (requestPath.equals("/users") && "POST".equals(method))) {
+            (requestPath.equals("/users") && "POST".equals(method)) ||
+            (requestPath.matches("/users/\\d+") && "GET".equals(method)) ||
+            (requestPath.startsWith("/gamification/") && "GET".equals(method))) {
             filterChain.doFilter(request, response);
             return;
         }
