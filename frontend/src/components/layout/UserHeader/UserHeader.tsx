@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
-import { apiFetch } from '../../../services/api'
+import { userService } from '../../../services/Userservice' 
 import './UserHeader.css'
 
 type HistoryItem = {
@@ -150,7 +150,7 @@ export const UserHeader = () => {
         </div>
         <div className="header-info">
           <ProfileBadge text={userData.role === 'MENTOR' ? 'Pessoa Mentora' : 'Mentorada'} />
-          <span className="profile-user-name">{userData.nome}</span>
+          <h2 className="profile-user-name">{userData.nome}</h2>
           <span className="profile-details">
             @{userData.username} | {userData.cargo}
           </span>
