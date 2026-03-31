@@ -67,7 +67,7 @@ public class UserController
     public ResponseEntity<?>		update(@RequestBody UpdateUserDTO userToUpdate)
 	{
 		Result result = this.userService.update(userToUpdate.toUser());
-
+		
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
@@ -75,7 +75,7 @@ public class UserController
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity
-            .status(HttpStatus.CREATED)
+            .status(HttpStatus.OK)
             .body(result.entity());
 	}
 

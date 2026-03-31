@@ -61,15 +61,22 @@ public class UserService {
 		return userFound;
 	}
 
-    public Result		update(User user)
+    public Result		update(User userToUpdate)
     {
-		if (user.id == null)
+		User existingUser = userRepository.findById(userToUpdate.id).orElse(null);
+
+		if (existingUser == null)
 		{
 			ValidationResult result = new ValidationResult();
-			result.addError("id", "Não foi possível alterar o usuário. Campo id está faltando");
-			return new Result(user, result);
+			result.addError("id", "Usuário não encontrado para o id fornecido");
+			return new Result(userToUpdate, result);
 		}
-        return (_persistUser(user, true));
+
+		existingUser.name = userToUpdate.name;
+		existingUser.email = userToUpdate.email;
+		existingUser.phoneNumber = userToUpdate.phoneNumber;
+
+        return (_persistUser(existingUser, true));
     }
 
     public Boolean		delete(Long id)
@@ -82,7 +89,10 @@ public class UserService {
     private Result _persistUser(User user, Boolean isUpdate)
 	{
 	    User savedUser = null;
-	    ValidationResult result = user.validate();
+	    ValidationResult result = new ValidationResult();
+		
+		if (!isUpdate)
+			result = user.validate();
 
 	    if (!result.hasErrors()) {
 	        try {
