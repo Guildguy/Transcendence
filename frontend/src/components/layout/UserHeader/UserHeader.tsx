@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
-import { apiFetch } from '../../../services/api'
+import { userService } from '../../../services/Userservice' 
 import './UserHeader.css'
 
 export const UserHeader = () => {
@@ -16,25 +16,17 @@ export const UserHeader = () => {
     role: 'MENTOR'
   });
 
-useEffect(() => {
+  useEffect(() => {
     const loadData = async () => {
-      const loggedUserId = localStorage.getItem('userId') || "1";
+      // Pega o ID do usuário logado no storage
+      const loggedUserId = localStorage.getItem('userId');
+      if (!loggedUserId) return;
+
       try {
-        const res = await apiFetch(`/users/${loggedUserId}`)
-        if (!res.ok) throw new Error('no user')
-        const data = await res.json()
-        const profile = data.profiles && data.profiles.length > 0 ? data.profiles[0] : {}
-        setUserData({ //CHECAR SE ESSE C[ODIGO ESTA CERTO
-          level: profile.level?.toString() || '0',
-          xp: profile.xp?.toString() || '0',
-          cargo: profile.cargo || 'Cargo',
-          nome: profile.nome || 'Nome do usuário',
-          username: profile.username || 'username',
-          profile: profile.profile || 'Mentor' //MENTOR OU MENTORADO
-        })
-      } catch (e) {
-        // fallback mock when backend is unavailable
-        setUserData({ level: '0', xp: '500' })
+        const data = await userService.getFullProfile(loggedUserId);
+        setUserData(data);
+      } catch (error) {
+        console.error("Erro ao carregar dados do Header:", error);
       }
     };
     loadData();
@@ -50,7 +42,7 @@ useEffect(() => {
         </div>
         <div className="header-info">
           <ProfileBadge text={userData.role === 'MENTOR' ? 'Pessoa Mentora' : 'Mentorada'} />
-          <span className="profile-user-name">{userData.nome}</span>
+          <h2 className="profile-user-name">{userData.nome}</h2>
           <span className="profile-details">
             @{userData.username} | {userData.cargo}
           </span>
@@ -59,23 +51,13 @@ useEffect(() => {
 
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
-          <InputGroup
-            label="Nível"
-            value={userData.level}
-            isEditing={false}
-            onChange={() => {}}
-          />
-          <InputGroup
-            label="XP"
-            value={`${userData.xp} XP`}
-            isEditing={false}
-            onChange={() => {}}
-          />
-          <InputGroup
-            label="Status"
-            value={userData.role === 'MENTOR' ? "Ensinando 🔥" : "Aprendendo 🚀"}
-            isEditing={false}
-            onChange={() => {}}
+          <InputGroup label="Nível" value={userData.level} isEditing={false} onChange={() => {}} />
+          <InputGroup label="XP" value={`${userData.xp} XP`} isEditing={false} onChange={() => {}} />
+          <InputGroup 
+            label="Status" 
+            value={userData.role === 'MENTOR' ? "Ensinando 🔥" : "Aprendendo 🚀"} 
+            isEditing={false} 
+            onChange={() => {}} 
           />
         </div>
       </div>
