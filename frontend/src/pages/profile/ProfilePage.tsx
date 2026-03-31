@@ -136,6 +136,13 @@ export const ProfilePage = () => {
 const handleSaveAll = async () => {
   if (!userData || !userData.id) return;
 
+  const userPayload = {
+    id: userData.id,
+    name: userData.nome,
+    email: userData.email,
+    phoneNumber: userData.telefone
+  };
+
   const profilePayload = {
     user_id: userData.id,
     profile_id: userData.profile_id,
@@ -155,6 +162,11 @@ const handleSaveAll = async () => {
   };
 
   try {
+    const resUser = await apiFetch('/users', {
+      method: 'PUT',
+      body: JSON.stringify(userPayload)
+    });
+
     const resProfile = await apiFetch('/profiles', {
       method: 'PUT',
       body: JSON.stringify(profilePayload)
@@ -166,7 +178,7 @@ const handleSaveAll = async () => {
       body: JSON.stringify(pythonStacksPayload)
     });
 
-    if (resProfile.ok && resStacks.ok) {
+    if (resProfile.ok && resStacks.ok && resUser.ok) {
       alert("Perfil e habilidades atualizados com sucesso!");
       setBackupData(userData);
       setBackupSkills(userSkills);
@@ -299,8 +311,6 @@ useEffect(() => {
   loadSkills();
 }, [userData.profile_id]);
 
-
-
   return (
     <div className="perfil-container">
       <div className="perfil-header">
@@ -341,7 +351,8 @@ useEffect(() => {
               {isEditing ? (
                 <div className="botoes-edicao-topo">
                   <Save
-                    size={22}DropdownList
+                    size={22}
+                    DropdownList
                     className="perfil-icone-salvar"
                     onClick={handleSaveAll}
                   />
@@ -365,6 +376,7 @@ useEffect(() => {
                 <InputGroup
                   placeholder="Nome Completo"
                   value={userData.nome}
+                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, nome: val })}
                 />
                 <DropdownList
@@ -420,12 +432,14 @@ useEffect(() => {
                 <InputGroup
                   placeholder="E-mail"
                   value={userData.email}
+                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, email: val })}
                 />
                 <InputGroup
                   placeholder="Telefone"
                   value={userData.telefone}
                   isNumeric={true}
+                  isEditing={isEditing}
                   onChange={(val) =>
                     setUserData({ ...userData, telefone: val })
                   }
