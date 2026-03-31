@@ -42,7 +42,7 @@ const DEFAULT_USER_DATA: UserHeaderData = {
 }
 
 const FALLBACK_USER_DATA: UserHeaderData = {
-  nome: 'luciano',
+  nome: 'lejorge',
   username: 'ze1',
   cargo: 'Mentor',
   avatarUrl: '',
