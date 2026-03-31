@@ -95,3 +95,75 @@
     }
 
 }
+
+/* Gamificação */
+.gamification-section {
+  width: 85vh;
+  margin-top: 20px;
+  padding-bottom: 16px;
+}
+
+.gamification-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+
+/* Conquistas */
+.achievements-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.achievement-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.achievement-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Histórico */
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+
+.history-xp {
+  font-weight: 600;
+  color: #86efac;
+}
+
+@media (max-width: 768px) {
+  .gamification-section {
+    width: 300px;
+  }
+}
