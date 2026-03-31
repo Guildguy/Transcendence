@@ -53,7 +53,7 @@ const DropdownList: React.FC<DropdownListProps> = ({
             value={isOpen ? searchTerm : value}
             onFocus={() => { setIsOpen(true); setSearchTerm(""); }}
             onChange={(e) => setSearchTerm(e.target.value)}
-            readOnly={!isOpen} // Só permite digitar quando focado
+            readOnly={!isOpen} 
           />
           
           {isOpen && (
