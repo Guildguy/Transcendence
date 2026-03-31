@@ -10,23 +10,22 @@ import { apiFetch, loginFetch } from "../../services/api";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
 
-// 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
   id?: number;
-  profile_id?: number; // Adicionado para mapear o ID do profile, se necessário
+  profile_id?: number;
   nome: string;
   email: string;
   avatarUrl: string;
-  cargo: string; // mapeia para 'position' no banco
-  presentationText: string; // mapeia para 'bio' no banco
-  anosExperiencia: string; // mapeia para 'xp' no banco
+  cargo: string;
+  presentationText: string; 
+  anosExperiencia: string; 
   github: string;
   linkedin: string;
   instagram: string;
-  telefone: string; // mapeia para 'phoneNumber' no banco
+  telefone: string;
   level?: number;
   xp?: number;
-  role: string; // Adicionado para diferenciar mentores de mentorados
+  role: string;
 }
 
 interface Skill {
@@ -39,7 +38,6 @@ export const ProfilePage = () => {
   const [abaAtiva, setAbaAtiva] = useState("gerais");
   const [isEditing, setIsEditing] = useState(false);
 
-  // Estados de Dados e Habilidades
   const [userData, setUserData] = useState<UserData>({
     nome: "", email: "", avatarUrl:"", cargo: "", presentationText: "",
     anosExperiencia: "", github: "", linkedin: "", instagram: "",
@@ -47,11 +45,9 @@ export const ProfilePage = () => {
   });
   const [userSkills, setUserSkills] = useState<Skill[]>([]);
 
-  // Estados de Backup (para o botão Cancelar)
   const [backupData, setBackupData] = useState<UserData | null>(null);
   const [backupSkills, setBackupSkills] = useState<Skill[]>([]);
 
-  // Estados de Senha
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
@@ -91,7 +87,6 @@ export const ProfilePage = () => {
             role: user.role || "mentor"
           };
 
-          // Carrega as habilidades vindas do MongoDB (campo stacks)
           const loadedSkills: Skill[] = profile.stacks || [];
 
           setUserData(unifiedData);
@@ -109,7 +104,7 @@ export const ProfilePage = () => {
         console.warn("Backend offline ou usuário não encontrado. Carregando Mock...");
         
         const mockUser: UserData = {
-          id: Number(loggedUserId), // Mantém o ID que tentou buscar
+          id: Number(loggedUserId),
           nome: "Marcelo Dias Machado", 
           cargo: "Desenvolvedor Mentor",
           email: "mrl.jose123@gmail.com", 
@@ -138,12 +133,11 @@ export const ProfilePage = () => {
     };
     
     loadFullProfile();
-  }, []); // Removi o `navigate` do array de dependências, já que não o usamos mais dentro do useEffect
+  }, []);
 
 const handleSaveAll = async () => {
   if (!userData || !userData.id) return;
 
-  // 1. Payload para o Backend Principal (Dados Pessoais)
   const profilePayload = {
     user_id: userData.id,
     profile_id: userData.profile_id,
@@ -157,8 +151,6 @@ const handleSaveAll = async () => {
     role: userData.role?.toUpperCase()
   };
 
-  // 2. Payload para o Microserviço Python (Skills/Stacks)
-  // Mapeamos o array de objetos [{id, name}] para ['name1', 'name2']
   const pythonStacksPayload = {
     profile_id: userData.profile_id?.toString() || userData.id.toString(),
     stacks: userSkills.map(skill => skill.name) 
@@ -170,7 +162,7 @@ const handleSaveAll = async () => {
       body: JSON.stringify(profilePayload)
     });
 
-    const resStacks = await fetch(`http://localhost:8000/profile`, { // Verifique se a porta do Python é 8000
+    const resStacks = await fetch(`http://localhost:8000/profile`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pythonStacksPayload)
@@ -211,9 +203,6 @@ const handleSaveAll = async () => {
     setUserSkills(newSkills);
   };
 
-  /**
-   * Converte arquivo para Base64
-   */
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -223,9 +212,6 @@ const handleSaveAll = async () => {
     });
   };
 
-  /**
-   * Faz upload da imagem para o backend
-   */
   const handleImageUpload = async (file: File) => {
     if (!userData.id) {
       alert("Erro: ID do usuário não encontrado");
@@ -246,7 +232,6 @@ const handleSaveAll = async () => {
 
       if (response.ok) {
         alert('Imagem atualizada com sucesso!');
-        // Recarrega a imagem
         loadProfileImage(Number(userData.profile_id));
       } else {
         const errors = await response.json();
@@ -259,9 +244,6 @@ const handleSaveAll = async () => {
     }
   };
 
-  /**
-   * Recupera a imagem do perfil do backend
-   */
   const loadProfileImage = async (profileId: number) => {
     try {
       const response = await apiFetch(`/profiles/image/${profileId}`);
@@ -272,11 +254,9 @@ const handleSaveAll = async () => {
         if (data && data.avatarUrl) {
           let finalImage = "";
           try {
-            // Se o backend enviar como string JSON: {"image_base64": "..."}
             const parsed = JSON.parse(data.avatarUrl);
             finalImage = parsed.image_base64 || parsed.avatarUrl;
           } catch (e) {
-          // Se o backend já enviar a string direta (Base64 pura)
           finalImage = data.avatarUrl;
         }
 
@@ -295,12 +275,8 @@ const handleSaveAll = async () => {
   }
 };
 
-  /**
-   * Carrega a imagem ao montar o componente
-   */
 useEffect(() => {
   const loadSkills = async () => {
-    // Só prossegue se o userData já tiver o profile_id real vindo do backend principal
     if (!userData.profile_id) return;
 
     const idParaBusca = userData.profile_id.toString();
