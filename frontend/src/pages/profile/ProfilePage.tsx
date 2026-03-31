@@ -59,13 +59,11 @@ export const ProfilePage = () => {
 
   useEffect(() => {
     const loadFullProfile = async () => {
-      // 1. Pega o ID salvo ou força o ID "1" para visualização sem login
       const loggedUserId = localStorage.getItem('userId');
       
       console.log('=== ProfilePage useEffect ===');
       console.log('ID do usuário sendo buscado:', loggedUserId);
 
-      // REMOVIDO: A trava de redirecionamento if (!loggedUserId) navigate('/auth')
 
       try {
         const response = await apiFetch(`/users/${loggedUserId}`);
@@ -97,9 +95,10 @@ export const ProfilePage = () => {
           const loadedSkills: Skill[] = profile.stacks || [];
 
           setUserData(unifiedData);
-          if (profile.id) {
-          loadProfileImage(profile.id);
-        }
+
+          if (profile.id)
+            loadProfileImage(profile.id);
+
           setBackupData(unifiedData);
           setUserSkills(loadedSkills);
           setBackupSkills(loadedSkills);
@@ -202,8 +201,9 @@ const handleSaveAll = async () => {
   };
 
   const handleCancel = () => {
-    if (backupData) setUserData(backupData);
-    setUserSkills(backupSkills); // Restaura as habilidades originais
+    if (backupData) 
+      setUserData(backupData);
+    setUserSkills(backupSkills);
     setIsEditing(false);
   };
 
@@ -281,6 +281,10 @@ const handleSaveAll = async () => {
         }
 
         setUserData((prev: any) => ({
+          ...prev,
+          avatarUrl: finalImage
+        }));
+        setBackupData((prev: any) => ({
           ...prev,
           avatarUrl: finalImage
         }));
