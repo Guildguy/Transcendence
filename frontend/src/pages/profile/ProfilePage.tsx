@@ -197,7 +197,6 @@ const handleSaveAll = async () => {
       alert("Por favor, preencha todos os campos de senha.");
       return;
     }
-    // alert("Simulando troca de senha no Mock...");
 
     const passwordPayload = {
       email: userData.email,
