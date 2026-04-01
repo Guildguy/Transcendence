@@ -1,0 +1,169 @@
+.session-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.session-list-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.session-list-title-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #6d28d9; /* Darker purple */
+}
+
+.session-list-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.session-list-badge {
+  background-color: #eef2ff; /* Light indigo */
+  color: #4f46e5; /* Indigo */
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.session-list-section-title {
+  font-size: 0.875rem; /* Smaller section title */
+  font-weight: 600;
+  color: #6b7280; /* Grayer text */
+  text-transform: uppercase;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.session-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  font-weight: 500;
+  width: 4rem;
+  flex-shrink: 0;
+}
+
+.session-date-day {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.session-date-month {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.session-details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.session-time {
+  font-weight: 500;
+  color: #111827;
+}
+
+.session-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.session-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.session-status-icon-container {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #6b7280;
+}
+
+.session-status-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto; /* Pushes actions to the right */
+}
+
+.session-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  color: #4f46e5;
+}
+
+.meet-button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.reschedule-button-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Variant colors for status badges */
+.badge-scheduled {
+  background-color: #eef2ff;
+  color: #4f46e5;
+}
+
+.badge-completed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-rescheduled {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.badge-no-show {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
