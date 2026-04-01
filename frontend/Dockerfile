@@ -5,6 +5,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install && \
     npm install \
+        @types/react \
+        @types/react-dom \
         @radix-ui/react-select \
         @radix-ui/react-switch \
         @radix-ui/react-label \
