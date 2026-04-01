@@ -41,6 +41,9 @@ public class MentorAvailability implements IEntity
     @Column(name = "end_time", nullable = false)
     public LocalTime endTime;
 
+    @Column(name = "slot_duration")
+    public Integer slotDuration;
+
     @Column(name = "created_at")
     public Date createdAt;
 
@@ -66,6 +69,8 @@ public class MentorAvailability implements IEntity
             result.addError("startTime", "Horario inicial deve ser informado.");
         if (endTime == null)
             result.addError("endTime", "Horario final deve ser informado.");
+        if (slotDuration == null)
+            result.addError("slotDuration", "Duracao do slot deve ser informada.");
         if (startTime != null && endTime != null && !startTime.isBefore(endTime))
             result.addError("timeRange", "Horario inicial deve ser menor que horario final.");
 
