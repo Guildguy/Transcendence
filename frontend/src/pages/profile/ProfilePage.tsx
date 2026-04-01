@@ -197,7 +197,27 @@ const handleSaveAll = async () => {
       alert("Por favor, preencha todos os campos de senha.");
       return;
     }
-    alert("Simulando troca de senha no Mock...");
+    // alert("Simulando troca de senha no Mock...");
+
+    const passwordPayload = {
+      email: userData.email,
+      oldPassword: currentPassword,
+      newPassword: newPassword
+    };
+
+    const response = await apiFetch('/change-password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordPayload)
+    });
+
+    if (response.ok) {
+      alert("Senha atualizada com sucesso!");
+    } else {
+      const errors = await response.json();
+      console.error('Erro ao atualizar senha:', errors);
+      alert('Erro ao atualizar senha: ' + (errors.message || 'Verifique os dados e tente novamente.'));
+    }
+
     setCurrentPassword("");
     setNewPassword("");
   };
@@ -329,7 +349,7 @@ useEffect(() => {
       <div className="perfil-tabs-nav">
         <button
           onClick={() => setAbaAtiva("gerais")}
-          className={`perfil-tab-btn ${abaAtiva === "gerais" ? "ativa" : "inativa"}`}
+         className={`perfil-tab-btn ${abaAtiva === "gerais" ? "ativa" : "inativa"}`}
         >
           Dados Gerais
         </button>

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.ft.trans.dto.ChangePasswordDTO;
 import com.ft.trans.dto.UserDTO;
 import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.entity.LoginRequest;
@@ -183,5 +184,26 @@ public class UserService {
 			password.append(chars.charAt((int) (Math.random() * chars.length())));
 		}
 		return password.toString();
+	}
+
+	public Result changePassword(ChangePasswordDTO changePasswordDTO) {
+		User user = userRepository.findByEmail(changePasswordDTO.email).orElse(null);
+		
+		if (user == null) {
+			ValidationResult result = new ValidationResult();
+			result.addError("email", "Usuário não encontrado para o email fornecido");
+			return new Result(null, result);
+		}
+
+		if (!user.passwordMatches(changePasswordDTO.oldPassword)) {
+			ValidationResult result = new ValidationResult();
+			result.addError("oldPassword", "A senha antiga está incorreta");
+			return new Result(null, result);
+		}
+
+		user.password = changePasswordDTO.newPassword;
+		user.encodePassword();
+		
+		return _persistUser(user, true);
 	}
 }

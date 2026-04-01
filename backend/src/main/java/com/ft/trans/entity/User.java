@@ -107,4 +107,9 @@ public class User implements IEntity{
 	{
 		this.password = new PasswordService().hashPassword(this.password);
 	}
+
+	public boolean				passwordMatches(String rawPassword)
+	{
+		return new PasswordService().matches(rawPassword, this.password);
+	}
 }
