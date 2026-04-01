@@ -38,12 +38,16 @@ interface MentoringContextType {
 const MentoringContext = createContext<MentoringContextType | null>(null);
 
 export function MentoringProvider({ children }: { children: React.ReactNode }) {
-  const [mentors, setMentors] = useState<Mentor[]>(mockMentors);
+  const [mentors, setMentors] = useState<Mentor[]>(
+    () => mockMentors.map((mentor) => ({ ...mentor, availability: [] }))
+  );
   const [mentees] = useState<Mentee[]>(mockMentees);
   const [sessions, setSessions] = useState<Session[]>(mockSessions);
   const [slotsMap, setSlotsMap] = useState<Record<string, Slot[]>>(() => {
     const map: Record<string, Slot[]> = {};
-    mockMentors.forEach(m => { map[m.id] = generateSlots(m); });
+    mockMentors.forEach((mentor) => {
+      map[mentor.id] = [];
+    });
     return map;
   });
   const [currentRole, setCurrentRole] = useState<'mentor' | 'mentee'>('mentee');
@@ -60,18 +64,25 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
           try {
             const availability = await getMentorAvailability(mentor.id);
             fetchedByMentorId[mentor.id] = availability;
-          } catch {
-            // Keep mock as fallback when backend data is not available.
+          } catch (error) {
+            console.error('Erro ao carregar disponibilidade do backend para mentor', mentor.id, error);
           }
         })
       );
 
-      if (cancelled || Object.keys(fetchedByMentorId).length === 0) return;
+      if (cancelled) return;
 
       setMentors((prev) => {
         const next = prev.map((mentor) => {
           const fetched = fetchedByMentorId[mentor.id];
-          if (!fetched) return mentor;
+          if (!fetched) {
+            return {
+              ...mentor,
+              availability: [],
+              slotDuration: 60,
+            };
+          }
+
           return {
             ...mentor,
             availability: fetched.blocks,
