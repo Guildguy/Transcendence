@@ -20,6 +20,9 @@ import java.io.IOException;
  * - POST /login
  * - POST /login/google
  * - POST /users (registro)
+ * - GET /users
+ * - GET /users/{id}
+ * - GET /mentor-availability/{mentorId}
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -44,7 +47,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if ((requestPath.equals("/login") && "POST".equals(method)) ||
             (requestPath.equals("/login/google") && "POST".equals(method)) ||
             (requestPath.equals("/users") && "POST".equals(method)) ||
+            (requestPath.equals("/users") && "GET".equals(method)) ||
             (requestPath.matches("/users/\\d+") && "GET".equals(method)) ||
+            (requestPath.matches("/mentor-availability/\\d+") && "GET".equals(method)) ||
             (requestPath.startsWith("/gamification/") && "GET".equals(method))) {
             filterChain.doFilter(request, response);
             return;
