@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useMentoring } from './MentoringContext';
 import type { Session } from './types.ts';
-import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../ui/CalendarCard';
+import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../CaldendarCard/CalendarCard.tsx';
 import Button from '../Button/Button';
-import { Badge } from '../ui/Badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/Dialog';
+import { Badge } from '../Badge/Badge.tsx';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../Dialog/Dialog.tsx';
 import { Calendar, Video, RefreshCw, ArrowRightLeft, ExternalLink, History } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
