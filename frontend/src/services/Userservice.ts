@@ -1,9 +1,9 @@
-const BASE_URL = 'http://localhost:8080';
+import { apiFetch } from './api';
 
 export const userService = {
   async getFullProfile(userId: string) {
     // 1. Busca os dados básicos do usuário e profile
-    const response = await fetch(`${BASE_URL}/users/${userId}`);
+    const response = await apiFetch(`/users/${userId}`);
     if (!response.ok) throw new Error('Erro ao buscar perfil');
     
     const data = await response.json();
@@ -15,7 +15,7 @@ export const userService = {
     let finalAvatar = "";
     if (profileId) {
       try {
-        const imgResponse = await fetch(`${BASE_URL}/profiles/image/${profileId}`);
+        const imgResponse = await apiFetch(`/profiles/image/${profileId}`);
         if (imgResponse.ok) {
           const imgData = await imgResponse.json();
           // Aqui está o segredo: o seu backend retorna um JSON stringificado no campo avatarUrl
@@ -61,9 +61,8 @@ export const userService = {
 
   // PUT /profiles - Atualiza os dados do perfil
   async updateProfile(profilePayload: any) {
-    const response = await fetch(`${BASE_URL}/profiles`, {
+    const response = await apiFetch('/profiles', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profilePayload),
     });
     if (!response.ok) throw new Error('Erro ao atualizar perfil');
@@ -72,9 +71,8 @@ export const userService = {
 
   // POST /profiles/image - Faz o upload da foto
   async uploadAvatar(profileId: number, imageBase64: string, fileName: string) {
-    const response = await fetch(`${BASE_URL}/profiles/image`, {
+    const response = await apiFetch('/profiles/image', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         profileId, 
         imageBase64, 
