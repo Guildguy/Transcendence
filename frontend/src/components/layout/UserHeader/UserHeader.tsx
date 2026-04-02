@@ -42,7 +42,7 @@ const DEFAULT_USER_DATA: UserHeaderData = {
 }
 
 const FALLBACK_USER_DATA: UserHeaderData = {
-  nome: 'Zezin 1',
+  nome: 'lejorge',
   username: 'ze1',
   cargo: 'Mentor',
   avatarUrl: '',
@@ -55,7 +55,7 @@ const FALLBACK_USER_DATA: UserHeaderData = {
   { name: 'Chama Acesa',               iconUrl: '/achievements/chama_acessa.png' },
   { name: 'Primeiro Match',            iconUrl: '/achievements/primeiro_aperto_de_mao.png' },
   ],
-  recentHistory: [                          // ← estava faltando isso
+  recentHistory: [
   { reason: 'PROFILE_COMPLETED', xp: 50 },
   { reason: 'MATCH_ACCEPTED',    xp: 150 },
   { reason: 'SESSION_COMPLETED', xp: 50 },
@@ -89,9 +89,8 @@ export const UserHeader = () => {
         const res = await apiFetch(`/users/${loggedUserId}`)
         if (!res.ok) throw new Error('user not found')
 
-        const data = await res.json()
-        const user = data?.user || {}
-        const profiles = Array.isArray(data?.profiles) ? data.profiles : []
+        const { user, profiles: fetchedProfiles } = await res.json()
+        const profiles = Array.isArray(fetchedProfiles) ? fetchedProfiles : []
         const mentorProfile = profiles.find((p: any) => p?.role === 'MENTOR') || profiles[0] || {}
 
         let level: number = mentorProfile?.level ?? 0
@@ -158,6 +157,7 @@ export const UserHeader = () => {
       </div>
 
       {/* Stats */}
+
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
           <InputGroup
@@ -179,21 +179,6 @@ export const UserHeader = () => {
             onChange={() => {}}
           />
         </div>
-
-        {/* Conquistas */}
-        {userData.unlockedAchievements.length > 0 && (
-          <div className="gamification-section">
-            <h3 className="gamification-title">🏅 Conquistas</h3>
-            <ul className="achievements-list">
-              {userData.unlockedAchievements.map((a) => (   // ← era (name)
-                <li key={a.name} className="achievement-badge">
-                  <img src={a.iconUrl} alt={a.name} className="achievement-icon" />
-                  <span>{a.name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {/* Histórico */}
         {userData.recentHistory.length > 0 && (

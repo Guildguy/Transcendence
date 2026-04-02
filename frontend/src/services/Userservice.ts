@@ -1,8 +1,8 @@
-import { apiFetch } from './api'; // Certifique-se que o caminho está correto
+import { apiFetch } from './api';
 
 export const userService = {
   async getFullProfile(userId: string) {
-    // 1. Busca os dados básicos usando o wrapper que já tem o JWT
+    // 1. Busca os dados básicos do usuário e profile
     const response = await apiFetch(`/users/${userId}`);
     if (!response.ok) throw new Error('Erro ao buscar perfil');
     
@@ -53,5 +53,29 @@ export const userService = {
       xp: profile.xp?.toString() || "0",
       role: user.role || "MENTOR",
     };
+  },
+
+  // PUT /profiles - Atualiza os dados do perfil
+  async updateProfile(profilePayload: any) {
+    const response = await apiFetch('/profiles', {
+      method: 'PUT',
+      body: JSON.stringify(profilePayload),
+    });
+    if (!response.ok) throw new Error('Erro ao atualizar perfil');
+    return response.json();
+  },
+
+  // POST /profiles/image - Faz o upload da foto
+  async uploadAvatar(profileId: number, imageBase64: string, fileName: string) {
+    const response = await apiFetch('/profiles/image', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        profileId, 
+        imageBase64, 
+        imageFileName: fileName 
+      }),
+    });
+    if (!response.ok) throw new Error('Erro no upload da imagem');
+    return response.json();
   }
 };

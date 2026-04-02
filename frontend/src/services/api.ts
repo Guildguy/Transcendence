@@ -56,12 +56,11 @@ export async function apiFetch(
     headers.set('Content-Type', 'application/json');
   }
 
-  // Faz a requisição com os headers atualizados e modo CORS habilitado
-  return fetch(url, {
+  return fetch(`${API_BASE_URL}${endpoint}`, { // Use the updated API_BASE_URL
     ...fetchOptions,
     headers,
-    credentials: 'include', // Inclui cookies e credenciais em requisições cross-origin
-    mode: 'cors', // Habilita CORS
+    credentials: 'include',
+    mode: 'cors',
   });
 }
 

@@ -69,6 +69,7 @@ public class MentorAvailabilityService {
             entity.dayOfWeek = slot.dayOfWeek();
             entity.startTime = slot.startTime();
             entity.endTime = slot.endTime();
+            entity.slotDuration = request.slotDuration;
             entity.createdAt = now;
             entity.createdBy = request.mentorId;
             entity.lastUpdateAt = now;
@@ -97,10 +98,24 @@ public class MentorAvailabilityService {
         List<MentorAvailability> availability = mentorAvailabilityRepository
             .findByMentor_IdOrderByDayOfWeekAscStartTimeAsc(mentorId);
 
+        Integer resolvedSlotDuration = resolveSlotDuration(availability);
+
         return new MentorAvailabilityServiceResult(
-            toResponse(mentorId, null, availability),
+            toResponse(mentorId, resolvedSlotDuration, availability),
             validation
         );
+    }
+
+    private Integer resolveSlotDuration(List<MentorAvailability> availability)
+    {
+        for (MentorAvailability slot : availability)
+        {
+            if (slot.slotDuration != null && ALLOWED_SLOT_DURATIONS.contains(slot.slotDuration))
+                return slot.slotDuration;
+        }
+
+        // Legacy rows may not have slotDuration persisted yet.
+        return 60;
     }
 
     private ValidationResult validateRequest(SaveMentorAvailabilityDTO request)

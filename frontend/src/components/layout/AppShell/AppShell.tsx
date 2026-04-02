@@ -13,7 +13,7 @@ function AppShell({ sidebar, header, footer, children }) {
         </aside>
       )}
 
-      <header className="header">
+      <header>
         {header}
       </header>
 
