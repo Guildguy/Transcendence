@@ -43,7 +43,7 @@ public class MentorshipSessionController
 			if (rr.validationResult().hasErrors())
 			{
 				return ResponseEntity
-					.status(HttpStatus.UNPROCESSABLE_ENTITY)
+					.status(HttpStatus.UNPROCESSABLE_CONTENT)
 					.body(rr.validationResult().getErrors());
 			}
 			return ResponseEntity.status(HttpStatus.CREATED).body(rr.sessions());
@@ -53,7 +53,7 @@ public class MentorshipSessionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity.status(HttpStatus.CREATED).body(result.entity());
@@ -81,7 +81,7 @@ public class MentorshipSessionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity
@@ -97,7 +97,7 @@ public class MentorshipSessionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity
@@ -129,7 +129,7 @@ public class MentorshipSessionController
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
-				.status(HttpStatus.UNPROCESSABLE_ENTITY)
+				.status(HttpStatus.UNPROCESSABLE_CONTENT)
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity

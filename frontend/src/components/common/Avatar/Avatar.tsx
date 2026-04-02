@@ -10,10 +10,7 @@ interface AvatarProps {
 }
 
 export const Avatar = ({ avatarUrl, size = 120, isEditable=false, onImageChange }: AvatarProps) => { 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Verificação de segurança para a URL
-  const hasValidUrl = avatarUrl && avatarUrl.length > 10; 
+ const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePencilClick = () => {
     fileInputRef.current?.click();
@@ -27,17 +24,17 @@ export const Avatar = ({ avatarUrl, size = 120, isEditable=false, onImageChange 
   };
 
   return (
-    <div className="avatar-wrapper" style={{ width: size, height: size }}>
+    <div 
+      className="avatar-wrapper" 
+      style={{ width: size, height: size }}
+    >
       <div className="perfil-avatar-base">
-        {hasValidUrl ? (
+        {avatarUrl ? (
           <img 
-            src={avatarUrl} 
-            alt="Avatar" 
+            src={avatarUrl && avatarUrl !== "" ? avatarUrl : defaultImage} 
+            alt="Avatar do usuário" 
             className="avatar-img"
-            onError={(e) => {
-              // Se a imagem falhar mostra o ícone de fallback
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
+            
           />
         ) : (
           <User size={size / 2} color="#e5e7eb" />
