@@ -1,6 +1,5 @@
-import { apiFetch } from './api';
+import { apiFetch } from './api'; // Importe seu wrapper
 
-const API_BASE_URL = 'http://localhost:8080';
 const PYTHON_API_URL = 'http://localhost:8000';
 
 export interface MentorCardData {
@@ -17,7 +16,7 @@ class MentorService {
   
   private async fetchProfileImage(profileId: number): Promise<string> {
     try {
-      // const response = await fetch(`${API_BASE_URL}/profiles/image/${profileId}`);
+      // Usando apiFetch para o Java (8080)
       const response = await apiFetch(`/profiles/image/${profileId}`);
       if (!response.ok) return "";
       const imgData = await response.json();
@@ -41,8 +40,8 @@ class MentorService {
 
   private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
     try {
+      // Python (8000) geralmente não usa o mesmo JWT do Java, mantemos fetch normal
       const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
-      // const response = await apiFetch(`profile/${profileId}`);
       if (response.ok) {
         const data = await response.json();
         return data.stacks || [];
@@ -53,11 +52,10 @@ class MentorService {
     }
   }
 
-  // NOVA FUNÇÃO: Processa um único usuário e seus perfis de uma vez
   private async processUser(userData: any): Promise<MentorCardData[]> {
     try {
-      // const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
-      const detailRes = await apiFetch(`users/${userData.id}`);
+      // Usando apiFetch para buscar detalhes do usuário
+      const detailRes = await apiFetch(`/users/${userData.id}`);
       const fullData = await detailRes.json();
       
       const user = fullData.user;
@@ -65,9 +63,7 @@ class MentorService {
         (p: any) => p.role?.toUpperCase() === 'MENTOR'
       );
 
-      // Aqui está o segredo: Processa todos os perfis desse usuário em paralelo
       return await Promise.all(mentorProfiles.map(async (profile: any) => {
-        // Dispara imagem e skills simultaneamente para este perfil
         const [finalAvatar, pythonStacks] = await Promise.all([
           this.fetchProfileImage(profile.id),
           this.fetchSkillsFromPython(profile.id)
@@ -91,14 +87,11 @@ class MentorService {
 
   async getAllMentorsForCards(): Promise<MentorCardData[]> {
     try {
-      // const response = await fetch(`${API_BASE_URL}/users`);
-      const response = await apiFetch('/users');
+      // Usando apiFetch para listar todos os usuários
+      const response = await apiFetch(`/users`);
       const users = await response.json();
 
-      // Dispara o processamento de TODOS os usuários ao mesmo tempo
       const results = await Promise.all(users.map((u: any) => this.processUser(u)));
-
-      // Como results é um Array de Arrays (devido ao map), usamos flat() para juntar tudo
       return results.flat();
     } catch (error) {
       console.error('Erro ao obter mentores:', error);
