@@ -5,8 +5,7 @@ import AppShell from './components/layout/AppShell/AppShell'
 import Header from './components/layout/Header/Header'
 import Footer from './components/layout/Footer/Footer'
 import Home from './pages/Home'
-import { Toaster } from './components/common/ui/Toaster'
-import MentorDashboard from './pages/mentor-dashboard/MentorDashboard'
+import { Toaster } from './components/common/Toast/Toaster'
 
 // Lazy Loading for non-critical pages
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'))
@@ -18,6 +17,7 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
 const HomeLogged = lazy(() => import('./pages/logged/HomeLogged'))
 const BookSessionWithMentor = lazy(() => import('./pages/book-session/BookSessionWithMentor'))
 const MentoriasPage = lazy(() => import('./pages/mentoria/MentoriasPage'))
+const MentorDashboard = lazy(() => import('./pages/mentor-dashboard/MentorDashboard'))
 
 function App() {
   return (
