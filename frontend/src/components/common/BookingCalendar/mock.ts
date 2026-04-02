@@ -19,12 +19,7 @@ export const mockMentors: Mentor[] = [
     maxMentees: 10,
     currentMentees: 7,
     slotDuration: 60,
-    availability: [
-      { id: 'tb1', day: 1, startHour: 8, startMinute: 0, endHour: 12, endMinute: 0 },
-      { id: 'tb2', day: 1, startHour: 19, startMinute: 0, endHour: 22, endMinute: 0 },
-      { id: 'tb3', day: 3, startHour: 14, startMinute: 0, endHour: 18, endMinute: 0 },
-      { id: 'tb4', day: 5, startHour: 9, startMinute: 0, endHour: 13, endMinute: 0 },
-    ],
+    availability: [],
   },
   {
     id: 'm2',
@@ -41,10 +36,7 @@ export const mockMentors: Mentor[] = [
     maxMentees: 8,
     currentMentees: 8,
     slotDuration: 60,
-    availability: [
-      { id: 'tb5', day: 2, startHour: 15, startMinute: 0, endHour: 19, endMinute: 0 },
-      { id: 'tb6', day: 4, startHour: 10, startMinute: 0, endHour: 14, endMinute: 0 },
-    ],
+    availability: [],
   },
   {
     id: 'm3',
@@ -60,11 +52,8 @@ export const mockMentors: Mentor[] = [
     totalMentored: 12,
     maxMentees: 5,
     currentMentees: 5,
-    slotDuration: 90,
-    availability: [
-      { id: 'tb7', day: 1, startHour: 18, startMinute: 0, endHour: 21, endMinute: 0 },
-      { id: 'tb8', day: 3, startHour: 18, startMinute: 0, endHour: 21, endMinute: 0 },
-    ],
+    slotDuration: 60,
+    availability: [],
   },
 ];
 
