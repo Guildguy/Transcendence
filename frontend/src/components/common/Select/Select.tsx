@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import "./Select.css";
 
 const Select = SelectPrimitive.Root;
 
@@ -14,24 +15,12 @@ const SelectTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
-    style={{
-      display: "flex",
-      height: "2.5rem",
-      width: "100%",
-      alignItems: "center",
-      justifyContent: "space-between",
-      borderRadius: "0.375rem",
-      border: "1px solid #d1d5db",
-      backgroundColor: "#ffffff",
-      padding: "0.5rem 0.75rem",
-      fontSize: "0.875rem",
-      outline: "none",
-    }}
+    className={`select-trigger ${className || ''}`.trim()}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown style={{ height: "1rem", width: "1rem", opacity: 0.5 }} />
+      <ChevronDown className="select-trigger-icon" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -43,16 +32,10 @@ const SelectScrollUpButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollUpButton
     ref={ref}
-    style={{
-      display: "flex",
-      cursor: "default",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "0.25rem",
-    }}
+    className={`select-scroll-up-button ${className || ''}`.trim()}
     {...props}
   >
-    <ChevronUp style={{ height: "1rem", width: "1rem" }} />
+    <ChevronUp className="select-scroll-up-button-icon" />
   </SelectPrimitive.ScrollUpButton>
 ));
 SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
@@ -63,16 +46,10 @@ const SelectScrollDownButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollDownButton
     ref={ref}
-    style={{
-      display: "flex",
-      cursor: "default",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "0.25rem",
-    }}
+    className={`select-scroll-down-button ${className || ''}`.trim()}
     {...props}
   >
-    <ChevronDown style={{ height: "1rem", width: "1rem" }} />
+    <ChevronDown className="select-scroll-down-button-icon" />
   </SelectPrimitive.ScrollDownButton>
 ));
 SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
@@ -84,25 +61,13 @@ const SelectContent = React.forwardRef<
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
-      style={{
-        position: "relative",
-        zIndex: 50,
-        maxHeight: "24rem",
-        minWidth: "8rem",
-        overflow: "hidden",
-        borderRadius: "0.375rem",
-        border: "1px solid #d1d5db",
-        backgroundColor: "#ffffff",
-        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-      }}
+      className={`select-content ${className || ''}`.trim()}
       position={position}
       {...props}
     >
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
-        style={{
-          padding: "0.25rem",
-        }}
+        className='select-viewport'
       >
         {children}
       </SelectPrimitive.Viewport>
@@ -118,11 +83,7 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    style={{
-      padding: "0.375rem 2rem 0.375rem 0.5rem",
-      fontSize: "0.875rem",
-      fontWeight: 600,
-    }}
+    className={`select-label ${className || ''}`.trim()}
     {...props}
   />
 ));
@@ -134,31 +95,12 @@ const SelectItem = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Item
     ref={ref}
-    style={{
-      display: "flex",
-      width: "100%",
-      cursor: "default",
-      alignItems: "center",
-      borderRadius: "0.25rem",
-      padding: "0.375rem 0.5rem",
-      fontSize: "0.875rem",
-      outline: "none",
-    }}
+    className={`select-item ${className || ''}`.trim()}
     {...props}
   >
-    <span
-      style={{
-        position: "absolute",
-        left: "0.5rem",
-        display: "flex",
-        height: "0.875rem",
-        width: "0.875rem",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <span className="select-item-indicator">
       <SelectPrimitive.ItemIndicator>
-        <Check style={{ height: "1rem", width: "1rem" }} />
+        <Check className="select-item-indicator-icon" />
       </SelectPrimitive.ItemIndicator>
     </span>
 
@@ -173,11 +115,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    style={{
-      margin: "0.25rem 0",
-      height: "1px",
-      backgroundColor: "#e5e7eb",
-    }}
+    className={`select-separator ${className || ''}`.trim()}
     {...props}
   />
 ));

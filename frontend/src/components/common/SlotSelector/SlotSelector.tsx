@@ -1,17 +1,18 @@
 import { useState, useMemo } from 'react';
-import { useMentoring } from './MentoringContext';
-import BookingCalendar from './BookingCalendar';
+import { useMentoring } from '../BookingCalendar/MentoringContext';
+import BookingCalendar from '../BookingCalendar/BookingCalendar';
 import Button from '../Button/Button';
-import { Badge } from '../ui/Badge';
-import { Switch } from '../ui/Switch';
-import { Label } from '../ui/Label';
-import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../ui/CalendarCard';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/Dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/Select';
+import { Badge } from '../Badge/Badge';
+import { Switch } from '../Switch/Switch';
+import { Label } from '../Label/Label';
+import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../CaldendarCard/CalendarCard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../Dialog/Dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../Select/Select';
 import { CalendarIcon, Clock, Video, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '../../../hooks/use-toast';
+import './SlotSelector.css';
 
 
 interface SlotSelectorProps {
@@ -131,9 +132,9 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
   };
 
   return (
-    <CalendarCard>
-      <CalendarCardHeader>
-        <CalendarCardTitle >
+    <>
+      <CalendarCardHeader className="slot-selector-card-header">
+        <CalendarCardTitle className="slot-selector-card-title">
           <CalendarIcon 
             size={18}
             color="var(--purple-primary)"
@@ -141,8 +142,8 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
           Agendar Próxima Mentoria
         </CalendarCardTitle>
       </CalendarCardHeader>
-      <CalendarCardContent>
-          <div>
+      <CalendarCardContent className="slot-selector-card-content">
+          <div className="slot-selector-calendar-container">
             <BookingCalendar
               mentorId={mentorId}
               mode="single"
@@ -154,40 +155,36 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
           </div>
 
           {/* Block & Time Selection */}
-          <div className="flex-1 min-w-[280px]">
+          <div className="slot-selector-selection-container">
             {selectedDate ? (
-              <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Horários Disponíveis</h4>
-                <p className="text-sm text-muted-foreground capitalize">
+              <div className="slot-selector-selection-header">
+                <h4 className="slot-selector-selection-title">Horários Disponíveis</h4>
+                <p className="slot-selector-selection-subtitle">
                   {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
                 </p>
               </div>
-            ) : !selectedDate ? (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+            ) : (
+              <div className="slot-selector-placeholder">
                 <p>Selecione uma data no calendário</p>
               </div>
-            ) : null}
+            )}
             
-            {selectedDate ? (
-              <div className="mt-4">
+            {selectedDate && (
+              <div className="slot-selector-blocks-container">
                 {blocks.length > 0 ? (
                   <>
                     {/* Available Blocks */}
-                    <div className="space-y-2">
+                    <div className="slot-selector-block-list">
                       {blocks.map((block, idx) => (
                         <button
                           key={idx}
                           onClick={() => { setSelectedBlockIdx(idx); setSelectedStartTime(null); setSelectedDuration(60); }}
-                          className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${
-                            selectedBlockIdx === idx
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                          }`}
+                          className={`slot-selector-block-button ${selectedBlockIdx === idx ? 'selected' : ''}`}
                         >
                           <Clock color="var(--purple-primary)"/>
-                          <div>
-                            <p className="text-sm font-medium">{block.startTime} – {block.endTime}</p>
-                            <p className="text-xs text-muted-foreground">
+                          <div className="slot-selector-block-button-info">
+                            <p>{block.startTime} – {block.endTime}</p>
+                            <p>
                               {formatDuration(toMinutes(block.endTime) - toMinutes(block.startTime))} disponível
                             </p>
                           </div>
@@ -197,10 +194,10 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
 
                     {/* Start Time & Duration pickers */}
                     {selectedBlock && (
-                      <div className="space-y-3 p-4 rounded-lg bg-muted/30 border">
-                        <div className="grid grid-cols-2 gap-3">
+                      <div className="slot-selector-pickers">
+                        <div className="slot-selector-pickers-grid">
                           <div>
-                            <Label className="text-xs text-muted-foreground mb-1.5 block">Início</Label>
+                            <Label className="slot-selector-picker-label">Início</Label>
                             <Select
                               value={selectedStartTime || ''}
                               onValueChange={(v: string) => { setSelectedStartTime(v); setSelectedDuration(60); }}
@@ -216,7 +213,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
                             </Select>
                           </div>
                           <div>
-                            <Label className="text-xs text-muted-foreground mb-1.5 block">Duração</Label>
+                            <Label className="slot-selector-picker-label">Duração</Label>
                             <Select
                               value={String(selectedDuration)}
                               onValueChange={(v: string) => setSelectedDuration(Number(v))}
@@ -235,7 +232,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
                         </div>
 
                         {selectedStartTime && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="slot-selector-session-info">
                             Sessão: <strong>{selectedStartTime} – {endTime}</strong> ({formatDuration(selectedDuration)})
                           </p>
                         )}
@@ -244,29 +241,29 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
 
                     {/* Recurring + Confirm */}
                     {selectedStartTime && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                          <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                          <div className="flex-1">
-                            <Label htmlFor="recurring" className="text-sm font-medium">
+                      <div className="slot-selector-actions">
+                        <div className="slot-selector-recurring-option">
+                          <RefreshCw className="slot-selector-recurring-icon" />
+                          <div className="slot-selector-recurring-text">
+                            <Label htmlFor="recurring" className="slot-selector-recurring-label">
                               Repetir semanalmente
                             </Label>
-                            <p className="text-xs text-muted-foreground">Máx. 10 encontros</p>
+                            <p className="slot-selector-recurring-description">Máx. 10 encontros</p>
                           </div>
                           <Switch id="recurring" checked={isRecurring} onCheckedChange={setIsRecurring} />
                         </div>
-                        <Button className="w-full" onClick={() => setShowConfirm(true)}>
-                          <Video className="h-4 w-4 mr-2" />
+                        <Button className="slot-selector-confirm-button" onClick={() => setShowConfirm(true)}>
+                          <Video className="slot-selector-confirm-button-icon" />
                           Confirmar Agendamento
                         </Button>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Nenhum horário disponível nesta data.</p>
+                  <p className="slot-selector-no-slots">Nenhum horário disponível nesta data.</p>
                 )}
               </div>
-            ) : null}
+            )}
           </div>
 
         {/* Confirmation Dialog */}
@@ -276,15 +273,15 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
               <DialogTitle className="font-display">Confirmar Agendamento</DialogTitle>
               <DialogDescription>
                 {selectedDate && selectedStartTime && (
-                  <div className="mt-3 space-y-2">
+                  <div className="slot-selector-dialog-description">
                     <p><strong>Data:</strong> {format(selectedDate, "dd/MM/yyyy (EEEE)", { locale: ptBR })}</p>
                     <p><strong>Horário:</strong> {selectedStartTime} – {endTime} ({formatDuration(selectedDuration)})</p>
                     {isRecurring && (
-                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-                        <RefreshCw className="h-3 w-3 mr-1" /> Recorrente · 10 sessões
+                      <Badge className="slot-selector-dialog-badge">
+                        <RefreshCw className="slot-selector-dialog-badge-icon" /> Recorrente · 10 sessões
                       </Badge>
                     )}
-                    <p className="text-xs mt-2">Um link do Google Meet será gerado automaticamente.</p>
+                    <p className="slot-selector-dialog-info">Um link do Google Meet será gerado automaticamente.</p>
                   </div>
                 )}
               </DialogDescription>
@@ -296,6 +293,6 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
           </DialogContent>
         </Dialog>
       </CalendarCardContent>
-    </CalendarCard>
+    </>
   );
 }

@@ -5,7 +5,7 @@ import AppShell from './components/layout/AppShell/AppShell'
 import Header from './components/layout/Header/Header'
 import Footer from './components/layout/Footer/Footer'
 import Home from './pages/Home'
-import { Toaster } from './components/common/ui/Toaster'
+import { Toaster } from './components/common/Toast/Toaster'
 
 // Lazy Loading for non-critical pages
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'))
