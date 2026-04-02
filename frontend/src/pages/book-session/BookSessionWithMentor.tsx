@@ -4,8 +4,8 @@ import Footer from '../../components/layout/Footer/Footer'
 import './BookSessionWithMentor.css'
 import MentorInfo from '../../components/common/MentorInfo/MentorInfo'
 import { MentoringProvider, useMentoring } from '../../components/common/BookingCalendar/MentoringContext'
-import { SlotSelector } from '../../components/common/BookingCalendar/SlotSelector'
-import { SessionList } from '../../components/common/BookingCalendar/SessionList'
+import { SlotSelector } from '../../components/common/SlotSelector/SlotSelector'
+import { SessionList } from '../../components/common/SessionList/SessionList'
 
 function BookSessionContent() {
   const { mentors, currentUserId } = useMentoring();

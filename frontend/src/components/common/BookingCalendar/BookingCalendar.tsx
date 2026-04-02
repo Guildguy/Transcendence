@@ -46,8 +46,8 @@ export default function BookingCalendar({
 
     
   return (
-    <div className="flex flex-col md:flex-row gap-8">
-      <div className="flex-shrink-0">
+    <div>
+      <div>
         <DayPicker
           mode={mode}
           selected={selectedDate}
