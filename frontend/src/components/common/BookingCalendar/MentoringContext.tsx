@@ -39,7 +39,7 @@ const MentoringContext = createContext<MentoringContextType | null>(null);
 
 export function MentoringProvider({ children }: { children: React.ReactNode }) {
   const [mentors, setMentors] = useState<Mentor[]>(
-    () => mockMentors.map((mentor) => ({ ...mentor, availability: [] }))
+    () => mockMentors.map((mentor) => ({ ...mentor }))
   );
   const [mentees] = useState<Mentee[]>(mockMentees);
   const [sessions, setSessions] = useState<Session[]>(mockSessions);
@@ -63,9 +63,20 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
         mockMentors.map(async (mentor) => {
           try {
             const availability = await getMentorAvailability(mentor.id);
-            fetchedByMentorId[mentor.id] = availability;
+            if (availability.blocks.length > 0)
+              fetchedByMentorId[mentor.id] = availability;
+            else {
+              fetchedByMentorId[mentor.id] = {
+                slotDuration: mentor.slotDuration ?? 60,
+                blocks: mentor.availability ?? [],
+              };
+            }
           } catch (error) {
             console.error('Erro ao carregar disponibilidade do backend para mentor', mentor.id, error);
+            fetchedByMentorId[mentor.id] = {
+              slotDuration: mentor.slotDuration ?? 60,
+              blocks: mentor.availability ?? [],
+            };
           }
         })
       );
