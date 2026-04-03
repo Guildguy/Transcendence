@@ -56,7 +56,7 @@ export async function apiFetch(
     headers.set('Content-Type', 'application/json');
   }
 
-  return fetch(`${API_BASE_URL}${endpoint}`, { // Use the updated API_BASE_URL
+  return fetch(url, {
     ...fetchOptions,
     headers,
     credentials: 'include',
