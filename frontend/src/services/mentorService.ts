@@ -1,4 +1,4 @@
-import { apiFetch } from './api'; // Importe seu wrapper
+import { apiFetch } from './api'; // Seu wrapper customizado
 
 const PYTHON_API_URL = 'http://localhost:8000';
 
@@ -9,14 +9,17 @@ export interface MentorCardData {
   skills: Array<{ id: string; name: string }>;
   anosExperiencia: number;
   isActive: boolean;
+  isAvailable: boolean; // Indica se o mentor tem vagas (RN02 do Java)
   avatarUrl?: string;
 }
 
 class MentorService {
   
+  /**
+   * Busca a imagem de perfil no backend Java (8080)
+   */
   private async fetchProfileImage(profileId: number): Promise<string> {
     try {
-      // Usando apiFetch para o Java (8080)
       const response = await apiFetch(`/profiles/image/${profileId}`);
       if (!response.ok) return "";
       const imgData = await response.json();
@@ -38,9 +41,13 @@ class MentorService {
     }
   }
 
+  /**
+   * Busca as stacks/habilidades no backend Python (8000)
+   */
   private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
     try {
-      // Python (8000) geralmente não usa o mesmo JWT do Java, mantemos fetch normal
+      // Como o Python costuma rodar em porta diferente, usamos o fetch nativo 
+      // ou garantimos que o apiFetch aceite URLs completas.
       const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
       if (response.ok) {
         const data = await response.json();
@@ -52,9 +59,26 @@ class MentorService {
     }
   }
 
+  /**
+   * Verifica a disponibilidade (capacidade) do mentor no Java
+   */
+  private async fetchAvailability(mentorUserId: number): Promise<boolean> {
+    try {
+      // Endpoint que mapeia para o MentorshipConnectionService.getMentorCapacity
+      const response = await apiFetch(`/connections/capacity/${mentorUserId}`);
+      if (!response.ok) return false;
+      const data = await response.json();
+      return data.isAvailable; 
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Processa os dados brutos do usuário e perfis para o formato de Card
+   */
   private async processUser(userData: any): Promise<MentorCardData[]> {
     try {
-      // Usando apiFetch para buscar detalhes do usuário
       const detailRes = await apiFetch(`/users/${userData.id}`);
       const fullData = await detailRes.json();
       
@@ -64,18 +88,24 @@ class MentorService {
       );
 
       return await Promise.all(mentorProfiles.map(async (profile: any) => {
-        const [finalAvatar, pythonStacks] = await Promise.all([
+        // Executa as chamadas de imagem, skills e disponibilidade em paralelo
+        const [finalAvatar, pythonStacks, isAvailable] = await Promise.all([
           this.fetchProfileImage(profile.id),
-          this.fetchSkillsFromPython(profile.id)
+          this.fetchSkillsFromPython(profile.id),
+          this.fetchAvailability(user.id)
         ]);
 
         return {
           id: profile.id,
           name: user.name || "Mentor",
           position: profile.position || 'Pessoa Mentora',
-          skills: pythonStacks.map((s: string, i: number) => ({ id: `py_${profile.id}_${i}`, name: s })),
+          skills: pythonStacks.map((s: string, i: number) => ({ 
+            id: `py_${profile.id}_${i}`, 
+            name: s 
+          })),
           anosExperiencia: profile.anosExperiencia || 0,
           isActive: true,
+          isAvailable: isAvailable, 
           avatarUrl: finalAvatar
         };
       }));
@@ -85,9 +115,11 @@ class MentorService {
     }
   }
 
+  /**
+   * Retorna a lista de todos os mentores para a vitrine
+   */
   async getAllMentorsForCards(): Promise<MentorCardData[]> {
     try {
-      // Usando apiFetch para listar todos os usuários
       const response = await apiFetch(`/users`);
       const users = await response.json();
 
@@ -96,6 +128,21 @@ class MentorService {
     } catch (error) {
       console.error('Erro ao obter mentores:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Busca as conexões atuais do usuário (Meus Mentores)
+   */
+  async getMyMentors(menteeId: number): Promise<any[]> {
+    try {
+      // Chama o endpoint de conexões aprovadas para o mentorado
+      const response = await apiFetch(`/connections/mentee/${menteeId}`);
+      if (!response.ok) return [];
+      return await response.json(); 
+    } catch (error) {
+      console.error('Erro ao buscar conexões do mentorado:', error);
+      return [];
     }
   }
 }
