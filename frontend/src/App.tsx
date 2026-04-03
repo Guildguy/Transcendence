@@ -5,7 +5,7 @@ import AppShell from './components/layout/AppShell/AppShell'
 import GlobalLayout from './components/layout/GlobalLayout/GlobalLayout'
 import Header from './components/layout/Header/Header'
 import Footer from './components/layout/Footer/Footer'
-import Home from './pages/Home'
+import Home from './pages/Home/Home'
 import { Toaster } from './components/common/Toast/Toaster'
 import { ChatProvider } from './components/chat/ChatContext/ChatContext'
 
