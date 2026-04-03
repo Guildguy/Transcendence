@@ -17,6 +17,7 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
 const HomeLogged = lazy(() => import('./pages/logged/HomeLogged'))
 const BookSessionWithMentor = lazy(() => import('./pages/book-session/BookSessionWithMentor'))
 const MentoriasPage = lazy(() => import('./pages/mentoria/MentoriasPage'))
+const MentorDashboard = lazy(() => import('./pages/mentor-dashboard/MentorDashboard'))
 
 function App() {
   return (
@@ -71,6 +72,11 @@ function App() {
            BOOK SESSION WITH MENTOR
         ===================== */}
         <Route path="/book-session" element={<BookSessionWithMentor />} />
+
+        {/* =====================
+           MENTOR DASHBOARD
+        ===================== */}
+        <Route path="/mentor-dashboard" element={<MentorDashboard />} />
 
         {/* =====================
            INSTITUCIONAL (FORA DO APPSHELL)
