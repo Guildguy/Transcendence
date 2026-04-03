@@ -7,8 +7,14 @@ body {
   .mentor-dashboard {
     display: flex;
     flex-direction: column;
+    width: 100vw;
   }
-  
+ 
+  .dashboard-container {
+    width: 80vw;
+    margin: 0 auto;
+  }
+
   .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -43,6 +49,7 @@ body {
   }
   
   .dashboard-content {
+    width: 80vw;
     padding: 2rem;
     display: grid;
     gap: 2rem;
@@ -58,6 +65,7 @@ body {
   .card-header {
     display: flex;
     justify-content: space-between;
+    gap: 1rem;
     align-items: center;
     margin-bottom: 1rem;
   }
