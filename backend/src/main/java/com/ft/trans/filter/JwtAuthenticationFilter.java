@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Filtro que valida o JWT em todas as requisições
@@ -24,6 +25,12 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Set<String> ALLOWED_ORIGINS = Set.of(
+        "http://localhost:5173",
+        "http://0.0.0.0:5173",
+        "http://127.0.0.1:5173"
+    );
+
     @Autowired
     private JWTService jwtService;
 
@@ -34,9 +41,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestPath = request.getRequestURI();
         String method = request.getMethod();
 
+        applyCorsHeaders(request, response);
+
         // Permite requisições OPTIONS (CORS preflight)
         if ("OPTIONS".equals(method)) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
 
@@ -53,10 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
             
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                // Token não fornecido
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"Missing or invalid Authorization header\"}");
+                writeUnauthorized(response, "Missing or invalid Authorization header");
                 return;
             }
 
@@ -65,9 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Valida o token
             if (!jwtService.validateToken(token)) {
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"Invalid or expired token\"}");
+                writeUnauthorized(response, "Invalid or expired token");
                 return;
             }
 
@@ -75,9 +79,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Authentication failed: " + e.getMessage() + "\"}");
+            writeUnauthorized(response, "Authentication failed");
         }
+    }
+
+    private void applyCorsHeaders(HttpServletRequest request, HttpServletResponse response)
+    {
+        String origin = request.getHeader(HttpHeaders.ORIGIN);
+
+        if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Vary", "Origin");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+        }
+
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+        response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type");
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException
+    {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }
