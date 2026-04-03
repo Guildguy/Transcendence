@@ -60,6 +60,7 @@
   /* 🔑 ESSENCIAL PARA EVITAR BUG DE ALTURA */
   min-height: 0;
   overflow-y: auto;
+  width: 100vh;
 }
 
 .app-shell > .footer {
