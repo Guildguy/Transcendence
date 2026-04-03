@@ -8,6 +8,7 @@ import Footer from './components/layout/Footer/Footer'
 import Home from './pages/Home/Home'
 import { Toaster } from './components/common/Toast/Toaster'
 import { ChatProvider } from './components/chat/ChatContext/ChatContext'
+import Forgot from './pages/auth/Forgot'
 
 // Lazy Loading for non-critical pages
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'))
@@ -42,6 +43,7 @@ function App() {
           >
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<AuthPage />} />
+            <Route path="/forgot" element={<Forgot />} />
           </Route>
 
           {/* REGISTER ROUTE */}
