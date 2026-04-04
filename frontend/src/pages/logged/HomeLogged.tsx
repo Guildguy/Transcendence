@@ -13,7 +13,6 @@ import './HomeLogged.css'
 
 
 function HomeLogged() {
-  useSearchParams()
   const [activeTab, setActiveTab] = useState<'pending' | 'notifications'>('pending')
   const [requests, setRequests] = useState(() => mockRequests)
 

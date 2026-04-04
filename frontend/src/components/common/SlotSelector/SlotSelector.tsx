@@ -5,7 +5,7 @@ import Button from '../Button/Button';
 import { Badge } from '../Badge/Badge';
 import { Switch } from '../Switch/Switch';
 import { Label } from '../Label/Label';
-import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../CaldendarCard/CalendarCard';
+import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../CalendarCard/CalendarCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../Dialog/Dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../Select/Select';
 import { CalendarIcon, Clock, Video, RefreshCw } from 'lucide-react';
