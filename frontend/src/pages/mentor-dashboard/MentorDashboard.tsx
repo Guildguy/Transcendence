@@ -3,28 +3,34 @@ import './MentorDashboard.css';
 import AppShell from '../../components/layout/AppShell/AppShell';
 import Footer from '../../components/layout/Footer/Footer';
 import Header from '../../components/layout/Header/Header';
-import UserHeader from '../../components/layout/UserHeader/UserHeader';
 import Button from '../../components/common/Button/Button';
 import { AvailabilityGrid } from '../../components/common/TimeSlot/TimeSlot';
 import { apiFetch } from '../../services/api';
+import { getMentorAvailability, saveMentorAvailability } from '../../services/mentorAvailabilityService';
+import type { TimeBlock } from '../../components/common/BookingCalendar/types';
+
 
 const MentorDashboard: React.FC = () => {
-  const [availabilityData, setAvailabilityData] = useState<{
-    [key: string]: { id: number; timeRange: string }[];
-  }>({});
-  const [nextId, setNextId] = useState(1);
+  const [blocks, setBlocks] = useState<TimeBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mentorId, setMentorId] = useState<number | null>(null);
   const [slotDuration, setSlotDuration] = useState(60);
 
-  // Carregar dados de disponibilidade do backend
+  // Helper: Convert TimeBlock to display string (HH:mm - HH:mm)
+  const blockToTimeRange = (block: TimeBlock): string => {
+    const startTime = `${String(block.startHour).padStart(2, '0')}:${String(block.startMinute).padStart(2, '0')}`;
+    const endTime = `${String(block.endHour).padStart(2, '0')}:${String(block.endMinute).padStart(2, '0')}`;
+    return `${startTime} - ${endTime}`;
+  };
+
+  // Load availability from service
   useEffect(() => {
     const loadAvailability = async () => {
       try {
         setLoading(true);
-        
-        // Primeiro, obter o ID do mentor logado
+
+        // Get current user ID
         const userResponse = await apiFetch('/user/current');
         if (!userResponse.ok) {
           throw new Error('Falha ao carregar usuário');
@@ -33,37 +39,10 @@ const MentorDashboard: React.FC = () => {
         const currentMentorId = userData.id;
         setMentorId(currentMentorId);
 
-        // Depois, carregar a disponibilidade do mentor
-        const availResponse = await apiFetch(`/mentor-availability/${currentMentorId}`);
-        if (!availResponse.ok) {
-          throw new Error('Falha ao carregar disponibilidade');
-        }
-        const availData = await availResponse.json();
-
-        // Transformar os dados para o formato do frontend
-        if (availData && availData.availability) {
-          const formattedData: { [key: string]: { id: number; timeRange: string }[] } = {};
-          let maxId = 0;
-
-          availData.availability.forEach((slot: any, index: number) => {
-            const day = slot.dayOfWeek;
-            if (!formattedData[day]) {
-              formattedData[day] = [];
-            }
-            const id = index + 1;
-            maxId = Math.max(maxId, id);
-            formattedData[day].push({
-              id,
-              timeRange: `${slot.startTime} - ${slot.endTime}`,
-            });
-          });
-
-          setAvailabilityData(formattedData);
-          setNextId(maxId + 1);
-          if (availData.slotDuration) {
-            setSlotDuration(availData.slotDuration);
-          }
-        }
+        // Use service to load availability
+        const { blocks: loadedBlocks, slotDuration: loadedDuration } = await getMentorAvailability(currentMentorId);
+        setBlocks(loadedBlocks);
+        setSlotDuration(loadedDuration);
         setError(null);
       } catch (err) {
         console.error('Erro ao carregar disponibilidade:', err);
@@ -75,31 +54,30 @@ const MentorDashboard: React.FC = () => {
 
     loadAvailability();
   }, []);
-  const handleDelete = (id: number) => {
-    setAvailabilityData(prevData => {
-      const updatedData = { ...prevData };
-      Object.keys(updatedData).forEach(day => {
-        updatedData[day as keyof typeof updatedData] = updatedData[day as keyof typeof updatedData].filter(slot => slot.id !== id);
-      });
-      return updatedData;
-    });
+
+  // Delete a block by ID
+  const handleDelete = (id: string) => {
+    setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== id));
   };
 
+  // Add a new time slot
   const handleAddTimeSlot = (day: string, startTime: string, endTime: string) => {
-    setAvailabilityData(prevData => {
-      const updatedData = { ...prevData };
-      if (!updatedData[day as keyof typeof updatedData]) {
-        updatedData[day as keyof typeof updatedData] = [];
-      }
-      updatedData[day as keyof typeof updatedData].push({
-        id: nextId,
-        timeRange: `${startTime} - ${endTime}`,
-      });
-      return updatedData;
-    });
-    setNextId(nextId + 1);
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+
+    const newBlock: TimeBlock = {
+      id: `temp-${Date.now()}-${Math.random()}`,
+      day: parseInt(day, 10) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+      startHour,
+      startMinute,
+      endHour,
+      endMinute,
+    };
+
+    setBlocks(prevBlocks => [...prevBlocks, newBlock]);
   };
 
+  // Save availability using service
   const handleSave = async () => {
     if (!mentorId) {
       setError('ID do mentor não encontrado');
@@ -108,62 +86,53 @@ const MentorDashboard: React.FC = () => {
 
     try {
       setLoading(true);
-      
-      // Transformar os dados do frontend para o formato do backend
-      const slots = [];
-      Object.entries(availabilityData).forEach(([day, daySlots]) => {
-        daySlots.forEach(slot => {
-          const [startTime, endTime] = slot.timeRange.split(' - ');
-          slots.push({
-            dayOfWeek: day,
-            startTime: startTime.trim(),
-            endTime: endTime.trim(),
-          });
-        });
-      });
-
-      const payload = {
-        mentorId,
-        slotDuration,
-        availability: slots,
-      };
-
-      const response = await apiFetch('/mentor-availability', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao salvar disponibilidade');
-      }
-
+      await saveMentorAvailability(mentorId, blocks, slotDuration);
       setError(null);
       alert('Disponibilidade salva com sucesso!');
     } catch (err) {
       console.error('Erro ao salvar disponibilidade:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao salvar');
-      alert(err instanceof Error ? err.message : 'Erro ao salvar disponibilidade');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao salvar';
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  // Transform TimeBlock[] to grouped format for AvailabilityGrid
+  const getAvailabilityDataForGrid = (): { [key: string]: { id: string; timeRange: string }[] } => {
+    const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const result: { [key: string]: { id: string; timeRange: string }[] } = {};
+
+    days.forEach((day, index) => {
+      result[day] = blocks
+        .filter(block => block.day === index)
+        .map(block => ({
+          id: block.id,
+          timeRange: blockToTimeRange(block),
+        }));
+    });
+
+    return result;
+  };
+
+  const availabilityDataForGrid = getAvailabilityDataForGrid();
+
   return (
     <AppShell
-          sidebar={null}
-          header={<Header isAuthenticated={true} />}
-          footer={<Footer />}
-    >  
+      sidebar={null}
+      header={<Header isAuthenticated={true} />}
+      footer={<Footer />}
+    >
       <div className="mentor-dashboard">
-        <UserHeader />
         <div className="dashboard-container">
           <main className="dashboard-content">
             {error && (
-              <div style={{ 
-                backgroundColor: '#fee', 
-                color: '#c00', 
-                padding: '1rem', 
-                borderRadius: '8px', 
+              <div style={{
+                backgroundColor: '#fee',
+                color: '#c00',
+                padding: '1rem',
+                borderRadius: '8px',
                 marginBottom: '1rem',
                 border: '1px solid #fcc'
               }}>
@@ -171,11 +140,11 @@ const MentorDashboard: React.FC = () => {
               </div>
             )}
             {loading && (
-              <div style={{ 
-                backgroundColor: '#eef', 
-                color: '#00c', 
-                padding: '1rem', 
-                borderRadius: '8px', 
+              <div style={{
+                backgroundColor: '#eef',
+                color: '#00c',
+                padding: '1rem',
+                borderRadius: '8px',
                 marginBottom: '1rem'
               }}>
                 Carregando disponibilidade...
@@ -198,7 +167,13 @@ const MentorDashboard: React.FC = () => {
                   {loading ? 'Salvando...' : 'Salvar'}
                 </Button>
               </div>
-              {!loading && <AvailabilityGrid availabilityData={availabilityData} handleDelete={handleDelete} handleAddTimeSlot={handleAddTimeSlot} />}
+              {!loading && (
+                <AvailabilityGrid
+                  availabilityData={availabilityDataForGrid}
+                  handleDelete={handleDelete}
+                  handleAddTimeSlot={handleAddTimeSlot}
+                />
+              )}
             </div>
 
             <div className="card sessions-card">
