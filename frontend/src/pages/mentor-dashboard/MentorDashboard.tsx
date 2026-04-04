@@ -7,6 +7,7 @@ import Button from '../../components/common/Button/Button';
 import { AvailabilityGrid } from '../../components/common/TimeSlot/TimeSlot';
 import { apiFetch } from '../../services/api';
 import { getMentorAvailability, saveMentorAvailability } from '../../services/mentorAvailabilityService';
+import { toast } from '../../hooks/use-toast';
 import type { TimeBlock } from '../../components/common/BookingCalendar/types';
 
 
@@ -88,12 +89,12 @@ const MentorDashboard: React.FC = () => {
       setLoading(true);
       await saveMentorAvailability(mentorId, blocks, slotDuration);
       setError(null);
-      alert('Disponibilidade salva com sucesso!');
+      toast({ title: 'Disponibilidade salva com sucesso' });
     } catch (err) {
       console.error('Erro ao salvar disponibilidade:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro ao salvar';
       setError(errorMessage);
-      alert(errorMessage);
+      toast({ title: 'Erro: as informações não puderam ser salvas' });
     } finally {
       setLoading(false);
     }
