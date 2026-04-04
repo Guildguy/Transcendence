@@ -43,18 +43,18 @@ public class ChangePasswordController {
             .body(result.entity());
     }
 
-    @PostMapping
-    public ResponseEntity<?> recoverPassword(@RequestBody PasswordRecoveryDTO passwordRecoveryDTO) {
+    // @PostMapping
+    // public ResponseEntity<?> recoverPassword(@RequestBody PasswordRecoveryDTO passwordRecoveryDTO) {
         
-        Result result = this.passwordRecoveryService.recoverPassword(passwordRecoveryDTO);
+    //     Result result = this.passwordRecoveryService.recoverPassword(passwordRecoveryDTO);
 
-		return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(result.entity());
-    }
+	// 	return ResponseEntity
+    //         .status(HttpStatus.OK)
+    //         .body(result.entity());
+    // }
 
     @PutMapping("/reset-password")
-    public ResponseEntity<?> putMethodName(@RequestBody ResetPasswordDTO resetPasswordDTO) {
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
 
 
         Result result = this.userService.changePassword(resetPasswordDTO);

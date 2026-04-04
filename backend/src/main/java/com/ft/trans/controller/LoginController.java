@@ -14,19 +14,23 @@ import com.ft.trans.entity.GoogleLoginRequest;
 import com.ft.trans.entity.LoginResponse;
 import com.ft.trans.service.UserService;
 import com.ft.trans.service.GoogleTokenValidationService;
+import com.ft.trans.service.PasswordRecoveryService;
+import com.ft.trans.dto.PasswordRecoveryDTO;
 
 @RestController
 @RequestMapping
 public class LoginController
 {
     private UserService userService;
+    private PasswordRecoveryService passwordRecoveryService;
     
     @Autowired
     private GoogleTokenValidationService googleTokenValidationService;
 
-    LoginController(UserService us)
+    LoginController(UserService us, PasswordRecoveryService prs)
     {
         this.userService = us;
+        this.passwordRecoveryService = prs;
     }
 
     @PostMapping("/login")
@@ -69,6 +73,19 @@ public class LoginController
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new java.util.HashMap<String, String>() {{
                         put("message", "Erro ao processar login: " + e.getMessage());
+                    }});
+        }
+    }
+
+    @PostMapping("/auth/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody PasswordRecoveryDTO passwordRecoveryDTO) {
+        try {
+            com.ft.trans.validation.Result result = this.passwordRecoveryService.recoverPassword(passwordRecoveryDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(result.entity());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new java.util.HashMap<String, String>() {{
+                        put("message", "Erro ao processar recuperação de senha: " + e.getMessage());
                     }});
         }
     }
