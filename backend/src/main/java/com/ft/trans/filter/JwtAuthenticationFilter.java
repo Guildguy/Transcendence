@@ -20,6 +20,7 @@ import java.io.IOException;
  * - POST /login
  * - POST /login/google
  * - POST /users (registro)
+ * - POST /auth/forgot-password
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -43,7 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Endpoints que não precisam de autenticação
         if ((requestPath.equals("/login") && "POST".equals(method)) ||
             (requestPath.equals("/login/google") && "POST".equals(method)) ||
-            (requestPath.equals("/users") && "POST".equals(method))) {
+            (requestPath.equals("/users") && "POST".equals(method)) ||
+            (requestPath.equals("/auth/forgot-password") && "POST".equals(method))) {
             filterChain.doFilter(request, response);
             return;
         }
