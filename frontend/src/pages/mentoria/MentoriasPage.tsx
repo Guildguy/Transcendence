@@ -7,71 +7,79 @@ import mentorService from '../../services/mentorService';
 
 // Componentes
 import MentorCard from '../../components/common/MentorCard/Mentorcard';
-import Header from '../../components/layout/Header/Header';
-import Footer from '../../components/layout/Footer/Footer';
 import DropdownList from '../../components/common/Dropdown/Dropdown';
 
 // Estilização
 import './MentoriasPage.css';
 
-// 1. Constantes de Filtro Fixo
+// Constantes de Filtro Fixo
 const OPCOES_EXPERIENCIA = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "+10"];
 const OPCOES_STATUS = ["Ativo", "Inativo"];
+const OPCOES_DISPONIBILIDADE = ["Com Vagas", "Lista de Espera"];
 
 // Componente Interno para a seção "Meus Mentores"
-const MiniMentorCard = ({ name, startDate, isActive }: { name: string, startDate: string, isActive: boolean }) => (
-  <div className="mini-mentor-card">
-    <div className="mini-avatar-container">
-      <User size={32} color="#1f2937" />
-    </div>
-    <div className="mini-info">
-      <h4>{name}</h4>
-      <p>Início: {startDate}</p>
-      <div className="mini-status">
-        <strong>Status:</strong> {isActive ? 'Ativo' : 'Inativo'}
-        <Circle size={10} fill={isActive ? "#4ade80" : "#fb7185"} color="transparent" />
+// Adaptado para os dados que vêm da ConnectionResponseDTO do Java
+const MiniMentorCard = ({ name, startDate, status }: { name: string, startDate: string, status: string }) => {
+  const isActive = status === 'APPROVED';
+  return (
+    <div className="mini-mentor-card">
+      <div className="mini-avatar-container">
+        <User size={32} color="#1f2937" />
+      </div>
+      <div className="mini-info">
+        <h4>{name}</h4>
+        <p>Início: {startDate}</p>
+        <div className="mini-status">
+          <strong>Status:</strong> {isActive ? 'Ativo' : 'Pendente'}
+          <Circle size={10} fill={isActive ? "#4ade80" : "#fb7185"} color="transparent" />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const MentoriasPage = () => {
   const [mentoresDisponiveis, setMentoresDisponiveis] = useState<MentorCardData[]>([]);
+  const [meusMentores, setMeusMentores] = useState<any[]>([]); 
   const [loading, setLoading] = useState(true);
 
-  // --- MOCK: SEUS MENTORES (Pode ser substituído por uma chamada de API futura) ---
-  const meusMentores = [
-    { id: 101, name: "Marcelo Dias", startDate: "03/03/2026", isActive: true },
-    { id: 102, name: "Ana Silva", startDate: "05/03/2026", isActive: true },
-  ];
-  
   // --- ESTADOS DE FILTRO ---
   const [filtroExp, setFiltroExp] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
   const [filtroCargo, setFiltroCargo] = useState("");
   const [filtroHabilidade, setFiltroHabilidade] = useState("");
+  const [filtroDisponibilidade, setFiltroDisponibilidade] = useState(""); // Novo filtro
   
   // --- PAGINAÇÃO ---
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Busca inicial de mentores (Usando o Service atualizado com apiFetch/JWT)
+  // Busca inicial de dados (Mentores da Rede + Minhas Conexões)
   useEffect(() => {
-    const fetchMentores = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const mentores = await mentorService.getAllMentorsForCards();
-        setMentoresDisponiveis(mentores);
+        // 1. Busca todos os mentores para a vitrine
+        const todos = await mentorService.getAllMentorsForCards();
+        setMentoresDisponiveis(todos);
+
+        // 2. Busca conexões do usuário logado (Meus Mentores)
+        // OBS: Aqui você deve passar o ID do usuário logado (vindo do seu Contexto ou JWT)
+        // Exemplo fixo com ID 1 apenas para ilustração
+        const logadoId = 1; 
+        const conexoes = await mentorService.getMyMentors(logadoId);
+        setMeusMentores(conexoes);
+
       } catch (error) {
-        console.error('Erro ao buscar mentores:', error);
+        console.error('Erro ao carregar dados da página de mentorias:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchMentores();
+    fetchData();
   }, []);
 
-  // --- GERAÇÃO DINÂMICA DE OPÇÕES BASEADA NO QUE VEM DO BACKEND ---
+  // --- GERAÇÃO DINÂMICA DE OPÇÕES ---
   const opcoesCargos = useMemo(() => 
     Array.from(new Set(mentoresDisponiveis.map(m => m.position))).sort(),
   [mentoresDisponiveis]);
@@ -94,9 +102,13 @@ const MentoriasPage = () => {
       const matchHabilidade = filtroHabilidade === "" || 
         mentor.skills.some(s => s.name === filtroHabilidade);
 
-      return matchExp && matchStatus && matchCargo && matchHabilidade;
+      // Lógica do novo filtro de disponibilidade
+      const matchDisponibilidade = filtroDisponibilidade === "" || 
+        (filtroDisponibilidade === "Com Vagas" ? mentor.isAvailable : !mentor.isAvailable);
+
+      return matchExp && matchStatus && matchCargo && matchHabilidade && matchDisponibilidade;
     });
-  }, [mentoresDisponiveis, filtroExp, filtroStatus, filtroCargo, filtroHabilidade]);
+  }, [mentoresDisponiveis, filtroExp, filtroStatus, filtroCargo, filtroHabilidade, filtroDisponibilidade]);
 
   // --- CONTROLE DE PAGINAÇÃO ---
   const totalPages = Math.ceil(mentoresFiltrados.length / itemsPerPage);
@@ -110,26 +122,28 @@ const MentoriasPage = () => {
     setFiltroStatus("");
     setFiltroCargo("");
     setFiltroHabilidade("");
+    setFiltroDisponibilidade("");
     setCurrentPage(1);
   };
 
   return (
-    <div className="page-wrapper">
-      <Header isAuthenticated={true} />
-
-      <main className="mentorias-page-container">
-        {/* Seção 1: Meus Mentores */}
+    <div className="mentorias-page-container">
+        {/* Seção 1: Meus Mentores (Conexões Reais) */}
         <section className="mentorias-section">
           <h2 className="section-title title-meus-mentores">Meus Mentores</h2>
           <div className="meus-mentores-grid">
-            {meusMentores.map(mentor => (
-              <MiniMentorCard 
-                key={mentor.id} 
-                name={mentor.name} 
-                startDate={mentor.startDate} 
-                isActive={mentor.isActive} 
-              />
-            ))}
+            {meusMentores.length > 0 ? (
+              meusMentores.map(conn => (
+                <MiniMentorCard 
+                  key={conn.id} 
+                  name={conn.mentorName} 
+                  startDate={conn.acceptedAt ? new Date(conn.acceptedAt).toLocaleDateString() : 'Pendente'} 
+                  status={conn.status} 
+                />
+              ))
+            ) : (
+              <p className="no-results">Você ainda não possui conexões de mentoria.</p>
+            )}
           </div>
         </section>
 
@@ -144,8 +158,8 @@ const MentoriasPage = () => {
               label="Habilidades"
               options={opcoesHabilidades}
               value={filtroHabilidade}
-              isEditing={true}
               onChange={(val) => { setFiltroHabilidade(val); setCurrentPage(1); }}
+              isEditing={true}
               placeholder="Todas"
             />
 
@@ -153,8 +167,8 @@ const MentoriasPage = () => {
               label="Cargo"
               options={opcoesCargos}
               value={filtroCargo}
-              isEditing={true}
               onChange={(val) => { setFiltroCargo(val); setCurrentPage(1); }}
+              isEditing={true}
               placeholder="Todos"
             />
 
@@ -162,18 +176,18 @@ const MentoriasPage = () => {
               label="Experiência"
               options={OPCOES_EXPERIENCIA}
               value={filtroExp}
-              isEditing={true}
               onChange={(val) => { setFiltroExp(val); setCurrentPage(1); }}
+              isEditing={true}
               placeholder="Anos"
             />
 
             <DropdownList 
-              label="Status"
-              options={OPCOES_STATUS}
-              value={filtroStatus}
+              label="Vagas"
+              options={OPCOES_DISPONIBILIDADE}
+              value={filtroDisponibilidade}
+              onChange={(val) => { setFiltroDisponibilidade(val); setCurrentPage(1); }}
               isEditing={true}
-              onChange={(val) => { setFiltroStatus(val); setCurrentPage(1); }}
-              placeholder="Todos"
+              placeholder="Disponibilidade"
             />
 
             <button className="limpar-filtros-btn" onClick={resetarFiltros}>
@@ -218,10 +232,7 @@ const MentoriasPage = () => {
             </>
           )}
         </section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
   );
 };
 

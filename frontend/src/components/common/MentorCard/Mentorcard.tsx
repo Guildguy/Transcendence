@@ -1,6 +1,6 @@
 import React from 'react';
-import { User, Circle } from 'lucide-react';
-import { Avatar } from '../../common/Avatar/Avatar'
+import { Circle, Users } from 'lucide-react'; // Adicionei o ícone Users para vagas
+import { Avatar } from '../../common/Avatar/Avatar';
 import './Mentorcard.css';
 
 interface Skill {
@@ -12,8 +12,9 @@ interface MentorCardProps {
   name: string;
   position: string;
   skills: Skill[];
-  anosExperiencia:number;
+  anosExperiencia: number;
   isActive: boolean;
+  isAvailable: boolean; // Nova Prop vinda do MentorService
   avatarUrl?: string;
 }
 
@@ -23,13 +24,14 @@ const MentorCard: React.FC<MentorCardProps> = ({
   skills, 
   anosExperiencia, 
   isActive, 
+  isAvailable, // Destruturando a nova prop
   avatarUrl 
 }) => {
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
 
   return (
-    <div className="mentor-card">
+    <div className={`mentor-card ${!isAvailable ? 'full-capacity' : ''}`}>
       <div className="mentor-card-header">
         <div className="mentor-avatar-container">
           <Avatar avatarUrl={avatarUrl} size={90} /> 
@@ -59,10 +61,18 @@ const MentorCard: React.FC<MentorCardProps> = ({
       </div>
 
       <div className="mentor-footer">
-        <p className="mentor-xp"><strong>Nível de Experiência:</strong> {anosExperiencia} anos</p>
+        <div className="mentor-stats-row">
+          <p className="mentor-xp"><strong>Experiência:</strong> {anosExperiencia} anos</p>
+          
+          {/* Nova seção de Disponibilidade de Vagas */}
+          <div className={`vacancy-badge ${isAvailable ? 'has-vagas' : 'no-vagas'}`}>
+            <Users size={14} />
+            <span>{isAvailable ? 'Com Vagas' : 'Lista de Espera'}</span>
+          </div>
+        </div>
         
         <div className="mentor-status">
-          <strong>Status:</strong> {isActive ? 'Ativo' : 'Indisponível'}
+          <strong>Perfil:</strong> {isActive ? 'Ativo' : 'Inativo'}
           <Circle 
             size={12} 
             fill={isActive ? "#4ade80" : "#fb7185"} 
@@ -71,6 +81,11 @@ const MentorCard: React.FC<MentorCardProps> = ({
           />
         </div>
       </div>
+
+      {/* Sugestão: Botão de Ação */}
+      <button className={`btn-conectar ${!isAvailable ? 'btn-waitlist' : ''}`}>
+        {isAvailable ? 'Solicitar Mentoria' : 'Entrar na Lista'}
+      </button>
     </div>
   );
 };
