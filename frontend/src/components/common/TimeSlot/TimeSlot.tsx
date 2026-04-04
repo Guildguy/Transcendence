@@ -23,8 +23,8 @@ export default TimeSlot;
 
 interface DayColumnProps {
   day: string;
-  slots: { id: number; timeRange: string }[];
-  onDelete: (id: number) => void;
+  slots: { id: string; timeRange: string }[];
+  onDelete: (id: string) => void;
   onAddTimeSlot: (day: string, startTime: string, endTime: string) => void;
 }
 
@@ -65,9 +65,9 @@ export const DayColumn: React.FC<DayColumnProps> = ({ day, slots, onDelete, onAd
 
 interface AvailabilityGridProps {
   availabilityData: {
-    [key: string]: { id: number; timeRange: string }[];
+    [key: string]: { id: string; timeRange: string }[];
   };
-  handleDelete: (id: number) => void;
+  handleDelete: (id: string) => void;
   handleAddTimeSlot: (day: string, startTime: string, endTime: string) => void;
 }
 
