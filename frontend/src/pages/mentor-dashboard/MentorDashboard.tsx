@@ -6,7 +6,7 @@ import Header from '../../components/layout/Header/Header';
 import Button from '../../components/common/Button/Button';
 import { AvailabilityGrid } from '../../components/common/TimeSlot/TimeSlot';
 import { SessionList } from '../../components/common/SessionList/SessionList';
-import { MenteeList } from '../../components/common/MenteeList/MenteeList';
+import { MenteeList, CapacityCard } from '../../components/common/MenteeList/MenteeList';
 import { apiFetch } from '../../services/api';
 import { getMentorAvailability, saveMentorAvailability } from '../../services/mentorAvailabilityService';
 import { toast } from '../../hooks/use-toast';
@@ -88,7 +88,8 @@ const MentorDashboard: React.FC = () => {
     // Check for conflicts
     if (hasTimeConflict(dayIndex, startTime, endTime)) {
       toast({ 
-        title: 'Erro: o novo horário coincide com um horário já criado'
+        title: 'Erro: o novo horário coincide com um horário já criado',
+        description: 'Por favor, escolha um horário diferente não conflitante.'
       });
       return;
     }
@@ -167,25 +168,13 @@ const MentorDashboard: React.FC = () => {
       <div className="mentor-dashboard">
         <div className="dashboard-container">
           <main className="dashboard-content">
-            {loading && (
-              <div style={{
-                backgroundColor: '#eef',
-                color: '#00c',
-                padding: '1rem',
-                borderRadius: '8px',
-                marginBottom: '1rem'
-              }}>
-                Carregando disponibilidade...
-              </div>
-            )}
             <div className="card capacity-card">
               <div className="card-header">
                 <h3>Capacidade da Carteira</h3>
               </div>
-              <p>7 de 10 mentorados</p>
-              <div className="progress-bar">
-                <div className="progress" style={{ width: '70%' }}></div>
-              </div>
+              {mentorId && (
+                <CapacityCard mentorId={mentorId} />
+              )}
             </div>
 
             <div className="card availability-card">
