@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import Button from '../Button/Button';
+import { toast } from '../../../hooks/use-toast';
 import './TimeSlot.css';
 
 interface TimeSlotProps {
@@ -121,6 +122,7 @@ const AddTimeSlotModal: React.FC<AddTimeSlotModalProps> = ({ day, onClose, onCon
     const endTime = `${endHour}:${endMinute}`;
 
     onConfirm(startTime, endTime);
+    toast({ title: 'Nova disponibilidade adicionada a agenda.' });
   };
 
   const handleStartMinuteChange = (value: string) => {
