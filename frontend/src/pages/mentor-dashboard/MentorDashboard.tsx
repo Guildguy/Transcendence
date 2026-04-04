@@ -61,13 +61,13 @@ const MentorDashboard: React.FC = () => {
   };
 
   // Add a new time slot
-  const handleAddTimeSlot = (day: string, startTime: string, endTime: string) => {
+  const handleAddTimeSlot = (dayIndex: number, startTime: string, endTime: string) => {
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
 
     const newBlock: TimeBlock = {
       id: `temp-${Date.now()}-${Math.random()}`,
-      day: parseInt(day, 10) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+      day: dayIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6,
       startHour,
       startMinute,
       endHour,
