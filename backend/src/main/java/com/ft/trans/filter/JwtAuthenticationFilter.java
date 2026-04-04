@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Permite requisições OPTIONS (CORS preflight)
         if ("OPTIONS".equals(method)) {
-            response.setStatus(HttpServletResponse.SC_OK);
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -94,7 +94,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+        String requestedHeaders = request.getHeader("Access-Control-Request-Headers");
+        if (requestedHeaders != null && !requestedHeaders.isBlank())
+            response.setHeader("Access-Control-Allow-Headers", requestedHeaders);
+        else
+            response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
         response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type");
     }
 
