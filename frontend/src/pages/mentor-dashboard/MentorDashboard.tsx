@@ -59,8 +59,38 @@ const MentorDashboard: React.FC = () => {
     setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== id));
   };
 
+  // Check if a new time slot conflicts with existing ones on the same day
+  const hasTimeConflict = (dayIndex: number, startTime: string, endTime: string): boolean => {
+    const [newStartHour, newStartMinute] = startTime.split(':').map(Number);
+    const [newEndHour, newEndMinute] = endTime.split(':').map(Number);
+    
+    const newStartTotalMinutes = newStartHour * 60 + newStartMinute;
+    const newEndTotalMinutes = newEndHour * 60 + newEndMinute;
+
+    // Find all blocks on the same day
+    const dayBlocks = blocks.filter(block => block.day === dayIndex);
+
+    // Check if new slot overlaps with any existing slot
+    return dayBlocks.some(block => {
+      const existingStartTotalMinutes = block.startHour * 60 + block.startMinute;
+      const existingEndTotalMinutes = block.endHour * 60 + block.endMinute;
+
+      // Two time ranges overlap if:
+      // new start < existing end AND new end > existing start
+      return newStartTotalMinutes < existingEndTotalMinutes && newEndTotalMinutes > existingStartTotalMinutes;
+    });
+  };
+
   // Add a new time slot
   const handleAddTimeSlot = (dayIndex: number, startTime: string, endTime: string) => {
+    // Check for conflicts
+    if (hasTimeConflict(dayIndex, startTime, endTime)) {
+      toast({ 
+        title: 'Erro: o novo horário coincide com um horário já criado'
+      });
+      return;
+    }
+
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
 
@@ -74,6 +104,12 @@ const MentorDashboard: React.FC = () => {
     };
 
     setBlocks(prevBlocks => [...prevBlocks, newBlock]);
+    
+    // Show success toast
+    toast({ 
+      title: 'Nova disponibilidade adicionada a agenda.',
+      description: `${startTime} - ${endTime}`
+    });
   };
 
   // Save availability using service
