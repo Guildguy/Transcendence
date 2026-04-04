@@ -23,12 +23,13 @@ export default TimeSlot;
 
 interface DayColumnProps {
   day: string;
+  dayIndex: number;
   slots: { id: string; timeRange: string }[];
   onDelete: (id: string) => void;
-  onAddTimeSlot: (day: string, startTime: string, endTime: string) => void;
+  onAddTimeSlot: (dayIndex: number, startTime: string, endTime: string) => void;
 }
 
-export const DayColumn: React.FC<DayColumnProps> = ({ day, slots, onDelete, onAddTimeSlot }) => {
+export const DayColumn: React.FC<DayColumnProps> = ({ day, dayIndex, slots, onDelete, onAddTimeSlot }) => {
   const [showModal, setShowModal] = useState(false);
 
   return (
@@ -54,7 +55,7 @@ export const DayColumn: React.FC<DayColumnProps> = ({ day, slots, onDelete, onAd
           day={day}
           onClose={() => setShowModal(false)}
           onConfirm={(startTime, endTime) => {
-            onAddTimeSlot(day, startTime, endTime);
+            onAddTimeSlot(dayIndex, startTime, endTime);
             setShowModal(false);
           }}
         />
@@ -68,7 +69,7 @@ interface AvailabilityGridProps {
     [key: string]: { id: string; timeRange: string }[];
   };
   handleDelete: (id: string) => void;
-  handleAddTimeSlot: (day: string, startTime: string, endTime: string) => void;
+  handleAddTimeSlot: (dayIndex: number, startTime: string, endTime: string) => void;
 }
 
 // --- Modal para Adicionar Novo Horário ---
@@ -141,10 +142,11 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ availability
   return (
     <>
       <div className="availability-grid">
-        {daysOfWeek.map(day => (
+        {daysOfWeek.map((day, index) => (
           <DayColumn
             key={day}
             day={day}
+            dayIndex={index}
             slots={availabilityData[day as keyof typeof availabilityData] || []}
             onDelete={handleDelete}
             onAddTimeSlot={handleAddTimeSlot}
