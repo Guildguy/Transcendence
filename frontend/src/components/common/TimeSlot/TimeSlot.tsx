@@ -122,7 +122,10 @@ const AddTimeSlotModal: React.FC<AddTimeSlotModalProps> = ({ day, onClose, onCon
     const endTime = `${endHour}:${endMinute}`;
 
     onConfirm(startTime, endTime);
-    toast({ title: 'Nova disponibilidade adicionada a agenda.' });
+    toast({ 
+      title: 'Nova disponibilidade adicionada a agenda.',
+      description: `${startTime} - ${endTime}`
+    });
   };
 
   const handleStartMinuteChange = (value: string) => {

@@ -14,7 +14,6 @@ import type { TimeBlock } from '../../components/common/BookingCalendar/types';
 const MentorDashboard: React.FC = () => {
   const [blocks, setBlocks] = useState<TimeBlock[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [mentorId, setMentorId] = useState<number | null>(null);
   const [slotDuration, setSlotDuration] = useState(60);
 
@@ -44,10 +43,9 @@ const MentorDashboard: React.FC = () => {
         const { blocks: loadedBlocks, slotDuration: loadedDuration } = await getMentorAvailability(currentMentorId);
         setBlocks(loadedBlocks);
         setSlotDuration(loadedDuration);
-        setError(null);
       } catch (err) {
         console.error('Erro ao carregar disponibilidade:', err);
-        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+        toast({ title: 'Erro ao carregar disponibilidade' });
       } finally {
         setLoading(false);
       }
@@ -81,20 +79,23 @@ const MentorDashboard: React.FC = () => {
   // Save availability using service
   const handleSave = async () => {
     if (!mentorId) {
-      setError('ID do mentor não encontrado');
+      toast({ title: 'Erro: ID do mentor não encontrado' });
       return;
     }
 
     try {
       setLoading(true);
       await saveMentorAvailability(mentorId, blocks, slotDuration);
-      setError(null);
-      toast({ title: 'Disponibilidade salva com sucesso' });
+      toast({ 
+        title: 'Disponibilidade salva com sucesso',
+        description: 'Suas informações foram atualizadas.'
+      });
     } catch (err) {
       console.error('Erro ao salvar disponibilidade:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao salvar';
-      setError(errorMessage);
-      toast({ title: 'Erro: as informações não puderam ser salvas' });
+      toast({ 
+        title: 'Erro: as informações não puderam ser salvas',
+        description: 'Por favor, tente novamente.'
+      });
     } finally {
       setLoading(false);
     }
@@ -128,18 +129,6 @@ const MentorDashboard: React.FC = () => {
       <div className="mentor-dashboard">
         <div className="dashboard-container">
           <main className="dashboard-content">
-            {error && (
-              <div style={{
-                backgroundColor: '#fee',
-                color: '#c00',
-                padding: '1rem',
-                borderRadius: '8px',
-                marginBottom: '1rem',
-                border: '1px solid #fcc'
-              }}>
-                <strong>Erro:</strong> {error}
-              </div>
-            )}
             {loading && (
               <div style={{
                 backgroundColor: '#eef',
