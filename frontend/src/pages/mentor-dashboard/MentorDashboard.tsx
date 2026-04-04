@@ -5,6 +5,8 @@ import Footer from '../../components/layout/Footer/Footer';
 import Header from '../../components/layout/Header/Header';
 import Button from '../../components/common/Button/Button';
 import { AvailabilityGrid } from '../../components/common/TimeSlot/TimeSlot';
+import { SessionList } from '../../components/common/SessionList/SessionList';
+import { MenteeList } from '../../components/common/MenteeList/MenteeList';
 import { apiFetch } from '../../services/api';
 import { getMentorAvailability, saveMentorAvailability } from '../../services/mentorAvailabilityService';
 import { toast } from '../../hooks/use-toast';
@@ -206,51 +208,25 @@ const MentorDashboard: React.FC = () => {
               <div className="card-header">
                 <h2>Próximas Sessões</h2>
               </div>
-              <div className="session-list">
-                <div className="session-item">
-                  <div className="session-info">
-                    <span className="avatar"></span>
-                    <div>
-                      <p>Fulano</p>
-                      <p>11/03 08:00 - 09:00</p>
-                    </div>
-                  </div>
-                  <span className="arrow">→</span>
-                </div>
-                <div className="session-item">
-                  <div className="session-info">
-                    <span className="avatar"></span>
-                    <div>
-                      <p>Fulano Dois</p>
-                      <p>13/03 08:00 - 09:00</p>
-                    </div>
-                  </div>
-                  <span className="arrow">→</span>
-                </div>
-                <div className="session-item">
-                  <div className="session-info">
-                    <span className="avatar"></span>
-                    <div>
-                      <p>Fulano Três</p>
-                      <p>15/03 08:00 - 09:00</p>
-                    </div>
-                  </div>
-                  <span className="arrow">→</span>
-                </div>
-              </div>
+              {mentorId && (
+                <SessionList 
+                  mentorId={String(mentorId)}
+                  showHeader={false}
+                  upcomingOnly={true}
+                  daysLimit={14}
+                  emptyStateMessage="Não há mentorias marcadas"
+                />
+              )}
             </div>
 
             <div className="card mentees-card">
               <h3>Meus Mentorados</h3>
-              <div className="mentees-grid">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="mentee-item">
-                    <span className="avatar"></span>
-                    <p>Fulano</p>
-                    <span className="arrow">→</span>
-                  </div>
-                ))}
-              </div>
+              {mentorId && (
+                <MenteeList 
+                  mentorId={mentorId}
+                  emptyStateMessage="Nenhum mentorado ainda"
+                />
+              )}
             </div>
           </main>
         </div>
