@@ -1,3 +1,25 @@
+.capacity-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.progress-bar {
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  height: 8px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.progress {
+  background-color: #8a2be2;
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
 .mentee-card {
   display: flex;
   justify-content: space-between;

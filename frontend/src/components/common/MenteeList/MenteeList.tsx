@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Avatar } from '../Avatar/Avatar';
 import './MenteeList.css';
 import { apiFetch } from '../../../services/api';
@@ -14,7 +14,67 @@ interface MenteeListProps {
   emptyStateMessage?: string;
 }
 
-export function MenteeList({ mentorId, emptyStateMessage = 'Nenhum mentorado ainda' }: MenteeListProps) {
+interface CapacityCardProps {
+  mentorId: number;
+}
+
+interface CapacityData {
+  currentMentees: number;
+  maxMentees: number;
+}
+
+// CapacityCard Component
+export function CapacityCard({ mentorId }: CapacityCardProps) {
+  const [capacity, setCapacity] = useState<CapacityData>({ currentMentees: 0, maxMentees: 10 });
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCapacity = async () => {
+      try {
+        // Fetch mentor capacity data from backend
+        const response = await apiFetch(`/mentors/${mentorId}/capacity`);
+        
+        if (!response.ok) {
+          throw new Error('Falha ao carregar capacidade');
+        }
+        
+        const data = await response.json();
+        setCapacity({
+          currentMentees: data.currentMentees || 0,
+          maxMentees: data.maxMentees || 10
+        });
+        setError(null);
+      } catch (err) {
+        console.error('Erro ao carregar capacidade:', err);
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      }
+    };
+
+    if (mentorId) {
+      loadCapacity();
+    }
+  }, [mentorId]);
+
+  const percentageUsed = error ? 0 : (capacity.currentMentees / capacity.maxMentees) * 100;
+
+  return (
+    <>
+      {!error && (
+        <p className="capacity-text">
+          {capacity.currentMentees} de {capacity.maxMentees} mentorados
+        </p>
+      )}
+      <div className="progress-bar">
+        <div 
+          className="progress" 
+          style={{ width: `${percentageUsed}%` }}
+        ></div>
+      </div>
+    </>
+  );
+}
+
+export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mentorados ainda' }: MenteeListProps) {
   const [mentees, setMentees] = useState<Mentee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +84,7 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Nenhum mentorado ain
       try {
         setLoading(true);
         // Fetch mentees for the mentor
-        // Adjust the endpoint based on your backend API
+        // Adjust the endpoint based on the backend API
         const response = await apiFetch(`/mentors/${mentorId}/mentees`);
         
         if (!response.ok) {
