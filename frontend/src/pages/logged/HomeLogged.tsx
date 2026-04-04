@@ -28,6 +28,7 @@ function HomeLogged() {
   const [requests, setRequests] = useState<PendingRequest[]>([])
   const [achievements, setAchievements] = useState<AchievementItem[]>([])
   const [mentorProfileId, setMentorProfileId] = useState<number | null>(null)
+  const [isMentor, setIsMentor] = useState(true)
   const [loading, setLoading] = useState(true)
 
   // 1. Resolve mentorProfileId + carrega dados reais com fallback automático
@@ -48,9 +49,13 @@ function HomeLogged() {
         if (userRes.ok) {
           const data = await userRes.json()
           const profiles: any[] = Array.isArray(data.profiles) ? data.profiles : []
-          const mentorProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTOR') ?? profiles[0]
+          const mentorProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTOR')
           resolvedProfileId = mentorProfile?.id ?? null
           setMentorProfileId(resolvedProfileId)
+          setIsMentor(resolvedProfileId !== null)
+          if (resolvedProfileId === null) {
+            setActiveTab('notifications')
+          }
         }
       } catch {
         // segue para fallback
@@ -81,7 +86,7 @@ function HomeLogged() {
           setRequests(mockRequests.map(r => ({ id: r.id, name: r.name })))
         }
       } else {
-        setRequests(mockRequests.map(r => ({ id: r.id, name: r.name })))
+        setRequests([])
       }
 
       // Carrega conquistas do summary de gamificação
@@ -114,6 +119,8 @@ function HomeLogged() {
 
   // 2. Accept/Decline conectados ao backend, com remoção otimista da lista
   const handleAccept = async (id: number) => {
+    if (mentorProfileId === null) return
+
     setRequests(prev => prev.filter(r => r.id !== id))
     try {
       await apiFetch(`/mentorships/${id}/accept`, {
@@ -126,6 +133,8 @@ function HomeLogged() {
   }
 
   const handleDecline = async (id: number) => {
+    if (mentorProfileId === null) return
+
     setRequests(prev => prev.filter(r => r.id !== id))
     try {
       await apiFetch(`/mentorships/${id}/reject`, {
@@ -154,7 +163,8 @@ function HomeLogged() {
             <div className="tab-bar">
               <button
                 className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-                onClick={() => setActiveTab('pending')}
+                onClick={() => isMentor && setActiveTab('pending')}
+                disabled={!isMentor}
               >
                 Solicitações Pendentes
               </button>
@@ -185,7 +195,10 @@ function HomeLogged() {
                   </div>
                 </div>
               ))}
-              {activeTab === 'pending' && !loading && requests.length === 0 && (
+              {activeTab === 'pending' && !isMentor && (
+                <div className="empty-state">Essa área está disponível apenas para perfis de mentor.</div>
+              )}
+              {activeTab === 'pending' && !loading && isMentor && requests.length === 0 && (
                 <div className="empty-state">Sem novas solicitações.</div>
               )}
               {activeTab === 'pending' && loading && (
