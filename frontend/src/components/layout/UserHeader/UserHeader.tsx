@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
+import { ProgressBar } from '../../common/ProgressBar/ProgressBar'
 import Achievements from '../../common/Achievements/Achievements'
 import { apiFetch } from '../../../services/api'
 import './UserHeader.css'
@@ -186,11 +187,14 @@ export const UserHeader = () => {
 
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
-          <InputGroup
-            value={`XP: ${userData.xp}`}
-            isEditing={false}
-            onChange={() => {}}
-          />
+          <div className="xp-section">
+            <ProgressBar
+              currentXp={userData.xp}
+              nextLevelXp={userData.nextLevelXp}
+              currentLevel={userData.level}
+              size="medium"
+            />
+          </div>
           <InputGroup
             value={`NÍVEL: ${String(userData.level)}`}
             isEditing={false}
