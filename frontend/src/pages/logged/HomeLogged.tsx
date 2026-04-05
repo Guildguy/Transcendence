@@ -5,6 +5,7 @@ import Achievements from '../../components/common/Achievements/Achievements'
 import Requests from '../../components/common/Requests/Requests'
 import { mockRequests, mockSchedule, mockAchievements } from './HomeLogged.mock.tsx'
 import { apiFetch } from '../../services/api'
+import { extractBase64FromAvatarUrl } from '../../utils/imageUtils'
 import './HomeLogged.css'
 
 interface PendingRequest {
@@ -63,7 +64,7 @@ function HomeLogged() {
               setRequests(data.map(m => ({
                 id: m.id,
                 name: m.menteeName ?? m.menteeProfileId ?? `Mentorado #${m.id}`,
-                avatar: m.avatarUrl,
+                avatar: extractBase64FromAvatarUrl(m.avatarUrl) || undefined,
               })))
             } else {
               // Backend respondeu vazio → sem pendências reais, não usa mock
