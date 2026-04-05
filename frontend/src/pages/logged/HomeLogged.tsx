@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import {useSearchParams } from 'react-router-dom'
 import AppShell from '../../components/layout/AppShell/AppShell'
 import Header from '../../components/layout/Header/Header'
 import Footer from '../../components/layout/Footer/Footer'
@@ -28,11 +27,6 @@ function HomeLogged() {
   }
 
   return (
-    <AppShell
-      sidebar={null}
-      header={<Header isAuthenticated={true} />}
-      footer={<Footer />}
-    >
       <div className="home-logged">
         
         <UserHeader />
@@ -106,8 +100,6 @@ function HomeLogged() {
         <Achievements achievements={mockAchievements} />
 
       </div>
-      {/* <Outlet /> */}
-    </AppShell>
   )
 }
 

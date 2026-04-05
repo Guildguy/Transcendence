@@ -160,11 +160,6 @@ const MentorDashboard: React.FC = () => {
   const availabilityDataForGrid = getAvailabilityDataForGrid();
 
   return (
-    <AppShell
-      sidebar={null}
-      header={<Header isAuthenticated={true} />}
-      footer={<Footer />}
-    >
       <div className="mentor-dashboard">
         <div className="dashboard-container">
           <main className="dashboard-content">
@@ -220,7 +215,6 @@ const MentorDashboard: React.FC = () => {
           </main>
         </div>
       </div>
-    </AppShell>
   );
 };
 

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import com.ft.trans.entity.User;
+import com.ft.trans.dto.UpdateUserDTO;
 import com.ft.trans.dto.UserDTO;
 import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.service.UserService;
@@ -63,10 +64,10 @@ public class UserController
 	}
 
 	@PutMapping
-    public ResponseEntity<?>		update(@RequestBody User user)
+    public ResponseEntity<?>		update(@RequestBody UpdateUserDTO userToUpdate)
 	{
-		Result result = this.userService.update(user);
-
+		Result result = this.userService.update(userToUpdate.toUser());
+		
 		if (result.validationResult().hasErrors())
 		{
 			return ResponseEntity
@@ -74,7 +75,7 @@ public class UserController
 				.body(result.validationResult().getErrors());
 		}
 		return ResponseEntity
-            .status(HttpStatus.CREATED)
+            .status(HttpStatus.OK)
             .body(result.entity());
 	}
 
