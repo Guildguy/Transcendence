@@ -2,33 +2,31 @@
    USER HEADER
    ============================================================ */
 .user-header {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   background-color: var(--white);
-  width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
+  align-items: left;
   box-shadow: 0 2px 8px rgba(91, 79, 207, 0.08);
 }
 
 .profile-section {
   display: grid;
-  grid-template-columns: 1fr 6fr;
+  grid-template-columns: auto 1fr;
   gap: 40px;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 1000px;
+  width: 80vw;
   margin: 0 auto;
-  padding: 40px;
-  height: fit-content;
-  box-sizing: border-box;
+  padding: 24px;
 }
 
 .profile-user-name {
   color: var(--text-dark);
   font-size: 2.5rem;
   font-weight: 800;
-  padding-top: 4px;
+  margin: 0;
+  padding: 1.5rem 0 1rem 0;
 }
 
 .profile-details {
@@ -39,7 +37,7 @@
 .header-info {
   display: grid;
   flex-direction: column;
-  gap: 12px;
+  gap: 0rem;
 }
 
 .header-avatar {
@@ -49,21 +47,16 @@
 /* Stats pills */
 .profile-stats-bg {
   display: grid;
-  background-color: var(--purple-medium);
-  justify-content: center;
+  background-color: var(--purple-light);
+  padding: 16px 0 0 0;
   justify-items: center;
-  align-content: center;
-  align-items: center;
-  padding-top: 28px;
-  padding-bottom: 10px;
 }
 
 .profile-stats-container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   background-color: transparent;
-  max-width: 1000px;
-  width: 100%;
+  width: 80vw;
   gap: 1rem;
   box-sizing: border-box;
 }
@@ -100,76 +93,11 @@
       text-align: center;
     }
 
-}
+    .gamification-section {
+      width: 300px;
+    }
 
-/* Gamificação */
-.gamification-section {
-  width: 85vh;
-  margin-top: 20px;
-  padding-bottom: 16px;
-}
-
-.gamification-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--white);
-  margin-bottom: 10px;
-}
-
-/* Conquistas */
-.achievements-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.achievement-icon {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-}
-
-.achievement-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: rgba(255, 255, 255, 0.15);
-  color: var(--white);
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-/* Histórico */
-.history-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8125rem;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--white);
-}
-
-.history-xp {
-  font-weight: 600;
-  color: #86efac;
-}
-
-@media (max-width: 768px) {
-  .gamification-section {
-    width: 300px;
-  }
+    .profile-user-name {
+      text-align: center;
+    }
 }

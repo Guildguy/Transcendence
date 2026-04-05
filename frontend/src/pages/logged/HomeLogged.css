@@ -15,10 +15,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  width: 100%;
-  max-width: 1000px;
+  width: 80vw;
   margin: 0 auto 20px auto;
-  padding: 20px;
+  padding: 40px 0 0 0;
   box-sizing: border-box;
 }
 
