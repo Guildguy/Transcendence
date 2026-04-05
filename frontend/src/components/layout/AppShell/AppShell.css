@@ -8,6 +8,9 @@
   flex-direction: column;
   min-height: 100vh; /* Mudado de height para min-height */
   background-color: var(--white);
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .app-shell > footer {
@@ -49,11 +52,13 @@
 
 .app-shell > main {
   flex: 1;
-  overflow-y: visible; /* Mudado de auto para visible */
   background-color: var(--white);
   /* 🔑 ESSENCIAL PARA EVITAR BUG DE ALTURA */
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .app-shell > .footer {

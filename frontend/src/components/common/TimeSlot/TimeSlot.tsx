@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import Button from '../Button/Button';
-import { toast } from '../../../hooks/use-toast';
 import './TimeSlot.css';
 
 interface TimeSlotProps {

@@ -6,6 +6,7 @@ import Footer from '../../components/layout/Footer/Footer'
 import UserHeader from '../../components/layout/UserHeader/UserHeader'
 import Avatar from '../../components/common/Avatar/Avatar'
 import Button from '../../components/common/Button/Button'
+import Achievements from '../../components/common/Achievements/Achievements'
 import { Check, X } from "lucide-react";
 import { mockRequests, mockSchedule, mockAchievements } from './HomeLogged.mock.tsx'
 import './HomeLogged.css'
@@ -102,17 +103,7 @@ function HomeLogged() {
         </section>
 
         {/* Achievements */}
-        <section className="achievements-section">
-          <h3 className="achievements-title">Conquistas</h3>
-          <div className="achievements-grid">
-            {mockAchievements.map((a) => (
-              <div key={a.id} className="achievement-card">
-                {a.icon && <img src={a.icon} alt={a.title} className="achievement-icon" style={{width: 48, height: 48, marginBottom: 8}} />}
-                <div className="achievement-title">{a.title}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <Achievements achievements={mockAchievements} />
 
       </div>
       {/* <Outlet /> */}
