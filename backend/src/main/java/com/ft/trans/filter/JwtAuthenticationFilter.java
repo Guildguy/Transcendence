@@ -53,10 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
             
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                // Token não fornecido
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"Missing or invalid Authorization header\"}");
+                writeUnauthorized(response, "Missing or invalid Authorization header");
                 return;
             }
 
@@ -65,9 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Valida o token
             if (!jwtService.validateToken(token)) {
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"Invalid or expired token\"}");
+                writeUnauthorized(response, "Invalid or expired token");
                 return;
             }
 
@@ -75,9 +70,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Authentication failed: " + e.getMessage() + "\"}");
+            writeUnauthorized(response, "Authentication failed");
         }
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException
+    {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }

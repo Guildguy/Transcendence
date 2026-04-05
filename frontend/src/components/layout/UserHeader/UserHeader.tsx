@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
-import { userService } from '../../../services/Userservice' 
+import { apiFetch } from '../../../services/api'
 import './UserHeader.css'
 
 type HistoryItem = {
