@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
+import Achievements from '../../common/Achievements/Achievements'
 import { apiFetch } from '../../../services/api'
 import './UserHeader.css'
 

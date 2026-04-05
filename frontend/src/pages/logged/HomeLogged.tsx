@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import UserHeader from '../../components/layout/UserHeader/UserHeader'
-import Button from '../../components/common/Button/Button'
 import Achievements from '../../components/common/Achievements/Achievements'
 import Requests from '../../components/common/Requests/Requests'
-import { mockRequests, mockSchedule, mockAchievements } from './HomeLogged.mock.tsx'
+import DailySchedule from '../../components/common/DailySchedule/DailySchedule'
+import { mockRequests, mockAchievements } from './HomeLogged.mock.tsx'
 import { apiFetch } from '../../services/api'
 import { extractBase64FromAvatarUrl } from '../../utils/imageUtils'
 import './HomeLogged.css'
@@ -151,20 +151,10 @@ function HomeLogged() {
             onDecline={handleDecline}
           />
 
-          {/* Right Panel - Schedule (mock provisório, sem backend ainda) */}
-          <div className="right-panel">
-            <h3 className="panel-title">Agenda do Dia</h3>
-            <div className="schedule-list">
-              {mockSchedule.map((item) => (
-                <div key={item.id} className="schedule-item">
-                  <span className="schedule-time">
-                    <strong>{item.time}</strong> - {item.mentee}
-                  </span>
-                  <Button>Remarcar</Button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <DailySchedule
+            userRole={userRole}
+            profileId={mentorProfileId}
+          />
 
         </section>
 
