@@ -42,7 +42,7 @@ const DEFAULT_USER_DATA: UserHeaderData = {
 }
 
 const FALLBACK_USER_DATA: UserHeaderData = {
-  nome: 'lejorge',
+  nome: 'Nome de Usuário',
   username: 'ze1',
   cargo: 'Mentor',
   avatarUrl: '',
@@ -179,23 +179,7 @@ export const UserHeader = () => {
             onChange={() => {}}
           />
         </div>
-
-        {/* Histórico */}
-        {userData.recentHistory.length > 0 && (
-          <div className="gamification-section">
-            <h3 className="gamification-title">📈 Histórico de XP</h3>
-            <ul className="history-list">
-              {userData.recentHistory.map((item, i) => (
-                <li key={i} className="history-item">
-                  <span className="history-reason">{formatReason(item.reason)}</span>
-                  <span className="history-xp">+{item.xp} XP</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
-
     </section>
   )
 }

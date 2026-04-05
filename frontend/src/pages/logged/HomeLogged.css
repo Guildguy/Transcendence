@@ -1,10 +1,11 @@
 /* ---- Outer wrapper ---- */
 .home-logged {
   background-color: var(--purple-bg);
-  width: 100vh;
-  height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-dark);
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* ============================================================
@@ -14,9 +15,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+  width: 100%;
   max-width: 1000px;
   margin: 0 auto 20px auto;
-  padding: 20px 20px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* ---- Left Panel ---- */
@@ -169,40 +172,6 @@
 }
 
 /* ============================================================
-   ACHIEVEMENTS SECTION
-   ============================================================ */
-.achievements-section {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.achievements-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--purple-primary);
-  margin: 0;
-  display: inline-block;
-  border-bottom: 2px solid var(--purple-primary);
-  padding-bottom: 4px;
-}
-
-.achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 20px;
-  padding-bottom: 20px;
-}
-
-.achievement-card {
-  background-color: var(--white);
-  border-radius: 16px;
-  height: 100px;
-  box-shadow: 0 2px 8px rgba(91, 79, 207, 0.06);
-}
-
-/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
@@ -212,9 +181,5 @@
 
   .panel-title {
     text-align: left;
-  }
-
-  .achievements-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 }

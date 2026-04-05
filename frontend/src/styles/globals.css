@@ -5,7 +5,7 @@
   /* Purple palette */
   --purple-primary: #5b4fcf;
   --purple-light: #c3c3ff;
-  --purple-medium: #8181ff;
+  --purple-medium: #615AA4;
   --purple-bg: #e9e9ff;
   
   /* Neutrals */
@@ -18,7 +18,7 @@
   
   /* UI elements */
   --border-color: #d8d6f0;
-  --badge-bg: #5b4fcf;
+  --badge-bg: #47464F;
   --badge-text: #ffffff;
 }
 

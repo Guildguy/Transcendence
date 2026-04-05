@@ -1,0 +1,55 @@
+/* ============================================================
+   ACHIEVEMENTS SECTION
+   ============================================================ */
+.achievements-section {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.achievements-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--purple-primary);
+  margin: 0;
+  display: inline-block;
+  border-bottom: 2px solid var(--purple-primary);
+  padding-bottom: 4px;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+  padding-bottom: 20px;
+}
+
+.achievement-card {
+  background-color: var(--white);
+  border-radius: 16px;
+  height: 100px;
+  box-shadow: 0 2px 8px rgba(91, 79, 207, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.achievement-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .achievements-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

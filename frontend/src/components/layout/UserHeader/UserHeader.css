@@ -5,6 +5,8 @@
   display: grid;
   background-color: var(--white);
   width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
   box-shadow: 0 2px 8px rgba(91, 79, 207, 0.08);
 }
 
@@ -14,10 +16,12 @@
   gap: 40px;
   align-items: center;
   justify-content: center;
+  width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 40px 40px;
+  padding: 40px;
   height: fit-content;
+  box-sizing: border-box;
 }
 
 .profile-user-name {
@@ -58,8 +62,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   background-color: transparent;
-  width: 85vh;
+  max-width: 1000px;
+  width: 100%;
   gap: 1rem;
+  box-sizing: border-box;
 }
 
 
