@@ -136,7 +136,7 @@ export const RequestCard = ({
   return (
     <div className="request-card">
       <div className="request-avatar">
-        <Avatar size={80} />
+        <Avatar size={80} avatarUrl={request.avatar} />
       </div>
       <p className="request-text">{getMessage()}</p>
       {showActions && (
