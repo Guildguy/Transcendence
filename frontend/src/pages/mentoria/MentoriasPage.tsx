@@ -61,6 +61,8 @@ const MentoriasPage = () => {
       try {
         // 1. Busca todos os mentores para a vitrine
         const todos = await mentorService.getAllMentorsForCards();
+        console.log("Mentors loaded from service:", todos);
+        console.log("Sample mentor data:", todos[0]);
         setMentoresDisponiveis(todos);
 
         // 2. Busca conexões do usuário logado (Meus Mentores)

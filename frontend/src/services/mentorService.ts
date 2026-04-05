@@ -66,11 +66,32 @@ class MentorService {
     try {
       // Endpoint que mapeia para o MentorshipConnectionService.getMentorCapacity
       const response = await apiFetch(`/connections/capacity/${mentorUserId}`);
-      if (!response.ok) return false;
+      if (!response.ok) {
+        console.warn(`Availability check failed for mentor ${mentorUserId}: ${response.status}`, response.statusText);
+        return true; // Default to true (has vagas) instead of false
+      }
       const data = await response.json();
-      return data.isAvailable; 
-    } catch {
-      return false;
+      console.log(`Availability data for mentor ${mentorUserId}:`, data);
+      
+      // Handle different possible response structures
+      if (typeof data === 'boolean') {
+        return data;
+      }
+      if (typeof data.isAvailable === 'boolean') {
+        return data.isAvailable;
+      }
+      if (typeof data.available === 'boolean') {
+        return data.available;
+      }
+      if (typeof data.hasCapacity === 'boolean') {
+        return data.hasCapacity;
+      }
+      
+      console.warn(`Unexpected availability response structure for mentor ${mentorUserId}:`, data);
+      return true; // Default to true if structure is unexpected
+    } catch (error) {
+      console.error(`Error fetching availability for mentor ${mentorUserId}:`, error);
+      return true; // Default to true (has vagas) on error
     }
   }
 
@@ -87,6 +108,8 @@ class MentorService {
         (p: any) => p.role?.toUpperCase() === 'MENTOR'
       );
 
+      console.log(`Processing user ${user.id} (${user.name}) with ${mentorProfiles.length} mentor profile(s)`);
+
       return await Promise.all(mentorProfiles.map(async (profile: any) => {
         // Executa as chamadas de imagem, skills e disponibilidade em paralelo
         const [finalAvatar, pythonStacks, isAvailable] = await Promise.all([
@@ -95,7 +118,7 @@ class MentorService {
           this.fetchAvailability(user.id)
         ]);
 
-        return {
+        const mentorCard = {
           id: profile.id,
           name: user.name || "Mentor",
           position: profile.position || 'Pessoa Mentora',
@@ -108,6 +131,10 @@ class MentorService {
           isAvailable: isAvailable, 
           avatarUrl: finalAvatar
         };
+
+        console.log(`[MentorCard] ${mentorCard.name} (ID: ${profile.id}) - Available: ${mentorCard.isAvailable}`);
+
+        return mentorCard;
       }));
     } catch (err) {
       console.error(`Erro ao processar usuário ${userData.id}:`, err);
