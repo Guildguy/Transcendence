@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
 import { loginFetch, saveAuthToken } from '../../services/api';
+
 
 function LoginForm() {
   const navigate = useNavigate();
@@ -101,9 +102,9 @@ function LoginForm() {
         onChange={(e) => setPassword(e.target.value)} // Atualiza o estado
       />
 
-      <a href="#" className="auth-link">
+      <Link to="/Forgot" className="auth-link">
         Esqueceu a sua senha?
-      </a>
+      </Link>
 
       <div className="social-buttons">
         <button type="button" className="social-btn" onClick={() => handleGoogleLogin()}>
