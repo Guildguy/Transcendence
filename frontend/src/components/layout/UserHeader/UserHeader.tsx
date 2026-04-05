@@ -187,12 +187,12 @@ export const UserHeader = () => {
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
           <InputGroup
-            value={`NÍVEL: ${String(userData.level)}`}
+            value={`XP: ${userData.xp}`}
             isEditing={false}
             onChange={() => {}}
           />
           <InputGroup
-            value={`XP: ${userData.xp}`}
+            value={`NÍVEL: ${String(userData.level)}`}
             isEditing={false}
             onChange={() => {}}
           />
