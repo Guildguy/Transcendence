@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Set;
 
 /**
  * Filtro que valida o JWT em todas as requisições
@@ -25,12 +24,6 @@ import java.util.Set;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final Set<String> ALLOWED_ORIGINS = Set.of(
-        "http://localhost:5173",
-        "http://0.0.0.0:5173",
-        "http://127.0.0.1:5173"
-    );
-
     @Autowired
     private JWTService jwtService;
 
@@ -40,8 +33,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         String requestPath = request.getRequestURI();
         String method = request.getMethod();
-
-        applyCorsHeaders(request, response);
 
         // Permite requisições OPTIONS (CORS preflight)
         if ("OPTIONS".equals(method)) {
@@ -81,25 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             writeUnauthorized(response, "Authentication failed");
         }
-    }
-
-    private void applyCorsHeaders(HttpServletRequest request, HttpServletResponse response)
-    {
-        String origin = request.getHeader(HttpHeaders.ORIGIN);
-
-        if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
-            response.setHeader("Access-Control-Allow-Origin", origin);
-            response.setHeader("Vary", "Origin");
-            response.setHeader("Access-Control-Allow-Credentials", "true");
-        }
-
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        String requestedHeaders = request.getHeader("Access-Control-Request-Headers");
-        if (requestedHeaders != null && !requestedHeaders.isBlank())
-            response.setHeader("Access-Control-Allow-Headers", requestedHeaders);
-        else
-            response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-        response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type");
     }
 
     private void writeUnauthorized(HttpServletResponse response, String message) throws IOException
