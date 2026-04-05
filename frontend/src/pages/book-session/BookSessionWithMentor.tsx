@@ -52,15 +52,9 @@ function BookSessionContent() {
 
 export function BookSessionWithMentor() {
   return (
-    <AppShell
-      sidebar={null}
-      header={<Header isAuthenticated={true} />}
-      footer={<Footer />}
-    >
       <MentoringProvider>
         <BookSessionContent />
       </MentoringProvider>
-    </AppShell>
   )
 }
 
