@@ -9,6 +9,17 @@ interface Mentee {
   avatarUrl?: string;
 }
 
+interface ConnectionResponseDTO {
+  id: number;
+  mentorId: number;
+  mentorName: string;
+  menteeId: number;
+  menteeName: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  acceptedAt: string;
+  createdAt: string;
+}
+
 interface MenteeListProps {
   mentorId: number;
   emptyStateMessage?: string;
@@ -32,7 +43,7 @@ export function CapacityCard({ mentorId }: CapacityCardProps) {
     const loadCapacity = async () => {
       try {
         // Fetch mentor capacity data from backend
-        const response = await apiFetch(`/mentors/${mentorId}/capacity`);
+        const response = await apiFetch(`/mentorship-connections/mentor/${mentorId}/capacity`);
         
         if (!response.ok) {
           throw new Error('Falha ao carregar capacidade');
@@ -83,16 +94,25 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
     const loadMentees = async () => {
       try {
         setLoading(true);
-        // Fetch mentees for the mentor
-        // Adjust the endpoint based on the backend API
-        const response = await apiFetch(`/mentors/${mentorId}/mentees`);
+        // Fetch active connections (mentorados) for the mentor
+        const response = await apiFetch(`/mentorship-connections/mentor/${mentorId}`);
         
         if (!response.ok) {
           throw new Error('Falha ao carregar mentorados');
         }
         
-        const data = await response.json();
-        setMentees(data || []);
+        const connections: ConnectionResponseDTO[] = await response.json();
+        
+        // Filter only APPROVED connections and map to Mentee format
+        const activeMentees: Mentee[] = connections
+          .filter(conn => conn.status === 'APPROVED')
+          .map(conn => ({
+            id: conn.menteeId,
+            name: conn.menteeName,
+            avatarUrl: undefined // Backend doesn't provide avatar in this response
+          }));
+        
+        setMentees(activeMentees);
         setError(null);
       } catch (err) {
         console.error('Erro ao carregar mentorados:', err);
