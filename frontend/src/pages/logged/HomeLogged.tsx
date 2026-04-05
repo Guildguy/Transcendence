@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import UserHeader from '../../components/layout/UserHeader/UserHeader'
-import Avatar from '../../components/common/Avatar/Avatar'
 import Button from '../../components/common/Button/Button'
 import Achievements from '../../components/common/Achievements/Achievements'
 import Requests from '../../components/common/Requests/Requests'
-import { Check, X } from "lucide-react";
 import { mockRequests, mockSchedule, mockAchievements } from './HomeLogged.mock.tsx'
+import { apiFetch } from '../../services/api'
 import './HomeLogged.css'
 
 interface PendingRequest {
@@ -14,17 +13,17 @@ interface PendingRequest {
   avatar?: string
 }
 
-interface AchievementItem {
-  name: string
-  iconUrl: string
+interface AchievementsData {
+  id: number
+  title: string
+  icon?: string
 }
 
 function HomeLogged() {
-  const [activeTab, setActiveTab] = useState<'pending' | 'notifications'>('pending')
   const [requests, setRequests] = useState<PendingRequest[]>([])
-  const [achievements, setAchievements] = useState<AchievementItem[]>([])
+  const [achievements, setAchievements] = useState<AchievementsData[]>([])
   const [mentorProfileId, setMentorProfileId] = useState<number | null>(null)
-  const [isMentor, setIsMentor] = useState(true)
+  const [userRole, setUserRole] = useState<'MENTOR' | 'MENTEE'>('MENTEE')
   const [loading, setLoading] = useState(true)
 
   // 1. Resolve mentorProfileId + carrega dados reais com fallback automático
@@ -33,7 +32,7 @@ function HomeLogged() {
       const userId = localStorage.getItem('userId')
       if (!userId) {
         setRequests(mockRequests.map(r => ({ id: r.id, name: r.name })))
-        setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+        setAchievements(mockAchievements)
         setLoading(false)
         return
       }
@@ -48,10 +47,7 @@ function HomeLogged() {
           const mentorProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTOR')
           resolvedProfileId = mentorProfile?.id ?? null
           setMentorProfileId(resolvedProfileId)
-          setIsMentor(resolvedProfileId !== null)
-          if (resolvedProfileId === null) {
-            setActiveTab('notifications')
-          }
+          setUserRole(resolvedProfileId !== null ? 'MENTOR' : 'MENTEE')
         }
       } catch {
         // segue para fallback
@@ -64,7 +60,6 @@ function HomeLogged() {
           if (incomingRes.ok) {
             const data: any[] = await incomingRes.json()
             if (data.length > 0) {
-              // Dados reais prevalecem
               setRequests(data.map(m => ({
                 id: m.id,
                 name: m.menteeName ?? m.menteeProfileId ?? `Mentorado #${m.id}`,
@@ -90,21 +85,19 @@ function HomeLogged() {
         const summaryRes = await apiFetch(`/gamification/users/${userId}/summary`)
         if (summaryRes.ok) {
           const summary = await summaryRes.json()
-          const unlocked: AchievementItem[] = Array.isArray(summary?.unlockedAchievements)
+          const unlocked: AchievementsData[] = Array.isArray(summary?.unlockedAchievements)
             ? summary.unlockedAchievements
             : []
           if (unlocked.length > 0) {
-            // Dados reais prevalecem
             setAchievements(unlocked)
           } else {
-            // Nenhuma conquista desbloqueada ainda → fallback
-            setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+            setAchievements(mockAchievements)
           }
         } else {
-          setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+          setAchievements(mockAchievements)
         }
       } catch {
-        setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+        setAchievements(mockAchievements)
       }
 
       setLoading(false)
@@ -149,7 +142,6 @@ function HomeLogged() {
 
         <section className="main-content">
 
-          {/* Requests Section */}
           <Requests
             userRole={userRole}
             mentorRequests={userRole === 'MENTOR' ? requests : []}
@@ -175,8 +167,7 @@ function HomeLogged() {
 
         </section>
 
-        {/* Achievements */}
-        <Achievements achievements={mockAchievements} />
+        <Achievements achievements={achievements} />
 
       </div>
   )

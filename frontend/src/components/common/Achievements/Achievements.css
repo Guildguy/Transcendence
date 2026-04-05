@@ -4,9 +4,8 @@
 
 .achievements-section {
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 20px;
+  width: 80vw;
+  margin: 24px auto 32px auto;
   box-sizing: border-box;
 }
 

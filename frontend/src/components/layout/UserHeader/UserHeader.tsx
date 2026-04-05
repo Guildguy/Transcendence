@@ -161,19 +161,16 @@ export const UserHeader = () => {
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
           <InputGroup
-            label="Nível"
-            value={String(userData.level)}
+            value={`NÍVEL: ${String(userData.level)}`}
             isEditing={false}
             onChange={() => {}}
           />
           <InputGroup
-            label="XP"
-            value={`${userData.xp} XP`}
+            value={`XP: ${userData.xp}`}
             isEditing={false}
             onChange={() => {}}
           />
           <InputGroup
-            label="Status"
             value={userData.role === 'MENTOR' ? 'Ensinando 🔥' : 'Aprendendo 🚀'}
             isEditing={false}
             onChange={() => {}}
