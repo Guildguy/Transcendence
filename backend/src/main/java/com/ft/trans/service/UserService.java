@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.ft.trans.dto.ChangePasswordDTO;
 import com.ft.trans.dto.UserDTO;
 import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.entity.LoginRequest;
@@ -61,15 +62,22 @@ public class UserService {
 		return userFound;
 	}
 
-    public Result		update(User user)
+    public Result		update(User userToUpdate)
     {
-		if (user.id == null)
+		User existingUser = userRepository.findById(userToUpdate.id).orElse(null);
+
+		if (existingUser == null)
 		{
 			ValidationResult result = new ValidationResult();
-			result.addError("id", "Não foi possível alterar o usuário. Campo id está faltando");
-			return new Result(user, result);
+			result.addError("id", "Usuário não encontrado para o id fornecido");
+			return new Result(userToUpdate, result);
 		}
-        return (_persistUser(user, true));
+
+		existingUser.name = userToUpdate.name;
+		existingUser.email = userToUpdate.email;
+		existingUser.phoneNumber = userToUpdate.phoneNumber;
+
+        return (_persistUser(existingUser, true));
     }
 
     public Boolean		delete(Long id)
@@ -82,7 +90,10 @@ public class UserService {
     private Result _persistUser(User user, Boolean isUpdate)
 	{
 	    User savedUser = null;
-	    ValidationResult result = user.validate();
+	    ValidationResult result = new ValidationResult();
+		
+		if (!isUpdate)
+			result = user.validate();
 
 	    if (!result.hasErrors()) {
 	        try {
@@ -173,5 +184,26 @@ public class UserService {
 			password.append(chars.charAt((int) (Math.random() * chars.length())));
 		}
 		return password.toString();
+	}
+
+	public Result changePassword(ChangePasswordDTO changePasswordDTO) {
+		User user = userRepository.findByEmail(changePasswordDTO.email).orElse(null);
+		
+		if (user == null) {
+			ValidationResult result = new ValidationResult();
+			result.addError("email", "Usuário não encontrado para o email fornecido");
+			return new Result(null, result);
+		}
+
+		if (!user.passwordMatches(changePasswordDTO.oldPassword)) {
+			ValidationResult result = new ValidationResult();
+			result.addError("oldPassword", "A senha antiga está incorreta");
+			return new Result(null, result);
+		}
+
+		user.password = changePasswordDTO.newPassword;
+		user.encodePassword();
+		
+		return _persistUser(user, true);
 	}
 }

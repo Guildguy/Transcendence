@@ -5,8 +5,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import com.google.gson.JsonElement;

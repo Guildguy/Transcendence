@@ -1,6 +1,5 @@
-import { apiFetch } from './api';
+import { apiFetch } from './api'; // Seu wrapper customizado
 
-const API_BASE_URL = 'http://localhost:8080';
 const PYTHON_API_URL = 'http://localhost:8000';
 
 export interface MentorCardData {
@@ -10,14 +9,17 @@ export interface MentorCardData {
   skills: Array<{ id: string; name: string }>;
   anosExperiencia: number;
   isActive: boolean;
+  isAvailable: boolean; // Indica se o mentor tem vagas (RN02 do Java)
   avatarUrl?: string;
 }
 
 class MentorService {
   
+  /**
+   * Busca a imagem de perfil no backend Java (8080)
+   */
   private async fetchProfileImage(profileId: number): Promise<string> {
     try {
-      // const response = await fetch(`${API_BASE_URL}/profiles/image/${profileId}`);
       const response = await apiFetch(`/profiles/image/${profileId}`);
       if (!response.ok) return "";
       const imgData = await response.json();
@@ -39,10 +41,14 @@ class MentorService {
     }
   }
 
+  /**
+   * Busca as stacks/habilidades no backend Python (8000)
+   */
   private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
     try {
+      // Como o Python costuma rodar em porta diferente, usamos o fetch nativo 
+      // ou garantimos que o apiFetch aceite URLs completas.
       const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
-      // const response = await apiFetch(`profile/${profileId}`);
       if (response.ok) {
         const data = await response.json();
         return data.stacks || [];
@@ -53,11 +59,27 @@ class MentorService {
     }
   }
 
-  // NOVA FUNÇÃO: Processa um único usuário e seus perfis de uma vez
+  /**
+   * Verifica a disponibilidade (capacidade) do mentor no Java
+   */
+  private async fetchAvailability(mentorUserId: number): Promise<boolean> {
+    try {
+      // Endpoint que mapeia para o MentorshipConnectionService.getMentorCapacity
+      const response = await apiFetch(`/connections/capacity/${mentorUserId}`);
+      if (!response.ok) return false;
+      const data = await response.json();
+      return data.isAvailable; 
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Processa os dados brutos do usuário e perfis para o formato de Card
+   */
   private async processUser(userData: any): Promise<MentorCardData[]> {
     try {
-      // const detailRes = await fetch(`${API_BASE_URL}/users/${userData.id}`);
-      const detailRes = await apiFetch(`users/${userData.id}`);
+      const detailRes = await apiFetch(`/users/${userData.id}`);
       const fullData = await detailRes.json();
       
       const user = fullData.user;
@@ -65,21 +87,25 @@ class MentorService {
         (p: any) => p.role?.toUpperCase() === 'MENTOR'
       );
 
-      // Aqui está o segredo: Processa todos os perfis desse usuário em paralelo
       return await Promise.all(mentorProfiles.map(async (profile: any) => {
-        // Dispara imagem e skills simultaneamente para este perfil
-        const [finalAvatar, pythonStacks] = await Promise.all([
+        // Executa as chamadas de imagem, skills e disponibilidade em paralelo
+        const [finalAvatar, pythonStacks, isAvailable] = await Promise.all([
           this.fetchProfileImage(profile.id),
-          this.fetchSkillsFromPython(profile.id)
+          this.fetchSkillsFromPython(profile.id),
+          this.fetchAvailability(user.id)
         ]);
 
         return {
           id: profile.id,
           name: user.name || "Mentor",
           position: profile.position || 'Pessoa Mentora',
-          skills: pythonStacks.map((s: string, i: number) => ({ id: `py_${profile.id}_${i}`, name: s })),
+          skills: pythonStacks.map((s: string, i: number) => ({ 
+            id: `py_${profile.id}_${i}`, 
+            name: s 
+          })),
           anosExperiencia: profile.anosExperiencia || 0,
           isActive: true,
+          isAvailable: isAvailable, 
           avatarUrl: finalAvatar
         };
       }));
@@ -89,20 +115,34 @@ class MentorService {
     }
   }
 
+  /**
+   * Retorna a lista de todos os mentores para a vitrine
+   */
   async getAllMentorsForCards(): Promise<MentorCardData[]> {
     try {
-      // const response = await fetch(`${API_BASE_URL}/users`);
-      const response = await apiFetch('/users');
+      const response = await apiFetch(`/users`);
       const users = await response.json();
 
-      // Dispara o processamento de TODOS os usuários ao mesmo tempo
       const results = await Promise.all(users.map((u: any) => this.processUser(u)));
-
-      // Como results é um Array de Arrays (devido ao map), usamos flat() para juntar tudo
       return results.flat();
     } catch (error) {
       console.error('Erro ao obter mentores:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Busca as conexões atuais do usuário (Meus Mentores)
+   */
+  async getMyMentors(menteeId: number): Promise<any[]> {
+    try {
+      // Chama o endpoint de conexões aprovadas para o mentorado
+      const response = await apiFetch(`/connections/mentee/${menteeId}`);
+      if (!response.ok) return [];
+      return await response.json(); 
+    } catch (error) {
+      console.error('Erro ao buscar conexões do mentorado:', error);
+      return [];
     }
   }
 }

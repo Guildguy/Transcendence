@@ -14,7 +14,6 @@ import com.ft.trans.entity.GoogleLoginRequest;
 import com.ft.trans.entity.LoginResponse;
 import com.ft.trans.service.UserService;
 import com.ft.trans.service.GoogleTokenValidationService;
-import com.ft.trans.entity.Profile;
 
 @RestController
 @RequestMapping
@@ -43,7 +42,6 @@ public class LoginController
     @PostMapping("/login/google")
     public ResponseEntity<?> loginGoogle(@RequestBody GoogleLoginRequest googleLoginRequest)
     {
-        // Validar o token do Google
         GoogleTokenValidationService.GoogleUserInfo userInfo = 
             googleTokenValidationService.validateAndGetUserInfo(googleLoginRequest.token);
         
@@ -55,7 +53,6 @@ public class LoginController
         }
 
         try {
-            // Buscar ou criar usuário
             User user = userService.findOrCreateByEmail(userInfo.email);
             
             if (user == null) {
@@ -64,8 +61,6 @@ public class LoginController
                             put("message", "Erro ao criar usuário");
                         }});
             }
-
-            // Gerar JWT
             String token = userService.generateTokenForUser(user);
             
             return ResponseEntity.ok(new LoginResponse(token, "Bearer", 86400000L, user.id));
