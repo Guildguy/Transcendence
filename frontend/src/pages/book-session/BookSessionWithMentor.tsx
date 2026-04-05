@@ -1,6 +1,3 @@
-import AppShell from '../../components/layout/AppShell/AppShell'
-import Header from '../../components/layout/Header/Header'
-import Footer from '../../components/layout/Footer/Footer'
 import './BookSessionWithMentor.css'
 import MentorInfo from '../../components/common/MentorInfo/MentorInfo'
 import { MentoringProvider, useMentoring } from '../../components/common/BookingCalendar/MentoringContext'

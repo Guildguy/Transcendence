@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './MentorDashboard.css';
-import AppShell from '../../components/layout/AppShell/AppShell';
-import Footer from '../../components/layout/Footer/Footer';
-import Header from '../../components/layout/Header/Header';
 import Button from '../../components/common/Button/Button';
 import { AvailabilityGrid } from '../../components/common/TimeSlot/TimeSlot';
 import { SessionList } from '../../components/common/SessionList/SessionList';

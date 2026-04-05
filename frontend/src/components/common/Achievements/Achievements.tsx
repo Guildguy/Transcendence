@@ -11,7 +11,7 @@ interface AchievementsProps {
 }
 
 export const Achievements = ({ achievements }: AchievementsProps) => {
-  return (
+    return (
     <section className="achievements-section">
       <h3 className="achievements-title">Conquistas</h3>
       <div className="achievements-grid">
@@ -24,7 +24,7 @@ export const Achievements = ({ achievements }: AchievementsProps) => {
                 className="achievement-icon"
               />
             )}
-            <div className="achievement-title">{a.title}</div>
+            <div className="achievement-name">{a.title}</div>
           </div>
         ))}
       </div>
