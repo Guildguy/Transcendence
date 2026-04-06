@@ -49,7 +49,10 @@ public class ChatService {
     public record ContactDTO(Long id, String name, String email) {}
 
     public List<ContactDTO> getContacts(Long userId) {
-        return messageRepository.findContacts(userId)
+        List<Long> contactsIdList = messageRepository.findContactIds(userId);
+        List<User> contacts = userRepository.findAllById(contactsIdList);
+
+        return contacts
                 .stream()
                 .map(u -> new ContactDTO(u.id, u.name, u.email))
                 .collect(Collectors.toList());

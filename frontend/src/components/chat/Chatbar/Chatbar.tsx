@@ -20,14 +20,10 @@ export const Sidebar = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await apiFetch(`/chat/${myId}/contacts`);
-        
-        if (!response.ok) {
-          console.error(`Error fetching contacts: ${response.status} ${response.statusText}`);
-          setUsers([]);
-          return;
-        }
-        
+        const response = await apiFetch(`/chat/${myId}/contacts`, {
+          method: 'GET',
+        });
+
         const data = await response.json();
         setUsers(Array.isArray(data) ? data : []);
       } catch (error) {

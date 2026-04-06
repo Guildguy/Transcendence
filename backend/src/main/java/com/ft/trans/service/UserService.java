@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ft.trans.dto.ChangePasswordDTO;
+import com.ft.trans.dto.ResetPasswordDTO;
 import com.ft.trans.dto.UserDTO;
 import com.ft.trans.dto.UserProfilesDTO;
 import com.ft.trans.entity.LoginRequest;
+import com.ft.trans.entity.PasswordRecoveryToken;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.UserRepository;
@@ -25,12 +27,14 @@ public class UserService {
 	
 	@Autowired
 	private JWTService			jwtService;
+	private PasswordRecoveryService passwordRecoveryService;
 
-    public				UserService(UserRepository ur, ProfileRepository pr, ProfileService ps)
+    public				UserService(UserRepository ur, ProfileRepository pr, ProfileService ps, PasswordRecoveryService prs)
     {
         this.userRepository = ur;
 		this.profileRepository = pr;
 		this.profileService = ps;
+		this.passwordRecoveryService = prs;
     }
 
     public Result		create(UserDTO userDTO)
@@ -203,6 +207,35 @@ public class UserService {
 
 		user.password = changePasswordDTO.newPassword;
 		user.encodePassword();
+		
+		return _persistUser(user, true);
+	}
+
+	public Result changePassword(ResetPasswordDTO resetPasswordDTO) {
+		PasswordRecoveryToken token = passwordRecoveryService.findByToken(resetPasswordDTO.token);
+
+		if (token == null || token.isExpired()) {
+			ValidationResult result = new ValidationResult();
+			result.addError("token", "Token de recuperação inválido ou expirado");
+			if (token != null)
+				passwordRecoveryService.delete(token); // Remove token expirado
+			return new Result(null, result);
+		}
+
+		// Extrair o email do token (mais seguro)
+		String email = token.getUser().email;
+		User user = userRepository.findByEmail(email).orElse(null);
+		
+		if (user == null) {
+			ValidationResult result = new ValidationResult();
+			result.addError("email", "Usuário não encontrado para o email fornecido");
+			return new Result(null, result);
+		}
+
+		user.password = resetPasswordDTO.newPassword;
+		user.encodePassword();
+
+		passwordRecoveryService.delete(token); // Remove token após uso
 		
 		return _persistUser(user, true);
 	}
