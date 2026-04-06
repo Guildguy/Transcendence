@@ -1,14 +1,14 @@
 package com.ft.trans.dto;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 public class MessageDTO {
     public Long    senderId;
     public Long    receiverId;
     public String  content;
     public Boolean isRead;
-    public Date    createdAt;
+    public Timestamp createdAt;
     public Long    createdBy;
-    public Date    lastUpdateAt;
+    public Timestamp lastUpdateAt;
     public Long    lastUpdateBy;
 }
