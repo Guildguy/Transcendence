@@ -15,7 +15,7 @@ import com.ft.trans.validation.Result;
 @Service
 public class PasswordRecoveryService {
 
-	@Autowired
+	@Autowired(required = false)
 	private JavaMailSender mailSender;
 
     private UserRepository userRepository;
@@ -38,8 +38,13 @@ public class PasswordRecoveryService {
 			return new Result(null, null); // Retorna sucesso, sem revelar se o email existe ou não
 		}
 
-		PasswordRecoveryToken token = new PasswordRecoveryToken(user);
+		PasswordRecoveryToken token = passwordRecoveryTokenRepository.findByUserId(user.id).orElse(null);
 
+		if (token != null) {
+			passwordRecoveryTokenRepository.delete(token);
+		}
+
+		token = new PasswordRecoveryToken(user);
 		passwordRecoveryTokenRepository.save(token);
 
 		this.sendRecoveryEmail(user.email, token.token);
@@ -48,6 +53,13 @@ public class PasswordRecoveryService {
 	}
 
 	private void sendRecoveryEmail(String email, String token) {
+		if (mailSender == null) {
+			System.out.println("⚠️  JavaMailSender não configurado. Email não será enviado.");
+			System.out.println("Token de recuperação: " + token);
+			System.out.println("Configure as variáveis: SPRING_MAIL_USERNAME e SPRING_MAIL_PASSWORD");
+			return;
+		}
+
 		SimpleMailMessage message = new SimpleMailMessage();
 
 		message.setTo(email);
