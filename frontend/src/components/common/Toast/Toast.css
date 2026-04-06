@@ -23,6 +23,13 @@
   background-color: #ffffff;
   color: #000000;
   position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toast:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .toast-action {

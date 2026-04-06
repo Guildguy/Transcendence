@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import './Header.css'
 import logo from '../../images/jpg/logo.png'
-import { clearAuthToken } from '../../../services/api'
+import { clearAuthToken, apiFetch } from '../../../services/api'
 
 interface HeaderProps {
   isAuthenticated?: boolean
@@ -9,12 +10,50 @@ interface HeaderProps {
 
 function Header({ isAuthenticated = false }: HeaderProps) {
   const navigate = useNavigate()
+  const [userRole, setUserRole] = useState<'MENTOR' | 'MENTEE'>('MENTEE')
+
+  // Fetch user profile from backend when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUserRole('MENTEE')
+      return
+    }
+
+    const fetchUserRole = async () => {
+      const userId = localStorage.getItem('userId')
+      if (!userId) {
+        setUserRole('MENTEE')
+        return
+      }
+
+      try {
+        const userRes = await apiFetch(`/users/${userId}`)
+        if (userRes.ok) {
+          const data = await userRes.json()
+          const profiles: any[] = Array.isArray(data.profiles) ? data.profiles : []
+          const hasMentorProfile = profiles.some(p => p?.role?.toUpperCase() === 'MENTOR')
+          setUserRole(hasMentorProfile ? 'MENTOR' : 'MENTEE')
+        } else {
+          setUserRole('MENTEE')
+        }
+      } catch (error) {
+        console.error('Erro ao buscar perfil do usuário:', error)
+        setUserRole('MENTEE')
+      }
+    }
+
+    fetchUserRole()
+  }, [isAuthenticated])
 
   const handleLogout = () => {
     clearAuthToken()
     localStorage.removeItem('userId')
+    localStorage.removeItem('userRole')
     navigate('/')
   }
+
+  // Determine mentoria link based on user role
+  const mentoriaLink = userRole === 'MENTOR' ? '/mentor-dashboard' : '/mentorias'
 
   return (
     <header className={`header ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`}>
@@ -31,27 +70,9 @@ function Header({ isAuthenticated = false }: HeaderProps) {
         ) : (
           <>
             <Link to="/home-logged">Home</Link>
-            <Link to="/mentorias">Mentoria</Link>
+            <Link to={mentoriaLink}>Mentoria</Link>
             <Link to="/profile">Perfil</Link>
             
-            {/* Botão de Logout para usuários logados
-            <button 
-              onClick={handleLogout} 
-              className="header-logout-btn"
-              style={{ 
-                background: 'none', 
-                border: 'none', 
-                cursor: 'pointer', 
-                display: 'flex', 
-                alignItems: 'center',
-                gap: '5px',
-                color: 'inherit',
-                font: 'inherit'
-              }}
-            >
-              <LogOut size={18} />
-              Sair
-            </button> */}
           </>
         )}
       </nav>
