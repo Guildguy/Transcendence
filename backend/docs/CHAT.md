@@ -12,15 +12,15 @@ O sistema de chat foi implementado usando **WebSocket + STOMP** no backend Sprin
 Frontend
   │
   ├── REST  ──────────────────────────────► ChatController
-  │   GET /chat/{readerId}/{otherId}            │
-  │   GET /users/{id}/online                    ▼
-  │                                        ChatService
+  │   GET /chat/{userId}/contacts              │
+  │   GET /chat/{readerId}/{otherId}            ▼
+  │   GET /users/{id}/online             ChatService
   │                                             │
   └── WebSocket (STOMP)                         ▼
       /ws  ──── CONNECT ──────────────►  WebSocketConfig
-                  │                     (valida JWT, seta principal,
-                  │                      registra como online)
-                  │
+              (bypass JWT filter)        (valida JWT no STOMP,
+                   │                     seta principal, registra online)
+                   │
            SUBSCRIBE ──────────────────► SimpleBroker /queue
            /user/queue/messages               │
                   │                           │
@@ -50,12 +50,17 @@ O frontend conecta ao endpoint `/ws` via SockJS, passando o JWT no header do STO
 
 **Quem chama quem:**
 ```
-Frontend → SockJS /ws → WebSocketConfig.configureClientInboundChannel
+Frontend → SockJS /ws (bypass JwtAuthenticationFilter)
+  → WebSocketConfig.configureClientInboundChannel
   → valida JWT via JWTService.extractEmail()
   → busca User via UserRepository.findByEmail()
   → seta StompPrincipal(userId) na sessão
   → registra userId em OnlineUserRegistry
 ```
+
+> ⚠️ A rota `/ws/**` é excluída do `JwtAuthenticationFilter` (filtro HTTP).
+> A autenticação acontece dentro do protocolo STOMP, no `WebSocketConfig`.
+> Se o `/ws` não estiver na whitelist do filtro, o handshake SockJS recebe `401` e a conexão nunca é estabelecida.
 
 ### 2. Abrir um chat (buscar histórico + marcar como lido)
 
@@ -119,6 +124,30 @@ Frontend → ChatController.isOnline()
 - Vira `true` → no CONNECT do WebSocket
 - Vira `false` → no DISCONNECT (evento `SessionDisconnectEvent` capturado por `WebSocketEventListener`)
 
+### 6. Carregar contatos da sidebar
+
+Retorna apenas os usuários com quem o usuário logado já trocou pelo menos uma mensagem.
+
+**Endpoint:**
+```
+GET /chat/{userId}/contacts
+```
+
+**Quem chama quem:**
+```
+Frontend (Chatbar) → ChatController.getContacts()
+  → ChatService.getContacts()
+    → MessageRepository.findContacts() ← DISTINCT dos parceiros de conversa
+  → retorna List<ContactDTO>
+```
+
+**ContactDTO:**
+```json
+{ "id": 5, "name": "Giovanna mentor", "email": "giovannamentor@teste.com" }
+```
+
+> ✅ Usuários sem nenhuma mensagem trocada **não aparecem** na sidebar.
+
 ---
 
 ## Integração no Frontend
@@ -135,11 +164,17 @@ npm install sockjs-client @stomp/stompjs
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
+// ⚠️ O ChatProvider observa o localStorage a cada 1s e conecta
+// automaticamente após o login — não é necessário conectar manualmente.
+// O código abaixo é apenas referência do que acontece internamente.
+
 const stompClient = new Client({
   webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
   connectHeaders: {
-    Authorization: 'Bearer ' + token,  // JWT obtido no login
+    // ⚠️ A chave no localStorage é 'authToken', não 'token'
+    Authorization: 'Bearer ' + localStorage.getItem('authToken'),
   },
+  reconnectDelay: 5000, // tenta reconectar automaticamente se cair
 
   onConnect: () => {
     // inscreve para receber mensagens
@@ -149,8 +184,8 @@ const stompClient = new Client({
     });
   },
 
-  onDisconnect: () => {
-    // atualiza UI: usuário offline
+  onStompError: (frame) => {
+    console.error('STOMP error:', frame.headers['message']);
   },
 });
 
@@ -174,7 +209,10 @@ stompClient.publish({
 
 ```typescript
 // ao abrir a tela de chat com outra pessoa
-const response = await fetch(`http://localhost:8080/chat/${meuId}/${idDaPessoa}`);
+// ⚠️ Passar o token no header — endpoint protegido por Spring Security
+const response = await fetch(`http://localhost:8080/chat/${meuId}/${idDaPessoa}`, {
+  headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+});
 const mensagens = await response.json(); // MessageDTO[]
 // renderiza o histórico
 // mensagens do outro para mim já são marcadas como lidas automaticamente
@@ -183,8 +221,21 @@ const mensagens = await response.json(); // MessageDTO[]
 ### Verificar status online
 
 ```typescript
-const response = await fetch(`http://localhost:8080/users/${idDaPessoa}/online`);
+const response = await fetch(`http://localhost:8080/users/${idDaPessoa}/online`, {
+  headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+});
 const online = await response.json(); // true | false
+```
+
+### Carregar contatos da sidebar
+
+```typescript
+// Retorna apenas quem já conversou com o usuário logado
+const response = await fetch(`http://localhost:8080/chat/${meuId}/contacts`, {
+  headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+});
+const contatos = await response.json();
+// contatos: [{ id, name, email }, ...]
 ```
 
 ---
@@ -197,12 +248,15 @@ const online = await response.json(); // true | false
   "receiverId":   2,
   "content":      "Olá!",
   "isRead":       false,
-  "createdAt":    "2026-03-17",
+  "createdAt":    "2026-04-04T17:03:21.000+00:00",
   "createdBy":    1,
-  "lastUpdateAt": "2026-03-17",
+  "lastUpdateAt": "2026-04-04T17:03:21.000+00:00",
   "lastUpdateBy": 1
 }
 ```
+
+> ⚠️ `createdAt` e `lastUpdateAt` retornam `Timestamp` completo (data + hora).
+> No front, use `new Date(msg.createdAt).toLocaleTimeString()` para exibir só o horário.
 
 | Campo | Descrição |
 |---|---|
@@ -221,15 +275,17 @@ const online = await response.json(); // true | false
 
 | Arquivo | Tipo | Responsabilidade |
 |---|---|---|
-| `entity/Message.java` | Entidade JPA | Tabela `messages` no banco |
+| `entity/Message.java` | Entidade JPA | Tabela `messages` no banco (usa `Timestamp`) |
 | `dto/MessageDTO.java` | DTO | Objeto trafegado no WebSocket e REST |
-| `repository/MessageRepository.java` | Repository | Queries de busca e markAsRead |
-| `service/ChatService.java` | Service | Lógica de salvar e buscar conversa |
+| `repository/MessageRepository.java` | Repository | findConversation, markAsRead, **findContacts** |
+| `service/ChatService.java` | Service | save, getConversation, **getContacts**, toDTO |
 | `controller/ChatController.java` | Controller | Endpoints REST e WebSocket handler |
 | `configuration/WebSocketConfig.java` | Config | Configura STOMP, autenticação JWT, registra online |
 | `configuration/StompPrincipal.java` | Config | Principal da sessão WebSocket |
 | `configuration/OnlineUserRegistry.java` | Config | Set em memória de usuários online |
 | `configuration/WebSocketEventListener.java` | Config | Escuta desconexão e remove do Set |
+| `filter/JwtAuthenticationFilter.java` | Filter | JWT HTTP filter — `/ws/**` está na whitelist |
+| `components/chat/ChatContext.tsx` | Frontend | Provider reativo: conecta WS após login, reconecta automaticamente |
 
 ---
 

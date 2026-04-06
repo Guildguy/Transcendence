@@ -1,6 +1,6 @@
 package com.ft.trans.repository;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ft.trans.entity.Message;
+import com.ft.trans.entity.User;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
@@ -19,5 +20,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE Message m SET m.isRead = true, m.lastUpdateAt = :now, m.lastUpdateBy = :receiverId WHERE m.receiver.id = :receiverId AND m.sender.id = :senderId AND m.isRead = false")
-    void markAsRead(@Param("receiverId") Long receiverId, @Param("senderId") Long senderId, @Param("now") Date now);
+    void markAsRead(@Param("receiverId") Long receiverId, @Param("senderId") Long senderId, @Param("now") Timestamp now);
+
+    @Query("SELECT DISTINCT CASE WHEN m.sender.id = :userId THEN m.receiver ELSE m.sender END FROM Message m WHERE m.sender.id = :userId OR m.receiver.id = :userId")
+    List<User> findContacts(@Param("userId") Long userId);
 }

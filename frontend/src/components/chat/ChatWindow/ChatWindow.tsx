@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, MoreHorizontal, User, Send, Loader2 } from 'lucide-react'; // Adicionei Loader2
+import { X, MoreHorizontal, User, Send, Loader2 } from 'lucide-react';
 import { useChat } from '../ChatContext/ChatContext'
+import { getAuthToken } from '../../../services/api';
 import './Chat.css';
 
 export const ChatWindow = () => {
@@ -10,7 +11,7 @@ export const ChatWindow = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const myId = Number(localStorage.getItem('userId'));
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
 
   // BUSCAR HISTÓRICO VIA REST
   useEffect(() => {
