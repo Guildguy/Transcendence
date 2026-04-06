@@ -8,4 +8,5 @@ import com.ft.trans.entity.PasswordRecoveryToken;
 
 public interface PasswordRecoveryTokenRepository extends JpaRepository<PasswordRecoveryToken, Long>{
     Optional<PasswordRecoveryToken> findByToken(String token);
+    Optional<PasswordRecoveryToken> findByUserId(Long userId);
 }
