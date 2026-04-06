@@ -28,9 +28,8 @@ function BookSessionContent() {
   const navigate = useNavigate();
   const { mentorId: urlMentorId } = useParams<{ mentorId?: string }>();
   const [selectedMentor, setSelectedMentor] = useState<MentorDetailData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshSessionList, setRefreshSessionList] = useState(false);
   
   // Get real user ID from localStorage (authenticated user), not from mock context
   const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
@@ -46,93 +45,80 @@ function BookSessionContent() {
         console.log('[BookSessionWithMentor] URL mentorId:', urlMentorId);
         console.log('[BookSessionWithMentor] Location state:', mentorState);
 
-        // Priority 1: URL parameter (should be mentorId from MentorCard click)
-        if (urlMentorId) {
-          const mentorProfileId = parseInt(urlMentorId, 10);
-          
-          if (!isNaN(mentorProfileId)) {
-            try {
-              console.log(`[BookSessionWithMentor] ✓ Attempting backend fetch with profileId: ${mentorProfileId}`);
-              const detailedMentor = await mentorService.getMentorDetails(mentorProfileId);
-              
-              if (detailedMentor) {
-                console.log('[BookSessionWithMentor] ✓ Successfully loaded mentor from backend:', detailedMentor);
-                setSelectedMentor(detailedMentor);
-                return;
-              } else {
-                console.warn(`[BookSessionWithMentor] Backend returned null for profileId ${mentorProfileId}`);
-              }
-            } catch (error) {
-              console.error('[BookSessionWithMentor] Error fetching from backend:', error);
-            }
-          }
-        }
-
-        // Priority 2: Navigation state (fallback if URL param or backend fails)
+        // Priority 1: Navigation state (best - has complete data from MentorCard)
         if (mentorState?.mentorId) {
-          console.log('[BookSessionWithMentor] ⚠ Using navigation state (backend fetch failed or no URL param)');
-          const cardData: MentorDetailData = {
+          console.log('[BookSessionWithMentor] ✓ Using navigation state');
+          const mentor: MentorDetailData = {
             id: mentorState.mentorId,
+            profileId: mentorState.mentorId,
+            userId: mentorState.mentorId,  // Use actual mentor ID, not 0
             name: mentorState.mentorName || 'Mentor',
             position: mentorState.mentorPosition || 'Position',
             skills: mentorState.mentorSkills || [],
             anosExperiencia: mentorState.mentorXp || 0,
-            isActive: true,
+            isActive: mentorState.mentorIsActive !== false,
             isAvailable: true,
             avatarUrl: mentorState.mentorAvatar,
             bio: 'Especialista em desenvolvimento e mentoria',
             rating: 4.8,
-            menteeCount: 0,
-            userId: 0,
-            profileId: mentorState.mentorId
+            menteeCount: 0
           };
-          console.log('[BookSessionWithMentor] Loaded from navigation state:', cardData);
-          setSelectedMentor(cardData);
+          setSelectedMentor(mentor);
+          setLoading(false);
           return;
         }
 
-        // Priority 3: Mock data fallback from MentoringContext
-        console.log('[BookSessionWithMentor] Trying mock data fallback...');
-        let mentor = null;
-        
+        // Priority 2: Backend fetch with URL parameter
         if (urlMentorId) {
-          mentor = mentors.find(m => m.id === urlMentorId);
-          if (mentor) {
-            console.log(`[BookSessionWithMentor] Found mock mentor with ID "${urlMentorId}"`);
+          const profileId = parseInt(urlMentorId, 10);
+          if (!isNaN(profileId)) {
+            try {
+              console.log(`[BookSessionWithMentor] Fetching from backend with profileId: ${profileId}`);
+              const mentor = await mentorService.getMentorDetails(profileId);
+              if (mentor) {
+                console.log('[BookSessionWithMentor] ✓ Backend fetch successful');
+                setSelectedMentor(mentor);
+                setLoading(false);
+                return;
+              }
+            } catch (err) {
+              console.warn('[BookSessionWithMentor] Backend fetch failed:', err);
+            }
           }
         }
-        
-        if (!mentor) {
-          mentor = mentors.find(m => m.id === 'm1') || mentors[0];
-          console.log('[BookSessionWithMentor] Using first available mock mentor:', mentor?.id);
-        }
 
-        if (mentor) {
-          const mockMentorData: MentorDetailData = {
-            id: 0,
-            profileId: 0,
-            userId: 0,
-            name: mentor.name,
-            position: mentor.role,
-            skills: mentor.skills.map((s: string, i: number) => ({
+        // Priority 3: Mock data fallback
+        console.log('[BookSessionWithMentor] Using mock data fallback');
+        const mockMentor = mentors.find(m => m.id === urlMentorId) || mentors[0];
+        
+        if (mockMentor) {
+          const mentor: MentorDetailData = {
+            id: parseInt(mockMentor.id.replace('m', ''), 10) || 0,
+            profileId: parseInt(mockMentor.id.replace('m', ''), 10) || 0,
+            userId: parseInt(mockMentor.id.replace('m', ''), 10) || 0,
+            name: mockMentor.name,
+            position: mockMentor.role,
+            skills: mockMentor.skills.map((s: string, i: number) => ({
               id: `skill-${i}`,
               name: s
             })),
-            anosExperiencia: parseInt(mentor.xp.replace(/\D/g, ''), 10) || 0,
+            anosExperiencia: parseInt(mockMentor.xp.replace(/\D/g, ''), 10) || 0,
             isActive: true,
-            isAvailable: mentor.status === 'available',
-            avatarUrl: mentor.avatar,
-            bio: mentor.bio || 'Especialista em desenvolvimento e mentoria',
+            isAvailable: mockMentor.status === 'available',
+            avatarUrl: mockMentor.avatar,
+            bio: mockMentor.bio || 'Especialista em desenvolvimento e mentoria',
             rating: 4.8,
             menteeCount: 0
           };
-          console.log('[BookSessionWithMentor] ✓ Loaded from mock data:', mockMentorData);
-          setSelectedMentor(mockMentorData);
+          console.log('[BookSessionWithMentor] ✓ Mock data loaded');
+          setSelectedMentor(mentor);
+          setLoading(false);
           return;
         }
 
-        console.error('[BookSessionWithMentor] All fallbacks failed - no mentor data available');
-        setError('Nenhum mentor selecionado. Por favor, volta à página de mentorias e clique em um mentor.');
+        // No mentor found
+        console.error('[BookSessionWithMentor] No mentor data available');
+        setError('Mentor não encontrado. Por favor, volta à página de mentorias e tente novamente.');
       } catch (error) {
         console.error('[BookSessionWithMentor] Unexpected error:', error);
         setError(`Erro inesperado: ${error instanceof Error ? error.message : 'Tente novamente'}`);
@@ -144,17 +130,17 @@ function BookSessionContent() {
     if (urlMentorId || mentorState?.mentorId) {
       loadMentor();
     } else {
-      setError('Nenhum mentor selecionado. Por favor, volta à página de mentorias e clique em um mentor.');
+      setError('Nenhum mentor selecionado. Por favor, volta à página de mentorias.');
       setLoading(false);
     }
   }, [urlMentorId, mentorState, mentors]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando dados do mentor...</p>
+      <div className="book-session-loading">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Carregando dados do mentor...</p>
         </div>
       </div>
     );
@@ -162,14 +148,14 @@ function BookSessionContent() {
 
   if (error || !selectedMentor) {
     return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h2 className="text-xl font-bold text-red-800 mb-2">Erro ao carregar mentor</h2>
-            <p className="text-red-700 mb-6">{error || 'Mentor não encontrado.'}</p>
+      <div className="book-session-error">
+        <div className="error-container">
+          <div className="error-box">
+            <h2 className="error-title">Mentor não encontrado</h2>
+            <p className="error-message">{error || 'Não conseguimos carregar os dados do mentor.'}</p>
             <button
               onClick={() => navigate('/mentoros')}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="error-button"
             >
               ← Voltar para mentorias
             </button>
@@ -179,61 +165,36 @@ function BookSessionContent() {
     );
   }
 
-  const handleBookingSuccess = () => {
-    console.log('[BookSessionWithMentor] Booking successful, refreshing SessionList');
-    setRefreshSessionList(prev => !prev);
-  };
-
-  const handleBookingError = (error: string) => {
-    console.error('[BookSessionWithMentor] Booking error:', error);
-  };
-
-  // Get numeric mentee ID from localStorage
   const numericMenteeId = currentUserId ? parseInt(currentUserId, 10) : null;
-  if (numericMenteeId && isNaN(numericMenteeId)) {
-    console.warn('[BookSessionWithMentor] Invalid mentee ID in localStorage:', currentUserId);
-  }
-
-  // Convert skills array format if needed
-  const mappedSkills = Array.isArray(selectedMentor.skills)
-    ? selectedMentor.skills.map((s: any) => ({
-        id: s.id || `skill-${s.name}`,
-        name: s.name || s
-      }))
-    : [];
+  const mentorIdStr = selectedMentor.userId?.toString() || selectedMentor.profileId?.toString() || '0';
 
   return (
     <div className="book-session-with-mentor">
       <MentorInfo
         name={selectedMentor.name}
         position={selectedMentor.position}
-        skills={mappedSkills}
+        skills={selectedMentor.skills}
         experience={selectedMentor.anosExperiencia}
-        isActive={true}
+        isActive={selectedMentor.isActive}
         avatarUrl={selectedMentor.avatarUrl}
         bio={selectedMentor.bio}
-        rating={selectedMentor.rating}
-        menteeCount={selectedMentor.menteeCount}
       />
 
-      <div className="calendar-container">
-        {/* Slot Selector with integrated calendar */}
-        {selectedMentor?.isAvailable && currentUserId && (
+      {selectedMentor.isAvailable && currentUserId && (
+        <div className="calendar-container">
           <SlotSelector 
-            mentorId={selectedMentor.userId?.toString() || selectedMentor.profileId?.toString() || selectedMentor.id.toString()}
+            mentorId={mentorIdStr}
             menteeId={numericMenteeId?.toString() || '0'}
-            onBookingSuccess={handleBookingSuccess}
-            onBookingError={handleBookingError}
           />
-        )}
-      </div>
+        </div>
+      )}
+
       <div className="calendar-container">
         <SessionList 
-          mentorId={selectedMentor.userId?.toString() || selectedMentor.profileId?.toString() || selectedMentor.id.toString()}
+          mentorId={mentorIdStr}
           menteeId={numericMenteeId?.toString()}
           showHeader={true}
           upcomingOnly={true}
-          key={refreshSessionList.toString()}
         />
       </div>
     </div>
