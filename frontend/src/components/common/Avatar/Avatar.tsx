@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { User, Pencil } from 'lucide-react';
+import { processAvatarUrl } from '../../../utils/imageUtils';
 import './Avatar.css';
 
 interface AvatarProps {
@@ -9,8 +10,23 @@ interface AvatarProps {
   onImageChange?: (file: File) => void;
 }
 
-export const Avatar = ({ avatarUrl, size = 120, isEditable=false, onImageChange }: AvatarProps) => { 
- const fileInputRef = useRef<HTMLInputElement>(null);
+export const Avatar = ({ avatarUrl, size = 120, isEditable = false, onImageChange }: AvatarProps) => { 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showFallback, setShowFallback] = useState(true);
+  const [processedUrl, setProcessedUrl] = useState<string>('');
+
+  // Process the avatarUrl when it changes
+  useEffect(() => {
+    const processed = processAvatarUrl(avatarUrl);
+    
+    if (processed) {
+      setProcessedUrl(processed);
+      setShowFallback(false);
+    } else {
+      setProcessedUrl('');
+      setShowFallback(true);
+    }
+  }, [avatarUrl]);
 
   const handlePencilClick = () => {
     fileInputRef.current?.click();
@@ -23,18 +39,23 @@ export const Avatar = ({ avatarUrl, size = 120, isEditable=false, onImageChange 
     }
   };
 
+  const handleImageError = () => {
+    console.warn('Failed to load avatar image from:', processedUrl);
+    setShowFallback(true);
+  };
+
   return (
     <div 
       className="avatar-wrapper" 
       style={{ width: size, height: size }}
     >
       <div className="perfil-avatar-base">
-        {avatarUrl ? (
+        {!showFallback && processedUrl ? (
           <img 
-            src={avatarUrl && avatarUrl !== "" ? avatarUrl : defaultImage} 
+            src={processedUrl} 
             alt="Avatar do usuário" 
             className="avatar-img"
-            
+            onError={handleImageError}
           />
         ) : (
           <User size={size / 2} color="#e5e7eb" />

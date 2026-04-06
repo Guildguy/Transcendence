@@ -31,8 +31,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Lê token e userId do localStorage de forma reativa
   // Observa mudanças a cada 1s para detectar login/logout sem recarregar a página
-  const [token, setToken]   = useState<string | null>(getAuthToken);
-  const [myId, setMyId]     = useState<number>(Number(localStorage.getItem('userId')));
+  const [token, setToken]   = useState<string | null>(getAuthToken());
+  const [myId, setMyId]     = useState<number | null>(Number(localStorage.getItem('userId')) || null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,21 +53,28 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setStompClient(null);
     }
 
-    // Só conecta se houver token válido
-    if (!token) return;
+    // Só conecta se houver token válido e myId válido
+    if (!token || !myId || myId <= 0) {
+      console.debug('[Chat] Waiting for token and userId...', { token: !!token, myId });
+      return;
+    }
+
+    console.debug('[Chat] Connecting to WebSocket...', { token: !!token, myId });
 
     const client = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
+      debug: (str) => console.debug('[STOMP]', str),
       onConnect: () => {
+        console.debug('[Chat] Connected to STOMP');
         client.subscribe('/user/queue/messages', (msg) => {
           const newMessage = JSON.parse(msg.body);
           setMessages((prev) => [...prev, newMessage]);
         });
       },
       onStompError: (frame) => {
-        console.error('STOMP error:', frame.headers['message']);
+        console.error('[Chat] STOMP error:', frame.headers['message']);
       },
     });
 
@@ -79,7 +86,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       client.deactivate();
       clientRef.current = null;
     };
-  }, [token]);
+  }, [token, myId]);
 
   const sendMessage = (receiverId: number, content: string) => {
     if (stompClient && stompClient.connected) {

@@ -27,16 +27,17 @@ export const Sidebar = () => {
         const data = await response.json();
         setUsers(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error("Erro ao buscar contatos:", error);
+        console.error("Error fetching contacts:", error);
+        setUsers([]);
       }
     };
 
-    if (myId) fetchUsers();
+    if (myId && myId > 0) fetchUsers();
   }, [myId]);
 
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = Array.isArray(users) ? users.filter(u => 
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   return (
     <aside className={`chat-sidebar${collapsed ? ' collapsed' : ''}`}>

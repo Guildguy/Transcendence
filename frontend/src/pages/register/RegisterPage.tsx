@@ -146,6 +146,10 @@ function RegisterPage() {
       if (userId)
         localStorage.setItem('userId', userId.toString());
 
+      // Armazena o tipo de perfil como userRole para usar no Header
+      if (profileType)
+        localStorage.setItem('userRole', profileType === 'MENTOR' ? 'MENTOR' : 'MENTEE');
+
       // 3. Dispara PROFILE_COMPLETED — token já salvo, apiFetch já pega automaticamente
       if (token && userId) {
         try {

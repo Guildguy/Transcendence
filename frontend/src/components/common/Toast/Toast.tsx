@@ -17,14 +17,45 @@ const ToastViewport = React.forwardRef<
 ));
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
+interface ToastProps extends React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> {
+  onDismiss?: () => void;
+}
+
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>
->(({ className, ...props }, ref) => {
+  ToastProps
+>(({ className, onDismiss, onClick, ...props }, _ref) => {
+  const toastRef = React.useRef<React.ElementRef<typeof ToastPrimitives.Root>>(null);
+
+  React.useEffect(() => {
+    if (!onDismiss) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the toast
+      if (toastRef.current && !toastRef.current.contains(event.target as Node)) {
+        onDismiss();
+      }
+    };
+
+    // Add slight delay to avoid closing immediately on open
+    const timer = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onDismiss]);
+
   return (
     <ToastPrimitives.Root
-      ref={ref}
+      ref={toastRef}
       className={`toast ${className || ''}`.trim()}
+      onClick={(e) => {
+        onDismiss?.();
+        onClick?.(e);
+      }}
       {...props}
     />
   );
@@ -81,16 +112,14 @@ const ToastDescription = React.forwardRef<
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
-
 type ToastActionElement = React.ReactElement<typeof ToastAction>;
 
 export {
+  Toast,
   type ToastProps,
   type ToastActionElement,
   ToastProvider,
   ToastViewport,
-  Toast,
   ToastTitle,
   ToastDescription,
   ToastClose,

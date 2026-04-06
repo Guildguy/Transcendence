@@ -12,14 +12,14 @@ export interface ScheduleItem {
 
 export interface Achievement {
   id: number
-  title?: string
+  title: string
   icon?: string
 }
 
 export const mockRequests: PendingRequest[] = [
-  { id: 1, name: 'Lula' },
-  { id: 2, name: 'Janja' },
-  { id: 3, name: 'Renan' },
+  { id: 1, name: 'Ana' },
+  { id: 2, name: 'João' },
+  { id: 3, name: 'Maria' },
 ]
 
 export const mockSchedule: ScheduleItem[] = [
