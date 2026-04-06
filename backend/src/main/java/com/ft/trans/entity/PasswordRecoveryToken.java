@@ -26,6 +26,10 @@ public class PasswordRecoveryToken {
         return LocalDateTime.now().isAfter(expiryDate);
     }
 
+    public User getUser() {
+        return this.user;
+    }
+
     public PasswordRecoveryToken() {}
 
     public PasswordRecoveryToken(User user) {

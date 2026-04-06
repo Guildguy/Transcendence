@@ -222,7 +222,9 @@ public class UserService {
 			return new Result(null, result);
 		}
 
-		User user = userRepository.findByEmail(resetPasswordDTO.email).orElse(null);
+		// Extrair o email do token (mais seguro)
+		String email = token.getUser().email;
+		User user = userRepository.findByEmail(email).orElse(null);
 		
 		if (user == null) {
 			ValidationResult result = new ValidationResult();
