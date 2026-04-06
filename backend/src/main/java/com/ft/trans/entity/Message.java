@@ -1,6 +1,6 @@
 package com.ft.trans.entity;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,8 +33,8 @@ public class Message {
     @Column(name = "is_read")
     public Boolean isRead = false;
 
-    public Date createdAt;
-    public Long  createdBy;
-    public Date  lastUpdateAt;
-    public Long  lastUpdateBy;
+    public Timestamp createdAt;
+    public Long      createdBy;
+    public Timestamp lastUpdateAt;
+    public Long      lastUpdateBy;
 }
