@@ -1,14 +1,17 @@
 package com.ft.trans.service;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.ft.trans.dto.MessageDTO;
 import com.ft.trans.entity.Message;
+import com.ft.trans.entity.User;
 import com.ft.trans.repository.MessageRepository;
 import com.ft.trans.repository.UserRepository;
+
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -22,7 +25,7 @@ public class ChatService {
     }
 
     public MessageDTO save(MessageDTO dto) {
-        Date now = new Date(System.currentTimeMillis());
+        Timestamp now = new Timestamp(System.currentTimeMillis());
         Message message = new Message();
         message.sender       = userRepository.findById(dto.senderId).orElseThrow();
         message.receiver     = userRepository.findById(dto.receiverId).orElseThrow();
@@ -36,11 +39,20 @@ public class ChatService {
     }
 
     public List<MessageDTO> getConversation(Long readerId, Long otherId) {
-        messageRepository.markAsRead(readerId, otherId, new Date(System.currentTimeMillis()));
+        messageRepository.markAsRead(readerId, otherId, new Timestamp(System.currentTimeMillis()));
         return messageRepository.findConversation(readerId, otherId)
                 .stream()
                 .map(this::toDTO)
                 .toList();
+    }
+
+    public record ContactDTO(Long id, String name, String email) {}
+
+    public List<ContactDTO> getContacts(Long userId) {
+        return messageRepository.findContacts(userId)
+                .stream()
+                .map(u -> new ContactDTO(u.id, u.name, u.email))
+                .collect(Collectors.toList());
     }
 
     private MessageDTO toDTO(Message m) {
