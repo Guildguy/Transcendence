@@ -101,46 +101,63 @@ export function SessionList({
     const fetchSessions = async () => {
       try {
         setLoading(true);
+        console.log(`[SessionList] Fetching sessions - mentorId: ${mentorId}, menteeId: ${menteeId}`);
         
-        // If menteeId is provided, fetch sessions for specific connection
-        if (menteeId) {
-          // This assumes connectionId equals menteeId - adjust if needed
-          const response = await apiFetch(`/mentorship-sessions/connection/${menteeId}/upcoming`);
-          if (!response.ok) {
-            throw new Error('Falha ao carregar sessões');
-          }
-          const data = await response.json();
-          setSessions(Array.isArray(data) ? data : []);
-        } else {
-          // Fetch all active connections for the mentor
-          const connectionsResponse = await apiFetch(`/mentorship-connections/mentor/${mentorId}`);
-          if (!connectionsResponse.ok) {
-            throw new Error('Falha ao carregar conexões');
-          }
-          
-          const connections = await connectionsResponse.json();
-          const allSessions: Session[] = [];
-
-          // Fetch sessions for each connection
-          for (const connection of connections) {
-            try {
-              const sessionsResponse = await apiFetch(`/mentorship-sessions/connection/${connection.id}/upcoming`);
-              if (sessionsResponse.ok) {
-                const connectionSessions = await sessionsResponse.json();
-                if (Array.isArray(connectionSessions)) {
-                  allSessions.push(...connectionSessions);
-                }
-              }
-            } catch (err) {
-              console.error(`Erro ao carregar sessões para conexão ${connection.id}:`, err);
-            }
-          }
-
-          setSessions(allSessions);
+        // Validate mentorId - must be numeric
+        if (!mentorId || typeof mentorId !== 'string' || !mentorId.match(/^\d+$/)) {
+          console.warn('[SessionList] Invalid or missing mentorId:', mentorId);
+          setError('ID do mentor inválido');
+          setSessions([]);
+          setLoading(false);
+          return;
         }
+
+        const mentorIdNum = parseInt(mentorId, 10);
+        
+        // If both mentorId and menteeId are provided, try to fetch sessions for the specific pair
+        if (menteeId && typeof menteeId === 'string' && menteeId.match(/^\d+$/)) {
+          const menteeIdNum = parseInt(menteeId, 10);
+          
+          try {
+            console.log(`[SessionList] Trying to fetch sessions for mentor ${mentorIdNum} and mentee ${menteeIdNum}`);
+            const response = await apiFetch(`/mentorship-sessions/mentor/${mentorIdNum}/mentee/${menteeIdNum}`);
+            if (response.ok) {
+              const data = await response.json();
+              console.log('[SessionList] Sessions for mentor-mentee pair:', data);
+              setSessions(Array.isArray(data) ? data : []);
+              setError(null);
+              setLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.warn('[SessionList] Failed to fetch mentor-mentee sessions:', err);
+          }
+        }
+
+        // Fallback: Fetch all sessions for the mentor
+        try {
+          console.log(`[SessionList] Fetching all sessions for mentor ${mentorIdNum}`);
+          const response = await apiFetch(`/mentorship-sessions/mentor/${mentorIdNum}`);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('[SessionList] Sessions for mentor:', data);
+            setSessions(Array.isArray(data) ? data : []);
+            setError(null);
+            setLoading(false);
+            return;
+          } else {
+            console.warn(`[SessionList] Failed to fetch sessions: HTTP ${response.status}`);
+          }
+        } catch (err) {
+          console.warn('[SessionList] Error fetching sessions:', err);
+        }
+
+        // If we reach here, set empty state
+        console.warn('[SessionList] No sessions found');
+        setSessions([]);
         setError(null);
       } catch (err) {
-        console.error('Erro ao carregar sessões:', err);
+        console.error('[SessionList] Erro ao carregar sessões:', err);
         setError(err instanceof Error ? err.message : 'Erro ao carregar sessões');
         setSessions([]);
       } finally {
