@@ -1,16 +1,16 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Clock, Video, RefreshCw, ExternalLink } from "lucide-react";
 import "./SessionList.css";
-import { format, parseISO, isPast } from 'date-fns';
+import { format, parseISO, isPast, isWithinInterval, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Mock data and hooks - replace with your actual data fetching
 // You should have a `useMentoring` hook that provides sessions
 const useMentoring = () => ({
-  getSessionsBetween: (mentorId: string, menteeId: string) => [
-    { id: '1', mentorId, menteeId, date: '2026-04-04T11:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'scheduled', isRecurring: true, recurrenceCount: 4, meetLink: '#' },
-    { id: '2', mentorId, menteeId, date: '2026-03-25T12:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'completed', isRecurring: true, recurrenceCount: 3, meetLink: '#' },
-    { id: '3', mentorId, menteeId, date: '2026-03-18T13:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'no-show', isRecurring: true, recurrenceCount: 2, meetLink: '#' },
+  getSessionsBetween: (mentorId: string, menteeId?: string) => [
+    { id: '1', mentorId, menteeId: menteeId || 'generic', date: '2026-04-04T11:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'scheduled', isRecurring: true, recurrenceCount: 4, meetLink: '#' },
+    { id: '2', mentorId, menteeId: menteeId || 'generic', date: '2026-03-25T12:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'completed', isRecurring: true, recurrenceCount: 3, meetLink: '#' },
+    { id: '3', mentorId, menteeId: menteeId || 'generic', date: '2026-03-18T13:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'no-show', isRecurring: true, recurrenceCount: 2, meetLink: '#' },
   ],
 });
 
@@ -18,7 +18,11 @@ type Session = ReturnType<ReturnType<typeof useMentoring>['getSessionsBetween']>
 
 interface SessionListProps {
   mentorId: string;
-  menteeId: string;
+  menteeId?: string;
+  showHeader?: boolean;
+  upcomingOnly?: boolean;
+  daysLimit?: number;
+  emptyStateMessage?: string;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -70,36 +74,76 @@ const SessionItem: React.FC<{ session: Session }> = ({ session }) => {
   );
 };
 
-export function SessionList({ mentorId, menteeId }: SessionListProps) {
+export function SessionList({ 
+  mentorId, 
+  menteeId, 
+  showHeader = true,
+  upcomingOnly = false,
+  daysLimit = 14,
+  emptyStateMessage = 'Não há mentorias marcadas'
+}: SessionListProps) {
   const { getSessionsBetween } = useMentoring();
   const sessions = getSessionsBetween(mentorId, menteeId);
 
-  const completedCount = sessions.filter(s => s.status === 'completed').length;
-  const upcomingSessions = sessions.filter(s => !isPast(parseISO(s.date)) && s.status !== 'completed' && s.status !== 'no-show');
-  const pastSessions = sessions.filter(s => isPast(parseISO(s.date)) || s.status === 'completed' || s.status === 'no-show');
+  // Filter sessions based on options
+  const filteredSessions = useMemo(() => {
+    let filtered = sessions;
+
+    if (upcomingOnly) {
+      const now = new Date();
+      const twoWeeksFromNow = addDays(now, daysLimit);
+
+      // Only upcoming sessions within the time limit
+      filtered = filtered.filter(s => {
+        const sessionDate = parseISO(s.date);
+        return isWithinInterval(sessionDate, { start: now, end: twoWeeksFromNow }) && s.status === 'scheduled';
+      });
+    }
+
+    return filtered;
+  }, [sessions, upcomingOnly, daysLimit]);
+
+  if (filteredSessions.length === 0) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '2rem 1rem',
+        color: '#666',
+        fontSize: '0.95rem'
+      }}>
+        {emptyStateMessage}
+      </div>
+    );
+  }
+
+  const completedCount = filteredSessions.filter(s => s.status === 'completed').length;
+  const upcomingSessions = filteredSessions.filter(s => !isPast(parseISO(s.date)) && s.status !== 'completed' && s.status !== 'no-show');
+  const pastSessions = filteredSessions.filter(s => isPast(parseISO(s.date)) || s.status === 'completed' || s.status === 'no-show');
 
   return (
     <>
-      <div className="session-list-header">
-        <div className="session-list-title-container">
-          <Clock className="session-list-title-icon" />
-          <h2 className="session-list-title">Histórico de Sessões</h2>
+      {showHeader && (
+        <div className="session-list-header">
+          <div className="session-list-title-container">
+            <Clock className="session-list-title-icon" />
+            <h2 className="session-list-title">Histórico de Sessões</h2>
+          </div>
+          <span className="session-list-badge">
+            {completedCount} mentoria(s) realizada(s)
+          </span>
         </div>
-        <span className="session-list-badge">
-          {completedCount} mentoria(s) realizada(s)
-        </span>
-      </div>
+      )}
 
       {upcomingSessions.length > 0 && (
         <div>
-          <h3 className="session-list-section-title">PRÓXIMAS</h3>
+          {showHeader && <h3 className="session-list-section-title">PRÓXIMAS</h3>}
           {upcomingSessions.map((session) => (
             <SessionItem key={session.id} session={session} />
           ))}
         </div>
       )}
 
-      {pastSessions.length > 0 && (
+      {showHeader && pastSessions.length > 0 && (
         <div>
           <h3 className="session-list-section-title">ANTERIORES</h3>
           {pastSessions.map((session) => (

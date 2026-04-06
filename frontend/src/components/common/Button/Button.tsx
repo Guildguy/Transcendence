@@ -6,11 +6,12 @@ interface ButtonProps {
   onClick?: () => void;
   className?: string;
   style?: React.CSSProperties;
+  disabled?: boolean;
 }
 
-export default function Button({ children, onClick, className, style }: ButtonProps) {
+export default function Button({ children, onClick, className, style, disabled }: ButtonProps) {
   return (
-    <button className={`button ${className || ''}`} onClick={onClick} style={style}>
+    <button className={`button ${className || ''}`} onClick={onClick} style={style} disabled={disabled}>
       {children}
     </button>
   );
