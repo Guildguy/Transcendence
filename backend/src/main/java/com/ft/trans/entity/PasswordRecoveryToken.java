@@ -26,6 +26,8 @@ public class PasswordRecoveryToken {
         return LocalDateTime.now().isAfter(expiryDate);
     }
 
+    public PasswordRecoveryToken() {}
+
     public PasswordRecoveryToken(User user) {
         this.user = user;
         this.token = java.util.UUID.randomUUID().toString();
