@@ -9,6 +9,7 @@ import Home from './pages/Home/Home'
 import { Toaster } from './components/common/Toast/Toaster'
 import { ChatProvider } from './components/chat/ChatContext/ChatContext'
 import Forgot from './pages/auth/Forgot'
+import ResetPassword from './pages/auth/ResetPassword'
 
 // Lazy Loading for non-critical pages
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'))
@@ -44,6 +45,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/forgot" element={<Forgot />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           {/* REGISTER ROUTE */}
