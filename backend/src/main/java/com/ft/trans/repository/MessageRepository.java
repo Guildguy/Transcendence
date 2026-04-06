@@ -24,4 +24,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query("SELECT DISTINCT CASE WHEN m.sender.id = :userId THEN m.receiver ELSE m.sender END FROM Message m WHERE m.sender.id = :userId OR m.receiver.id = :userId")
     List<User> findContacts(@Param("userId") Long userId);
+
+    @Query("SELECT DISTINCT CASE WHEN m.sender.id = :userId THEN m.receiver.id ELSE m.sender.id END " +
+       "FROM Message m WHERE m.sender.id = :userId OR m.receiver.id = :userId")
+    List<Long> findContactIds(@Param("userId") Long userId);
 }

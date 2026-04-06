@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Search, MessageCircle } from 'lucide-react';
 import { useChat } from '../ChatContext/ChatContext';
-import { getAuthToken } from '../../../services/api';
+import { apiFetch } from '../../../services/api';
 import './Chatbar.css';
 
 interface UserData {
@@ -20,11 +20,12 @@ export const Sidebar = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/chat/${myId}/contacts`, {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await apiFetch(`/chat/${myId}/contacts`, {
+          method: 'GET',
         });
+
         const data = await response.json();
-        setUsers(data);
+        setUsers(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Erro ao buscar contatos:", error);
       }
