@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Avatar } from '../../common/Avatar/Avatar'
 import { ProfileBadge } from '../../common/ProfileBadge/ProfileBadge'
 import InputGroup from '../../common/InputGroup/InputGroup'
+import { ProgressBar } from '../../common/ProgressBar/ProgressBar'
+import Achievements from '../../common/Achievements/Achievements'
 import { apiFetch } from '../../../services/api'
 import './UserHeader.css'
 
@@ -42,7 +44,7 @@ const DEFAULT_USER_DATA: UserHeaderData = {
 }
 
 const FALLBACK_USER_DATA: UserHeaderData = {
-  nome: 'lejorge',
+  nome: 'Nome de Usuário',
   username: 'ze1',
   cargo: 'Mentor',
   avatarUrl: '',
@@ -92,13 +94,16 @@ export const UserHeader = () => {
         const { user, profiles: fetchedProfiles } = await res.json()
         const profiles = Array.isArray(fetchedProfiles) ? fetchedProfiles : []
         const mentorProfile = profiles.find((p: any) => p?.role === 'MENTOR') || profiles[0] || {}
+        const profileId = mentorProfile?.id
 
         let level: number = mentorProfile?.level ?? 0
         let xp: number = mentorProfile?.xp ?? 0
         let nextLevelXp: number | null = null
         let unlockedAchievements: AchievementItem[] = []
         let recentHistory: HistoryItem[] = []
+        let avatarUrl = ''
 
+        // Fetch gamification summary
         try {
           const summaryRes = await apiFetch(`/gamification/users/${loggedUserId}/summary`)
           if (summaryRes.ok) {
@@ -117,6 +122,28 @@ export const UserHeader = () => {
           // Mantém valores do perfil se gamification falhar
         }
 
+        // Fetch profile image separately (like ProfilePage does)
+        if (profileId) {
+          try {
+            const imgRes = await apiFetch(`/profiles/image/${profileId}`)
+            if (imgRes.ok) {
+              const imgData = await imgRes.json()
+              if (imgData && imgData.avatarUrl) {
+                try {
+                  // Try to parse as JSON (backend might wrap in JSON)
+                  const parsed = JSON.parse(imgData.avatarUrl)
+                  avatarUrl = parsed.image_base64 || parsed.avatarUrl || imgData.avatarUrl
+                } catch {
+                  // Not JSON, use as-is
+                  avatarUrl = imgData.avatarUrl
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('Failed to load profile image:', err)
+          }
+        }
+
         setUserData({
           level,
           xp,
@@ -126,7 +153,7 @@ export const UserHeader = () => {
           cargo: mentorProfile?.position || 'Cargo',
           nome: user?.name || 'Nome do usuario',
           username: user?.email ? String(user.email).split('@')[0] : 'username',
-          avatarUrl: mentorProfile?.avatarUrl || '',
+          avatarUrl,
           role: mentorProfile?.role === 'MENTORADO' ? 'MENTORADO' : 'MENTOR',
         })
       } catch {
@@ -144,7 +171,7 @@ export const UserHeader = () => {
       <div className="profile-section">
         <div className="header-info">
           <div className="header-avatar">
-            <Avatar avatarUrl={userData.avatarUrl} size={120} />
+            <Avatar avatarUrl={userData.avatarUrl} size={150} />
           </div>
         </div>
         <div className="header-info">
@@ -160,42 +187,26 @@ export const UserHeader = () => {
 
       <div className="profile-stats-bg">
         <div className="profile-stats-container">
+          <div className="xp-section">
+            <ProgressBar
+              currentXp={userData.xp}
+              nextLevelXp={userData.nextLevelXp}
+              currentLevel={userData.level}
+              size="medium"
+            />
+          </div>
           <InputGroup
-            label="Nível"
-            value={String(userData.level)}
+            value={`NÍVEL: ${String(userData.level)}`}
             isEditing={false}
             onChange={() => {}}
           />
           <InputGroup
-            label="XP"
-            value={`${userData.xp} XP`}
-            isEditing={false}
-            onChange={() => {}}
-          />
-          <InputGroup
-            label="Status"
             value={userData.role === 'MENTOR' ? 'Ensinando 🔥' : 'Aprendendo 🚀'}
             isEditing={false}
             onChange={() => {}}
           />
         </div>
-
-        {/* Histórico */}
-        {userData.recentHistory.length > 0 && (
-          <div className="gamification-section">
-            <h3 className="gamification-title">📈 Histórico de XP</h3>
-            <ul className="history-list">
-              {userData.recentHistory.map((item, i) => (
-                <li key={i} className="history-item">
-                  <span className="history-reason">{formatReason(item.reason)}</span>
-                  <span className="history-xp">+{item.xp} XP</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
-
     </section>
   )
 }

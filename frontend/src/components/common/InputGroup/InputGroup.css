@@ -13,7 +13,7 @@
 .custom-input,
 .view-box {
   width: 100%;
-  background-color: #f5f5f5;
+  background-color: var(--input-group-bg);
   border: none;
   border-radius: 20px;
   padding: 12px 20px;
@@ -58,7 +58,7 @@
     background-color: #ffffff !important; /* Fundo branco */
     border: 1px solid #d1d5db; /* Borda cinza suave */
     border-radius: 6px;
-    padding: 8px;
+    padding: px;
     width: 100%;
     color: #111827;
     transition: all 0.2s ease;

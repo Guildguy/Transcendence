@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import AppShell from '../../components/layout/AppShell/AppShell'
-import Header from '../../components/layout/Header/Header'
-import Footer from '../../components/layout/Footer/Footer'
 import UserHeader from '../../components/layout/UserHeader/UserHeader'
-import Avatar from '../../components/common/Avatar/Avatar'
-import Button from '../../components/common/Button/Button'
-import { Check, X } from 'lucide-react'
+import Achievements from '../../components/common/Achievements/Achievements'
+import Requests from '../../components/common/Requests/Requests'
+import DailySchedule from '../../components/common/DailySchedule/DailySchedule'
+import { mockRequests, mockAchievements } from './HomeLogged.mock.tsx'
 import { apiFetch } from '../../services/api'
-import { mockRequests, mockSchedule, mockAchievements } from './HomeLogged.mock.tsx'
+import { extractBase64FromAvatarUrl } from '../../utils/imageUtils'
 import './HomeLogged.css'
 
 interface PendingRequest {
@@ -17,17 +14,17 @@ interface PendingRequest {
   avatar?: string
 }
 
-interface AchievementItem {
-  name: string
-  iconUrl: string
+interface AchievementsData {
+  id: number
+  title: string
+  icon?: string
 }
 
 function HomeLogged() {
-  const [activeTab, setActiveTab] = useState<'pending' | 'notifications'>('pending')
   const [requests, setRequests] = useState<PendingRequest[]>([])
-  const [achievements, setAchievements] = useState<AchievementItem[]>([])
+  const [achievements, setAchievements] = useState<AchievementsData[]>([])
   const [mentorProfileId, setMentorProfileId] = useState<number | null>(null)
-  const [isMentor, setIsMentor] = useState(true)
+  const [userRole, setUserRole] = useState<'MENTOR' | 'MENTEE'>('MENTEE')
   const [loading, setLoading] = useState(true)
 
   // 1. Resolve mentorProfileId + carrega dados reais com fallback automático
@@ -36,7 +33,7 @@ function HomeLogged() {
       const userId = localStorage.getItem('userId')
       if (!userId) {
         setRequests(mockRequests.map(r => ({ id: r.id, name: r.name })))
-        setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+        setAchievements(mockAchievements)
         setLoading(false)
         return
       }
@@ -51,10 +48,7 @@ function HomeLogged() {
           const mentorProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTOR')
           resolvedProfileId = mentorProfile?.id ?? null
           setMentorProfileId(resolvedProfileId)
-          setIsMentor(resolvedProfileId !== null)
-          if (resolvedProfileId === null) {
-            setActiveTab('notifications')
-          }
+          setUserRole(resolvedProfileId !== null ? 'MENTOR' : 'MENTEE')
         }
       } catch {
         // segue para fallback
@@ -67,11 +61,10 @@ function HomeLogged() {
           if (incomingRes.ok) {
             const data: any[] = await incomingRes.json()
             if (data.length > 0) {
-              // Dados reais prevalecem
               setRequests(data.map(m => ({
                 id: m.id,
                 name: m.menteeName ?? m.menteeProfileId ?? `Mentorado #${m.id}`,
-                avatar: m.avatarUrl,
+                avatar: extractBase64FromAvatarUrl(m.avatarUrl) || undefined,
               })))
             } else {
               // Backend respondeu vazio → sem pendências reais, não usa mock
@@ -93,21 +86,19 @@ function HomeLogged() {
         const summaryRes = await apiFetch(`/gamification/users/${userId}/summary`)
         if (summaryRes.ok) {
           const summary = await summaryRes.json()
-          const unlocked: AchievementItem[] = Array.isArray(summary?.unlockedAchievements)
+          const unlocked: AchievementsData[] = Array.isArray(summary?.unlockedAchievements)
             ? summary.unlockedAchievements
             : []
           if (unlocked.length > 0) {
-            // Dados reais prevalecem
             setAchievements(unlocked)
           } else {
-            // Nenhuma conquista desbloqueada ainda → fallback
-            setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+            setAchievements(mockAchievements)
           }
         } else {
-          setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+          setAchievements(mockAchievements)
         }
       } catch {
-        setAchievements(mockAchievements.map(a => ({ name: a.title ?? '', iconUrl: a.icon ?? '' })))
+        setAchievements(mockAchievements)
       }
 
       setLoading(false)
@@ -146,108 +137,30 @@ function HomeLogged() {
   }
 
   return (
-    <AppShell
-      sidebar={null}
-      header={<Header isAuthenticated={true} />}
-      footer={<Footer />}
-    >
       <div className="home-logged">
 
         <UserHeader />
 
         <section className="main-content">
 
-          {/* Left Panel */}
-          <div className="left-panel">
-            <div className="tab-bar">
-              <button
-                className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-                onClick={() => isMentor && setActiveTab('pending')}
-                disabled={!isMentor}
-              >
-                Solicitações Pendentes
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'notifications' ? 'active' : ''}`}
-                onClick={() => setActiveTab('notifications')}
-              >
-                Notificações
-              </button>
-            </div>
+          <Requests
+            userRole={userRole}
+            mentorRequests={userRole === 'MENTOR' ? requests : []}
+            menteeAcceptedRequests={userRole === 'MENTEE' ? requests : []}
+            onAccept={handleAccept}
+            onDecline={handleDecline}
+          />
 
-            <div className="requests-list">
-              {activeTab === 'pending' && !loading && requests.map((req) => (
-                <div key={req.id} className="request-card">
-                  <div className="request-avatar img">
-                    <Avatar size={80} avatarUrl={req.avatar} />
-                  </div>
-                  <p className="request-text">
-                    <strong>{req.name}</strong> solicitou realizar mentoria. Aceita?
-                  </p>
-                  <div className="request-actions">
-                    <Button onClick={() => handleAccept(req.id)} className="icon-button" aria-label="Accept">
-                      <Check size={18} color="green" />
-                    </Button>
-                    <Button onClick={() => handleDecline(req.id)} className="icon-button" aria-label="Decline">
-                      <X size={18} color="red" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {activeTab === 'pending' && !isMentor && (
-                <div className="empty-state">Essa área está disponível apenas para perfis de mentor.</div>
-              )}
-              {activeTab === 'pending' && !loading && isMentor && requests.length === 0 && (
-                <div className="empty-state">Sem novas solicitações.</div>
-              )}
-              {activeTab === 'pending' && loading && (
-                <div className="empty-state">Carregando...</div>
-              )}
-              {activeTab === 'notifications' && (
-                <div className="empty-state">Sem novas notificações.</div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Panel - Schedule (mock provisório, sem backend ainda) */}
-          <div className="right-panel">
-            <h3 className="panel-title">Agenda do Dia</h3>
-            <div className="schedule-list">
-              {mockSchedule.map((item) => (
-                <div key={item.id} className="schedule-item">
-                  <span className="schedule-time">
-                    <strong>{item.time}</strong> - {item.mentee}
-                  </span>
-                  <Button>Remarcar</Button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <DailySchedule
+            userRole={userRole}
+            profileId={mentorProfileId}
+          />
 
         </section>
 
-        {/* Achievements — reais se desbloqueados, mock se não */}
-        <section className="achievements-section">
-          <h3 className="achievements-title">Conquistas</h3>
-          <div className="achievements-grid">
-            {achievements.map((a, i) => (
-              <div key={i} className="achievement-card">
-                {a.iconUrl && (
-                  <img
-                    src={a.iconUrl}
-                    alt={a.name}
-                    className="achievement-icon"
-                    style={{ width: 48, height: 48, marginBottom: 8 }}
-                  />
-                )}
-                <div className="achievement-title">{a.name}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <Achievements achievements={achievements} />
 
       </div>
-    </AppShell>
   )
 }
 

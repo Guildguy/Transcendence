@@ -1,65 +1,75 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { Clock, Video, RefreshCw, ExternalLink } from "lucide-react";
 import "./SessionList.css";
 import { format, parseISO, isPast, isWithinInterval, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { apiFetch } from '../../../services/api';
 
-// Mock data and hooks - replace with your actual data fetching
-// You should have a `useMentoring` hook that provides sessions
-const useMentoring = () => ({
-  getSessionsBetween: (mentorId: string, menteeId?: string) => [
-    { id: '1', mentorId, menteeId: menteeId || 'generic', date: '2026-04-04T11:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'scheduled', isRecurring: true, recurrenceCount: 4, meetLink: '#' },
-    { id: '2', mentorId, menteeId: menteeId || 'generic', date: '2026-03-25T12:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'completed', isRecurring: true, recurrenceCount: 3, meetLink: '#' },
-    { id: '3', mentorId, menteeId: menteeId || 'generic', date: '2026-03-18T13:00:00.000Z', startTime: '08:00', endTime: '09:00', status: 'no-show', isRecurring: true, recurrenceCount: 2, meetLink: '#' },
-  ],
-});
+interface Session {
+  id: number;
+  connectionId: number;
+  scheduledDate: string;
+  durationMinutes: number;
+  meetUrl: string;
+  status: 'SCHEDULED' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED';
+  isRecurrent: boolean;
+  recurrenceIndex?: number;
+  recurrenceGroupId?: string;
+  menteeMissed?: boolean;
+  mentorNotes?: string;
+}
 
-type Session = ReturnType<ReturnType<typeof useMentoring>['getSessionsBetween']>[0];
-
-interface SessionListProps {
+type SessionListProps = {
   mentorId: string;
   menteeId?: string;
   showHeader?: boolean;
   upcomingOnly?: boolean;
   daysLimit?: number;
   emptyStateMessage?: string;
-}
+};
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  scheduled: { label: 'Agendada', className: 'badge-scheduled' },
-  completed: { label: 'Realizada', className: 'badge-completed' },
-  rescheduled: { label: 'Reagendada', className: 'badge-rescheduled' },
-  'no-show': { label: 'No-show', className: 'badge-no-show' },
+  SCHEDULED: { label: 'Agendada', className: 'badge-scheduled' },
+  COMPLETED: { label: 'Realizada', className: 'badge-completed' },
+  RESCHEDULED: { label: 'Reagendada', className: 'badge-rescheduled' },
+  NO_SHOW: { label: 'No-show', className: 'badge-no-show' },
+  CANCELLED: { label: 'Cancelada', className: 'badge-cancelled' },
 };
 
 const SessionItem: React.FC<{ session: Session }> = ({ session }) => {
-  const { status, isRecurring, recurrenceCount } = session;
-  const isFuture = !isPast(parseISO(session.date));
+  const { status, isRecurrent, recurrenceIndex } = session;
+  const isFuture = !isPast(parseISO(session.scheduledDate));
   const config = statusConfig[status];
+
+  const startTime = format(parseISO(session.scheduledDate), 'HH:mm');
+  const endTime = format(
+    new Date(new Date(session.scheduledDate).getTime() + session.durationMinutes * 60000),
+    'HH:mm'
+  );
 
   return (
     <div className="session-item">
       <div className="session-date">
-        <span className="session-date-day">{format(parseISO(session.date), 'dd')}</span>
-        <span className="session-date-month">{format(parseISO(session.date), 'MMM', { locale: ptBR })}</span>
+        <span className="session-date-day">{format(parseISO(session.scheduledDate), 'dd')}</span>
+        <span className="session-date-month">{format(parseISO(session.scheduledDate), 'MMM', { locale: ptBR })}</span>
       </div>
 
       <div className="session-details">
-        <div className="session-time">{session.startTime} – {session.endTime}</div>
+        <div className="session-time">{startTime} – {endTime}</div>
         <div className="session-status">
           <span className={`session-status-badge ${config.className}`}>{config.label}</span>
-          {isRecurring && (
+          {isRecurrent && recurrenceIndex && (
             <div className="session-status-icon-container">
               <RefreshCw className="session-status-icon" />
-              <span>{recurrenceCount}/10</span>
+              <span>{recurrenceIndex}/10</span>
             </div>
           )}
         </div>
       </div>
 
-      {isFuture && status === 'scheduled' && (
+      {isFuture && status === 'SCHEDULED' && session.meetUrl && (
         <div className="session-actions">
-          <a href={session.meetLink} target="_blank" rel="noopener noreferrer" className="session-action-button">
+          <a href={session.meetUrl} target="_blank" rel="noopener noreferrer" className="session-action-button">
             <Video className="meet-button-icon" />
             <span>Meet</span>
             <ExternalLink className="reschedule-button-icon" />
@@ -82,8 +92,83 @@ export function SessionList({
   daysLimit = 14,
   emptyStateMessage = 'Não há mentorias marcadas'
 }: SessionListProps) {
-  const { getSessionsBetween } = useMentoring();
-  const sessions = getSessionsBetween(mentorId, menteeId);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch sessions from backend
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        setLoading(true);
+        console.log(`[SessionList] Fetching sessions - mentorId: ${mentorId}, menteeId: ${menteeId}`);
+        
+        // Validate mentorId - must be numeric
+        if (!mentorId || typeof mentorId !== 'string' || !mentorId.match(/^\d+$/)) {
+          console.warn('[SessionList] Invalid or missing mentorId:', mentorId);
+          setError('ID do mentor inválido');
+          setSessions([]);
+          setLoading(false);
+          return;
+        }
+
+        const mentorIdNum = parseInt(mentorId, 10);
+        
+        // If both mentorId and menteeId are provided, try to fetch sessions for the specific pair
+        if (menteeId && typeof menteeId === 'string' && menteeId.match(/^\d+$/)) {
+          const menteeIdNum = parseInt(menteeId, 10);
+          
+          try {
+            console.log(`[SessionList] Trying to fetch sessions for mentor ${mentorIdNum} and mentee ${menteeIdNum}`);
+            const response = await apiFetch(`/mentorship-sessions/mentor/${mentorIdNum}/mentee/${menteeIdNum}`);
+            if (response.ok) {
+              const data = await response.json();
+              console.log('[SessionList] Sessions for mentor-mentee pair:', data);
+              setSessions(Array.isArray(data) ? data : []);
+              setError(null);
+              setLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.warn('[SessionList] Failed to fetch mentor-mentee sessions:', err);
+          }
+        }
+
+        // Fallback: Fetch all sessions for the mentor
+        try {
+          console.log(`[SessionList] Fetching all sessions for mentor ${mentorIdNum}`);
+          const response = await apiFetch(`/mentorship-sessions/mentor/${mentorIdNum}`);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('[SessionList] Sessions for mentor:', data);
+            setSessions(Array.isArray(data) ? data : []);
+            setError(null);
+            setLoading(false);
+            return;
+          } else {
+            console.warn(`[SessionList] Failed to fetch sessions: HTTP ${response.status}`);
+          }
+        } catch (err) {
+          console.warn('[SessionList] Error fetching sessions:', err);
+        }
+
+        // If we reach here, set empty state
+        console.warn('[SessionList] No sessions found');
+        setSessions([]);
+        setError(null);
+      } catch (err) {
+        console.error('[SessionList] Erro ao carregar sessões:', err);
+        setError(err instanceof Error ? err.message : 'Erro ao carregar sessões');
+        setSessions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (mentorId) {
+      fetchSessions();
+    }
+  }, [mentorId, menteeId]);
 
   // Filter sessions based on options
   const filteredSessions = useMemo(() => {
@@ -91,17 +176,43 @@ export function SessionList({
 
     if (upcomingOnly) {
       const now = new Date();
-      const twoWeeksFromNow = addDays(now, daysLimit);
+      const futureDate = addDays(now, daysLimit);
 
       // Only upcoming sessions within the time limit
       filtered = filtered.filter(s => {
-        const sessionDate = parseISO(s.date);
-        return isWithinInterval(sessionDate, { start: now, end: twoWeeksFromNow }) && s.status === 'scheduled';
+        const sessionDate = parseISO(s.scheduledDate);
+        return isWithinInterval(sessionDate, { start: now, end: futureDate }) && s.status === 'SCHEDULED';
       });
     }
 
     return filtered;
   }, [sessions, upcomingOnly, daysLimit]);
+
+  if (loading) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '2rem 1rem',
+        color: '#666',
+        fontSize: '0.95rem'
+      }}>
+        Carregando sessões...
+      </div>
+    );
+  }
+
+  if (error && sessions.length === 0) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '2rem 1rem',
+        color: '#c00',
+        fontSize: '0.95rem'
+      }}>
+        {error}
+      </div>
+    );
+  }
 
   if (filteredSessions.length === 0) {
     return (
@@ -116,9 +227,9 @@ export function SessionList({
     );
   }
 
-  const completedCount = filteredSessions.filter(s => s.status === 'completed').length;
-  const upcomingSessions = filteredSessions.filter(s => !isPast(parseISO(s.date)) && s.status !== 'completed' && s.status !== 'no-show');
-  const pastSessions = filteredSessions.filter(s => isPast(parseISO(s.date)) || s.status === 'completed' || s.status === 'no-show');
+  const completedCount = filteredSessions.filter(s => s.status === 'COMPLETED').length;
+  const upcomingSessions = filteredSessions.filter(s => !isPast(parseISO(s.scheduledDate)) && s.status !== 'COMPLETED' && s.status !== 'NO_SHOW');
+  const pastSessions = filteredSessions.filter(s => isPast(parseISO(s.scheduledDate)) || s.status === 'COMPLETED' || s.status === 'NO_SHOW');
 
   return (
     <>

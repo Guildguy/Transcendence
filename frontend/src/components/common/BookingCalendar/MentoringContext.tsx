@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { Mentor, Mentee, Session, Slot, TimeBlock } from './types.ts';
-import { mockMentors, mockMentees, mockSessions, generateSlots } from './mock.ts';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import type { Session, TimeBlock } from './types.ts';
 import { addDays, format } from 'date-fns';
-import { getMentorAvailability, saveMentorAvailability } from '../../../services/mentorAvailabilityService';
+import { getMentorAvailability } from '../../../services/mentorAvailabilityService';
 
 interface BookCustomSlotParams {
   mentorId: string;
@@ -14,195 +13,23 @@ interface BookCustomSlotParams {
 }
 
 interface MentoringContextType {
-  mentors: Mentor[];
-  mentees: Mentee[];
   sessions: Session[];
-  slots: Slot[];
-  currentRole: 'mentor' | 'mentee';
-  currentUserId: string;
-  setCurrentRole: (role: 'mentor' | 'mentee') => void;
-  bookSlot: (slotId: string, menteeId: string, isRecurring: boolean) => void;
   bookCustomSlot: (params: BookCustomSlotParams) => void;
-  rescheduleSession: (sessionId: string, newSlotId: string) => void;
-  rescheduleSessionCustom: (sessionId: string, date: string, startTime: string, endTime: string) => void;
   cancelSession: (sessionId: string) => void;
-  updateAvailability: (mentorId: string, blocks: TimeBlock[], slotDuration: number) => void;
   getSessionsForMentor: (mentorId: string) => Session[];
   getSessionsForMentee: (menteeId: string) => Session[];
   getSessionsBetween: (mentorId: string, menteeId: string) => Session[];
-  getSlotsForMentor: (mentorId: string) => Slot[];
-  getMenteesForMentor: (mentorId: string) => Mentee[];
-  getAvailableBlocksForDate: (mentorId: string, date: string) => { startTime: string; endTime: string }[];
+  getBackendAvailability: (mentorId: string | number) => Promise<{ blocks: TimeBlock[]; slotDuration: number }>;
+  getAvailableBlocksForDate: (mentorId: string, date: string, blocks: TimeBlock[]) => { startTime: string; endTime: string }[];
 }
 
 const MentoringContext = createContext<MentoringContextType | null>(null);
 
 export function MentoringProvider({ children }: { children: React.ReactNode }) {
-  const [mentors, setMentors] = useState<Mentor[]>(
-    () => mockMentors.map((mentor) => ({ ...mentor }))
-  );
-  const [mentees] = useState<Mentee[]>(mockMentees);
-  const [sessions, setSessions] = useState<Session[]>(mockSessions);
-  const [slotsMap, setSlotsMap] = useState<Record<string, Slot[]>>(() => {
-    const map: Record<string, Slot[]> = {};
-    mockMentors.forEach((mentor) => {
-      map[mentor.id] = [];
-    });
-    return map;
-  });
-  const [currentRole, setCurrentRole] = useState<'mentor' | 'mentee'>('mentee');
-  const currentUserId = currentRole === 'mentor' ? 'm1' : 'e1';
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadMentorAvailabilities = async () => {
-      const fetchedByMentorId: Record<string, { slotDuration: number; blocks: TimeBlock[] }> = {};
-
-      await Promise.all(
-        mockMentors.map(async (mentor) => {
-          try {
-            const availability = await getMentorAvailability(mentor.id);
-            if (availability.blocks.length > 0)
-              fetchedByMentorId[mentor.id] = availability;
-            else {
-              fetchedByMentorId[mentor.id] = {
-                slotDuration: mentor.slotDuration ?? 60,
-                blocks: mentor.availability ?? [],
-              };
-            }
-          } catch (error) {
-            console.error('Erro ao carregar disponibilidade do backend para mentor', mentor.id, error);
-            fetchedByMentorId[mentor.id] = {
-              slotDuration: mentor.slotDuration ?? 60,
-              blocks: mentor.availability ?? [],
-            };
-          }
-        })
-      );
-
-      if (cancelled) return;
-
-      setMentors((prev) => {
-        const next = prev.map((mentor) => {
-          const fetched = fetchedByMentorId[mentor.id];
-          if (!fetched) {
-            return {
-              ...mentor,
-              availability: [],
-              slotDuration: 60,
-            };
-          }
-
-          return {
-            ...mentor,
-            availability: fetched.blocks,
-            slotDuration: fetched.slotDuration,
-          };
-        });
-
-        const nextSlotsMap: Record<string, Slot[]> = {};
-        next.forEach((mentor) => {
-          nextSlotsMap[mentor.id] = generateSlots(mentor);
-        });
-        setSlotsMap(nextSlotsMap);
-
-        return next;
-      });
-    };
-
-    void loadMentorAvailabilities();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [sessions, setSessions] = useState<Session[]>([]);
 
   const generateMeetLink = () =>
     `https://meet.google.com/${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}`;
-
-  const bookSlot = useCallback((slotId: string, menteeId: string, isRecurring: boolean) => {
-    let targetSlot: Slot | undefined;
-    const newSlotsMap = { ...slotsMap };
-
-    for (const mentorId in newSlotsMap) {
-      const idx = newSlotsMap[mentorId].findIndex(s => s.id === slotId);
-      if (idx !== -1) {
-        targetSlot = { ...newSlotsMap[mentorId][idx], booked: true, bookedBy: menteeId };
-        newSlotsMap[mentorId] = [...newSlotsMap[mentorId]];
-        newSlotsMap[mentorId][idx] = targetSlot;
-        break;
-      }
-    }
-
-    if (!targetSlot) return;
-
-    const meetLink = generateMeetLink();
-    const newSessions: Session[] = [];
-
-    if (isRecurring) {
-      const baseDate = new Date(targetSlot.date);
-      for (let i = 0; i < 10; i++) {
-        const sessionDate = addDays(baseDate, i * 7);
-        const dateStr = format(sessionDate, 'yyyy-MM-dd');
-        newSessions.push({
-          id: `s-${Date.now()}-${i}`,
-          mentorId: targetSlot.mentorId,
-          menteeId,
-          date: dateStr,
-          startTime: targetSlot.startTime,
-          endTime: targetSlot.endTime,
-          status: 'scheduled',
-          meetLink,
-          isRecurring: true,
-          recurrenceCount: i + 1,
-          maxRecurrence: 10,
-        });
-      }
-    } else {
-      newSessions.push({
-        id: `s-${Date.now()}`,
-        mentorId: targetSlot.mentorId,
-        menteeId,
-        date: targetSlot.date,
-        startTime: targetSlot.startTime,
-        endTime: targetSlot.endTime,
-        status: 'scheduled',
-        meetLink,
-        isRecurring: false,
-        maxRecurrence: 10,
-      });
-    }
-
-    setSlotsMap(newSlotsMap);
-    setSessions(prev => [...prev, ...newSessions]);
-  }, [slotsMap]);
-
-  const rescheduleSession = useCallback((sessionId: string, newSlotId: string) => {
-    let targetSlot: Slot | undefined;
-    const newSlotsMap = { ...slotsMap };
-
-    for (const mentorId in newSlotsMap) {
-      const idx = newSlotsMap[mentorId].findIndex(s => s.id === newSlotId);
-      if (idx !== -1) {
-        targetSlot = { ...newSlotsMap[mentorId][idx], booked: true };
-        newSlotsMap[mentorId] = [...newSlotsMap[mentorId]];
-        newSlotsMap[mentorId][idx] = targetSlot;
-        break;
-      }
-    }
-
-    if (!targetSlot) return;
-
-    setSlotsMap(newSlotsMap);
-    setSessions(prev =>
-      prev.map(s =>
-        s.id === sessionId
-          ? { ...s, date: targetSlot!.date, startTime: targetSlot!.startTime, endTime: targetSlot!.endTime, status: 'rescheduled' as const }
-          : s
-      )
-    );
-  }, [slotsMap]);
 
   const bookCustomSlot = useCallback(({ mentorId, menteeId, date, startTime, endTime, isRecurring }: BookCustomSlotParams) => {
     const meetLink = generateMeetLink();
@@ -245,30 +72,38 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
     setSessions(prev => [...prev, ...newSessions]);
   }, []);
 
-  const rescheduleSessionCustom = useCallback((sessionId: string, date: string, startTime: string, endTime: string) => {
-    setSessions(prev =>
-      prev.map(s =>
-        s.id === sessionId
-          ? { ...s, date, startTime, endTime, status: 'rescheduled' as const }
-          : s
-      )
-    );
-  }, []);
-
   const cancelSession = useCallback((sessionId: string) => {
     setSessions(prev => prev.filter(s => s.id !== sessionId));
   }, []);
 
-  // Given a mentor and a date, return available free windows considering booked sessions
-  const getAvailableBlocksForDate = useCallback((mentorId: string, date: string) => {
-    const mentor = mentors.find(m => m.id === mentorId);
-    if (!mentor) return [];
+  const getSessionsForMentor = useCallback((mentorId: string) =>
+    sessions.filter(s => s.mentorId === mentorId), [sessions]);
 
+  const getSessionsForMentee = useCallback((menteeId: string) =>
+    sessions.filter(s => s.menteeId === menteeId), [sessions]);
+
+  const getSessionsBetween = useCallback((mentorId: string, menteeId: string) =>
+    sessions.filter(s => s.mentorId === mentorId && s.menteeId === menteeId), [sessions]);
+
+  // Fetch real availability from backend
+  const getBackendAvailability = useCallback(async (mentorId: string | number) => {
+    try {
+      const availability = await getMentorAvailability(mentorId);
+      return availability;
+    } catch (error) {
+      console.error('[MentoringContext] Erro ao carregar disponibilidade do backend:', error);
+      return { blocks: [], slotDuration: 60 };
+    }
+  }, []);
+
+  // Calculate available time windows based on availability blocks and booked sessions
+  const getAvailableBlocksForDate = useCallback((mentorId: string, date: string, blocks: TimeBlock[]) => {
     const dateObj = new Date(date + 'T12:00:00');
-    const dayOfWeek = dateObj.getDay() as import('./types').DayOfWeek;
+    const dayOfWeek = dateObj.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-    const blocks = mentor.availability.filter(b => b.day === dayOfWeek);
-    if (blocks.length === 0) return [];
+    // Filter blocks for this day of week
+    const dayBlocks = blocks.filter(b => b.day === dayOfWeek);
+    if (dayBlocks.length === 0) return [];
 
     // Get booked sessions for this mentor on this date
     const bookedSessions = sessions.filter(
@@ -284,7 +119,7 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
 
     const freeWindows: { startTime: string; endTime: string }[] = [];
 
-    for (const block of blocks) {
+    for (const block of dayBlocks) {
       const blockStart = block.startHour * 60 + block.startMinute;
       const blockEnd = block.endHour * 60 + block.endMinute;
 
@@ -310,51 +145,15 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
     }
 
     return freeWindows;
-  }, [mentors, sessions]);
-
-  const updateAvailability = useCallback((mentorId: string, blocks: TimeBlock[], slotDuration: number) => {
-    setMentors((prev) => {
-      const next = prev.map((mentor) =>
-        mentor.id === mentorId ? { ...mentor, availability: blocks, slotDuration } : mentor
-      );
-
-      const nextSlotsMap: Record<string, Slot[]> = {};
-      next.forEach((mentor) => {
-        nextSlotsMap[mentor.id] = generateSlots(mentor);
-      });
-      setSlotsMap(nextSlotsMap);
-
-      return next;
-    });
-
-    void saveMentorAvailability(mentorId, blocks, slotDuration).catch((error) => {
-      console.error('Erro ao salvar disponibilidade do mentor no backend:', error);
-    });
-  }, []);
-
-  const getSessionsForMentor = useCallback((mentorId: string) =>
-    sessions.filter(s => s.mentorId === mentorId), [sessions]);
-
-  const getSessionsForMentee = useCallback((menteeId: string) =>
-    sessions.filter(s => s.menteeId === menteeId), [sessions]);
-
-  const getSessionsBetween = useCallback((mentorId: string, menteeId: string) =>
-    sessions.filter(s => s.mentorId === mentorId && s.menteeId === menteeId), [sessions]);
-
-  const getSlotsForMentor = useCallback((mentorId: string) =>
-    slotsMap[mentorId] || [], [slotsMap]);
-
-  const getMenteesForMentor = useCallback((mentorId: string) =>
-    mentees.filter(m => m.mentorId === mentorId), [mentees]);
+  }, [sessions]);
 
   return (
     <MentoringContext.Provider
       value={{
-        mentors, mentees, sessions, slots: Object.values(slotsMap).flat(),
-        currentRole, currentUserId, setCurrentRole,
-        bookSlot, bookCustomSlot, rescheduleSession, rescheduleSessionCustom, cancelSession, updateAvailability,
+        sessions,
+        bookCustomSlot, cancelSession,
         getSessionsForMentor, getSessionsForMentee, getSessionsBetween,
-        getSlotsForMentor, getMenteesForMentor, getAvailableBlocksForDate,
+        getBackendAvailability, getAvailableBlocksForDate,
       }}
     >
       {children}

@@ -1,17 +1,18 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMentoring } from '../BookingCalendar/MentoringContext';
 import BookingCalendar from '../BookingCalendar/BookingCalendar';
 import Button from '../Button/Button';
 import { Badge } from '../Badge/Badge';
 import { Switch } from '../Switch/Switch';
 import { Label } from '../Label/Label';
-import { CalendarCard, CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../CalendarCard/CalendarCard';
+import { CalendarCardContent, CalendarCardHeader, CalendarCardTitle } from '../CalendarCard/CalendarCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../Dialog/Dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../Select/Select';
-import { CalendarIcon, Clock, Video, RefreshCw } from 'lucide-react';
+import { CalendarIcon, Clock, Video, RefreshCw, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '../../../hooks/use-toast';
+import type { TimeBlock } from '../BookingCalendar/types';
 import './SlotSelector.css';
 
 
@@ -29,8 +30,11 @@ const fromMinutes = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
 export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
-  const { mentors, bookCustomSlot, getAvailableBlocksForDate } = useMentoring();
-  const mentor = mentors.find(m => m.id === mentorId);
+  const { bookCustomSlot, getBackendAvailability, getAvailableBlocksForDate } = useMentoring();
+
+  const [availabilityBlocks, setAvailabilityBlocks] = useState<TimeBlock[]>([]);
+  const [loadingAvailability, setLoadingAvailability] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedBlockIdx, setSelectedBlockIdx] = useState<number | null>(null);
@@ -39,12 +43,36 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
   const [isRecurring, setIsRecurring] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Fetch availability from backend on mount or when mentorId changes
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        setLoadingAvailability(true);
+        setAvailabilityError(null);
+        const { blocks } = await getBackendAvailability(mentorId);
+        setAvailabilityBlocks(blocks);
+        console.log(`[SlotSelector] Loaded ${blocks.length} availability block(s) for mentor ${mentorId}`);
+      } catch (error) {
+        console.error('[SlotSelector] Error loading availability:', error);
+        setAvailabilityError('Não conseguimos carregar a disponibilidade do mentor. Tente novamente mais tarde.');
+        setAvailabilityBlocks([]);
+      } finally {
+        setLoadingAvailability(false);
+      }
+    };
+
+    if (mentorId) {
+      fetchAvailability();
+    }
+  }, [mentorId, getBackendAvailability]);
+
   const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
 
+  // Get available time blocks for selected date
   const blocks = useMemo(() => {
-    if (!dateStr) return [];
-    return getAvailableBlocksForDate(mentorId, dateStr);
-  }, [dateStr, mentorId, getAvailableBlocksForDate]);
+    if (!dateStr || availabilityBlocks.length === 0) return [];
+    return getAvailableBlocksForDate(mentorId, dateStr, availabilityBlocks);
+  }, [dateStr, mentorId, availabilityBlocks, getAvailableBlocksForDate]);
 
   const selectedBlock = selectedBlockIdx !== null ? blocks[selectedBlockIdx] : null;
 
@@ -81,18 +109,18 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
 
   // Check which dates have availability (for calendar highlighting)
   const availableDates = useMemo(() => {
-    if (!mentor) return new Set<string>();
+    if (availabilityBlocks.length === 0) return new Set<string>();
     const dates = new Set<string>();
     const today = new Date();
     for (let i = 1; i <= 28; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const ds = format(d, 'yyyy-MM-dd');
-      const b = getAvailableBlocksForDate(mentorId, ds);
+      const b = getAvailableBlocksForDate(mentorId, ds, availabilityBlocks);
       if (b.length > 0) dates.add(ds);
     }
     return dates;
-  }, [mentor, mentorId, getAvailableBlocksForDate]);
+  }, [mentorId, availabilityBlocks, getAvailableBlocksForDate]);
 
   const isDayAvailable = (date: Date) => availableDates.has(format(date, 'yyyy-MM-dd'));
 
@@ -143,6 +171,60 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
         </CalendarCardTitle>
       </CalendarCardHeader>
       <CalendarCardContent className="slot-selector-card-content">
+          {loadingAvailability && (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <div style={{ 
+                display: 'inline-block',
+                width: '2rem', 
+                height: '2rem', 
+                border: '2px solid transparent',
+                borderTopColor: 'var(--primary, #3b82f6)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <p style={{ marginTop: '1rem', color: '#6b7280' }}>Carregando disponibilidade...</p>
+            </div>
+          )}
+
+          {availabilityError && (
+            <div style={{
+              display: 'flex',
+              gap: '0.75rem',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+              color: '#b91c1c'
+            }}>
+              <AlertCircle size={20} style={{ flexShrink: 0 }} />
+              <div>
+                <strong>Erro ao carregar disponibilidade</strong>
+                <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>{availabilityError}</p>
+              </div>
+            </div>
+          )}
+
+          {!loadingAvailability && availabilityBlocks.length === 0 && !availabilityError && (
+            <div style={{
+              display: 'flex',
+              gap: '0.75rem',
+              backgroundColor: '#fef3c7',
+              border: '1px solid #fcd34d',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+              color: '#92400e'
+            }}>
+              <AlertCircle size={20} style={{ flexShrink: 0 }} />
+              <div>
+                <strong>Nenhuma disponibilidade</strong>
+                <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>O mentor ainda não configurou sua disponibilidade.</p>
+              </div>
+            </div>
+          )}
+
+          {!loadingAvailability && (
           <div className="slot-selector-calendar-container">
             <BookingCalendar
               mentorId={mentorId}
@@ -153,6 +235,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
               modifiersClassNames={{ available: 'bg-primary/15 font-semibold text-primary' }}
             />
           </div>
+          )}
 
           {/* Block & Time Selection */}
           <div className="slot-selector-selection-container">

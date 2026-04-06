@@ -10,6 +10,21 @@
   color: #374151;
   display: flex;
   flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.mentor-card.clickable {
+  cursor: pointer;
+}
+
+.mentor-card.clickable:hover {
+  box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.15);
+  border-color: #6366f1;
+  transform: translateY(-2px);
+}
+
+.mentor-card.full-capacity {
+  opacity: 0.85;
 }
 
 .mentor-card-header {

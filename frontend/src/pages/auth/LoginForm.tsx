@@ -3,13 +3,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import logo_42 from '../../components/images/jpg/logo-42.png'
 import logo_google from '../../components/images/jpg/logo-google.png'
-import { loginFetch, saveAuthToken } from '../../services/api';
+import { loginFetch, saveAuthToken, apiFetch } from '../../services/api';
 
 
 function LoginForm() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Helper function to fetch and store user role
+  const fetchAndStoreUserRole = async (userId: string) => {
+    try {
+      const userRes = await apiFetch(`/users/${userId}`);
+      if (userRes.ok) {
+        const data = await userRes.json();
+        const profiles: any[] = Array.isArray(data.profiles) ? data.profiles : [];
+        const hasMentorProfile = profiles.some(p => p?.role?.toUpperCase() === 'MENTOR');
+        const userRole = hasMentorProfile ? 'MENTOR' : 'MENTEE';
+        localStorage.setItem('userRole', userRole);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar perfil do usuário:', error);
+      // Se não conseguir buscar o role, deixa sem armazenar
+    }
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -36,8 +53,10 @@ function LoginForm() {
       if (token)
         saveAuthToken(token);
       
-      if (data.user_id)
+      if (data.user_id) {
         localStorage.setItem('userId', data.user_id.toString());
+        await fetchAndStoreUserRole(data.user_id.toString());
+      }
       navigate('/home-logged');
       
     } catch (error) {
@@ -65,8 +84,10 @@ function LoginForm() {
         
         if (data.token) {
           saveAuthToken(data.token);
-          if (data.user_id)
+          if (data.user_id) {
             localStorage.setItem('userId', data.user_id.toString());
+            await fetchAndStoreUserRole(data.user_id.toString());
+          }
           navigate('/home-logged');
         }
       } catch (error) {
