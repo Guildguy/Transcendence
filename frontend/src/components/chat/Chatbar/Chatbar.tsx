@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Search, MessageCircle } from 'lucide-react';
-import { useChat } from '../ChatContext/ChatContext'
+import { useChat } from '../ChatContext/ChatContext';
+import { getAuthToken } from '../../../services/api';
 import './Chatbar.css';
 
 interface UserData {
@@ -17,21 +18,19 @@ export const Sidebar = () => {
   const myId = Number(localStorage.getItem('userId'));
 
   useEffect(() => {
-    // Busca a lista de usuários/amigos do seu backend
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:8080/users', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        const response = await fetch(`http://localhost:8080/chat/${myId}/contacts`, {
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
         const data = await response.json();
-        // Filtra para não mostrar você mesmo na lista
-        setUsers(data.filter((u: UserData) => u.id !== myId));
+        setUsers(data);
       } catch (error) {
-        console.error("Erro ao buscar usuários:", error);
+        console.error("Erro ao buscar contatos:", error);
       }
     };
 
-    fetchUsers();
+    if (myId) fetchUsers();
   }, [myId]);
 
   const filteredUsers = users.filter(u => 

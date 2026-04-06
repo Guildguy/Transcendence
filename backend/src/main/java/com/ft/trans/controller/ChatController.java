@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.ft.trans.configuration.OnlineUserRegistry;
 import com.ft.trans.dto.MessageDTO;
 import com.ft.trans.service.ChatService;
+import com.ft.trans.service.ChatService.ContactDTO;
 
 @Controller
 public class ChatController {
@@ -43,6 +44,12 @@ public class ChatController {
             @PathVariable Long readerId,
             @PathVariable Long otherId) {
         return ResponseEntity.ok(chatService.getConversation(readerId, otherId));
+    }
+
+    @GetMapping("/chat/{userId}/contacts")
+    @ResponseBody
+    public ResponseEntity<List<ContactDTO>> getContacts(@PathVariable Long userId) {
+        return ResponseEntity.ok(chatService.getContacts(userId));
     }
 
     @GetMapping("/users/{id}/online")

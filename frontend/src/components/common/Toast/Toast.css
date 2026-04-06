@@ -22,6 +22,7 @@
   border: 1px solid #e5e7eb;
   background-color: #ffffff;
   color: #000000;
+  position: relative;
 }
 
 .toast-action {
@@ -39,8 +40,9 @@
 }
 
 .toast-close {
+  color: var(--purple-medium);
   position: absolute;
-  top: 0.5rem;
+  top: 1.5rem;
   right: 0.5rem;
   background: none;
   border: none;

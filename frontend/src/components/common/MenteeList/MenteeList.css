@@ -1,0 +1,94 @@
+.capacity-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.progress-bar {
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  height: 8px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.progress {
+  background-color: #8a2be2;
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.mentee-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.mentee-card:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.mentee-card-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.mentee-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mentee-arrow {
+  font-size: 1.5rem;
+  color: #8a2be2;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.mentees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.mentee-list-empty,
+.mentee-list-error,
+.mentee-list-loading {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.mentee-list-error {
+  color: #c00;
+  background-color: #fee;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  .mentees-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mentee-card-content {
+    flex: 1;
+    min-width: 0;
+  }
+}
