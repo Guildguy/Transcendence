@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './MentorDashboard.css';
-import AppShell from '../../components/layout/AppShell/AppShell';
-import Footer from '../../components/layout/Footer/Footer';
-import Header from '../../components/layout/Header/Header';
 import Button from '../../components/common/Button/Button';
 import { AvailabilityGrid } from '../../components/common/TimeSlot/TimeSlot';
 import { SessionList } from '../../components/common/SessionList/SessionList';
 import { MenteeList, CapacityCard } from '../../components/common/MenteeList/MenteeList';
-import { apiFetch } from '../../services/api';
 import { getMentorAvailability, saveMentorAvailability } from '../../services/mentorAvailabilityService';
 import { toast } from '../../hooks/use-toast';
 import type { TimeBlock } from '../../components/common/BookingCalendar/types';
@@ -32,13 +28,17 @@ const MentorDashboard: React.FC = () => {
       try {
         setLoading(true);
 
-        // Get current user ID
-        const userResponse = await apiFetch('/user/current');
-        if (!userResponse.ok) {
-          throw new Error('Falha ao carregar usuário');
+        // Get current user ID from localStorage
+        const storedUserId = localStorage.getItem('userId');
+        if (!storedUserId) {
+          throw new Error('Usuário não encontrado. Por favor, faça login novamente.');
         }
-        const userData = await userResponse.json();
-        const currentMentorId = userData.id;
+        
+        const currentMentorId = Number(storedUserId);
+        if (isNaN(currentMentorId) || currentMentorId <= 0) {
+          throw new Error('ID de usuário inválido');
+        }
+        
         setMentorId(currentMentorId);
 
         // Use service to load availability
@@ -47,7 +47,7 @@ const MentorDashboard: React.FC = () => {
         setSlotDuration(loadedDuration);
       } catch (err) {
         console.error('Erro ao carregar disponibilidade:', err);
-        toast({ title: 'Erro ao carregar disponibilidade' });
+        toast({ title: err instanceof Error ? err.message : 'Erro ao carregar disponibilidade' });
       } finally {
         setLoading(false);
       }
@@ -160,11 +160,6 @@ const MentorDashboard: React.FC = () => {
   const availabilityDataForGrid = getAvailabilityDataForGrid();
 
   return (
-    <AppShell
-      sidebar={null}
-      header={<Header isAuthenticated={true} />}
-      footer={<Footer />}
-    >
       <div className="mentor-dashboard">
         <div className="dashboard-container">
           <main className="dashboard-content">
@@ -220,7 +215,6 @@ const MentorDashboard: React.FC = () => {
           </main>
         </div>
       </div>
-    </AppShell>
   );
 };
 

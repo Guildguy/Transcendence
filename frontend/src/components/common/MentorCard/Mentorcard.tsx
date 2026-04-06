@@ -1,5 +1,6 @@
 import React from 'react';
 import { Circle, Users } from 'lucide-react'; // Adicionei o ícone Users para vagas
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../../common/Avatar/Avatar';
 import './Mentorcard.css';
 
@@ -9,6 +10,7 @@ interface Skill {
 }
 
 interface MentorCardProps {
+  id: number;
   name: string;
   position: string;
   skills: Skill[];
@@ -19,6 +21,7 @@ interface MentorCardProps {
 }
 
 const MentorCard: React.FC<MentorCardProps> = ({ 
+  id,
   name, 
   position, 
   skills, 
@@ -27,11 +30,45 @@ const MentorCard: React.FC<MentorCardProps> = ({
   isAvailable, // Destruturando a nova prop
   avatarUrl 
 }) => {
+  const navigate = useNavigate();
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
 
+  console.log(`[MentorCard Render] ${name} (ID: ${id}) - Available: ${isAvailable}`);
+
+  const handleCardClick = () => {
+    console.log(`[MentorCard Click] ${name} (ID: ${id}) - Available: ${isAvailable}`);
+    if (isAvailable) {
+      console.log(`Navigating to /book-session/${id}`);
+      navigate(`/book-session/${id}`, {
+        state: {
+          mentorId: id,
+          mentorName: name,
+          mentorPosition: position,
+          mentorSkills: skills,
+          mentorXp: anosExperiencia,
+          mentorAvatar: avatarUrl,
+          mentorIsActive: isActive
+        }
+      });
+    } else {
+      console.log(`Card not clickable - mentor at full capacity`);
+    }
+  };
+
+  const handleWaitlistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Add mentor to waitlist:', id);
+    // TODO: Implement waitlist functionality
+  };
+
   return (
-    <div className={`mentor-card ${!isAvailable ? 'full-capacity' : ''}`}>
+    <div 
+      className={`mentor-card ${!isAvailable ? 'full-capacity' : 'clickable'}`}
+      onClick={handleCardClick}
+      role={isAvailable ? 'button' : 'article'}
+      tabIndex={isAvailable ? 0 : -1}
+    >
       <div className="mentor-card-header">
         <div className="mentor-avatar-container">
           <Avatar avatarUrl={avatarUrl} size={90} /> 
@@ -64,11 +101,13 @@ const MentorCard: React.FC<MentorCardProps> = ({
         <div className="mentor-stats-row">
           <p className="mentor-xp"><strong>Experiência:</strong> {anosExperiencia} anos</p>
           
-          {/* Nova seção de Disponibilidade de Vagas */}
-          <div className={`vacancy-badge ${isAvailable ? 'has-vagas' : 'no-vagas'}`}>
-            <Users size={14} />
-            <span>{isAvailable ? 'Com Vagas' : 'Lista de Espera'}</span>
-          </div>
+          {/* Only show "Lista de Espera" badge/button if NO vagas available */}
+          {!isAvailable && (
+            <div className="vacancy-badge no-vagas">
+              <Users size={14} />
+              <span>Lista de Espera</span>
+            </div>
+          )}
         </div>
         
         <div className="mentor-status">
@@ -82,10 +121,15 @@ const MentorCard: React.FC<MentorCardProps> = ({
         </div>
       </div>
 
-      {/* Sugestão: Botão de Ação */}
-      <button className={`btn-conectar ${!isAvailable ? 'btn-waitlist' : ''}`}>
-        {isAvailable ? 'Solicitar Mentoria' : 'Entrar na Lista'}
-      </button>
+      {/* Show action button only if NO vagas available */}
+      {!isAvailable && (
+        <button 
+          className="btn-conectar btn-waitlist"
+          onClick={handleWaitlistClick}
+        >
+          Entrar na Lista
+        </button>
+      )}
     </div>
   );
 };
