@@ -56,7 +56,7 @@ function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
 
           {/* AUTHENTICATED ROUTES - With sidebar & chat via GlobalLayout */}
-          //<Route element={<GlobalLayout />}>
+          <Route element={<GlobalLayout />}>
             <Route path="/home-logged" element={<HomeLogged />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/mentorias" element={<MentoriasPage />} />
