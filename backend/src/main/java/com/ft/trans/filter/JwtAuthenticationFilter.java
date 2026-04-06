@@ -21,6 +21,8 @@ import java.io.IOException;
  * - POST /login/google
  * - POST /users (registro)
  * - POST /auth/forgot-password
+ * - POST /change-password/validate-token
+ * - PUT /change-password/reset-password
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -46,6 +48,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             (requestPath.equals("/login/google") && "POST".equals(method)) ||
             (requestPath.equals("/users") && "POST".equals(method)) ||
             (requestPath.equals("/auth/forgot-password") && "POST".equals(method)) ||
+            (requestPath.equals("/change-password/validate-token") && "POST".equals(method)) ||
+            (requestPath.equals("/change-password/reset-password") && "PUT".equals(method)) ||
             (requestPath.startsWith("/ws"))) {   // WebSocket — auth happens inside STOMP
             filterChain.doFilter(request, response);
             return;
