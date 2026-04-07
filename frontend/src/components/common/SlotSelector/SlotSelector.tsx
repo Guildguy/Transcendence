@@ -19,6 +19,7 @@ import './SlotSelector.css';
 interface SlotSelectorProps {
   mentorId: string;
   menteeId: string;
+  connectionId: number | null;
 }
 
 const toMinutes = (t: string) => {
@@ -29,7 +30,7 @@ const toMinutes = (t: string) => {
 const fromMinutes = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
-export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
+export function SlotSelector({ mentorId, menteeId, connectionId }: SlotSelectorProps) {
   const { bookCustomSlot, getBackendAvailability, getAvailableBlocksForDate } = useMentoring();
 
   const [availabilityBlocks, setAvailabilityBlocks] = useState<TimeBlock[]>([]);
@@ -131,25 +132,32 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
     setIsRecurring(false);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedStartTime || !dateStr) return;
-    bookCustomSlot({
-      mentorId,
-      menteeId,
-      date: dateStr,
-      startTime: selectedStartTime,
-      endTime,
-      isRecurring,
-    });
-    toast({
-      title: 'Mentoria agendada!',
-      description: isRecurring
-        ? 'Agendamento recorrente criado (10 sessões semanais).'
-        : `Sessão agendada para ${format(selectedDate!, "dd/MM/yyyy")} das ${selectedStartTime} às ${endTime}.`,
-    });
-    setShowConfirm(false);
-    setSelectedDate(undefined);
-    resetSelection();
+
+    if (!connectionId) {
+      alert('Não foi possível identificar uma conexão ativa para este agendamento.');
+      return;
+    }
+
+    try {
+      await bookCustomSlot({
+        mentorId,
+        menteeId,
+        connectionId,
+        date: dateStr,
+        startTime: selectedStartTime,
+        endTime,
+        isRecurring,
+      });
+      
+      setSelectedDate(undefined);
+      setShowConfirm(false);
+      resetSelection();
+    } catch (err) {
+      console.error('[SlotSelector] Falha ao agendar:', err);
+      // O erro já é logado no contexto, aqui poderíamos mostrar um toast/alert
+    }
   };
 
   const formatDuration = (mins: number) => {
@@ -354,9 +362,9 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-display">Confirmar Agendamento</DialogTitle>
-              <DialogDescription>
+              <DialogDescription asChild>
                 {selectedDate && selectedStartTime && (
-                  <div className="slot-selector-dialog-description">
+                  <span className="slot-selector-dialog-description-content" style={{ display: 'block' }}>
                     <p><strong>Data:</strong> {format(selectedDate, "dd/MM/yyyy (EEEE)", { locale: ptBR })}</p>
                     <p><strong>Horário:</strong> {selectedStartTime} – {endTime} ({formatDuration(selectedDuration)})</p>
                     {isRecurring && (
@@ -365,7 +373,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
                       </Badge>
                     )}
                     <p className="slot-selector-dialog-info">Um link do Google Meet será gerado automaticamente.</p>
-                  </div>
+                  </span>
                 )}
               </DialogDescription>
             </DialogHeader>

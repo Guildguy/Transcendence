@@ -5,6 +5,7 @@ import { AvailabilityGrid } from '../../components/common/TimeSlot/TimeSlot';
 import { SessionList } from '../../components/common/SessionList/SessionList';
 import { MenteeList, CapacityCard } from '../../components/common/MenteeList/MenteeList';
 import { getMentorAvailability, saveMentorAvailability } from '../../services/mentorAvailabilityService';
+import { apiFetch } from '../../services/api';
 import { toast } from '../../hooks/use-toast';
 import type { TimeBlock } from '../../components/common/BookingCalendar/types';
 
@@ -22,9 +23,9 @@ const MentorDashboard: React.FC = () => {
     return `${startTime} - ${endTime}`;
   };
 
-  // Load availability from service
+  // Load availability and mentor profile from service
   useEffect(() => {
-    const loadAvailability = async () => {
+    const loadMentorData = async () => {
       try {
         setLoading(true);
 
@@ -34,26 +35,39 @@ const MentorDashboard: React.FC = () => {
           throw new Error('Usuário não encontrado. Por favor, faça login novamente.');
         }
         
-        const currentMentorId = Number(storedUserId);
-        if (isNaN(currentMentorId) || currentMentorId <= 0) {
-          throw new Error('ID de usuário inválido');
-        }
+        const myUserId = Number(storedUserId);
         
-        setMentorId(currentMentorId);
+        // 1. Fetch user to find the MENTOR profile ID
+        const userRes = await apiFetch(`/users/${myUserId}`);
+        if (!userRes.ok) throw new Error('Não foi possível carregar seus dados de perfil.');
+        
+        const userData = await userRes.json();
+        const profiles: any[] = userData.profiles || [];
+        const mentorProfile = profiles.find(p => p.role?.toUpperCase() === 'MENTOR');
+        
+        if (!mentorProfile) {
+          throw new Error('Perfil de mentor não encontrado para este usuário.');
+        }
 
-        // Use service to load availability
-        const { blocks: loadedBlocks, slotDuration: loadedDuration } = await getMentorAvailability(currentMentorId);
+        const currentMentorProfileId = mentorProfile.id;
+        setMentorId(currentMentorProfileId);
+
+        // 2. Use service to load availability using the PROFILE ID
+        const { blocks: loadedBlocks, slotDuration: loadedDuration } = await getMentorAvailability(currentMentorProfileId);
         setBlocks(loadedBlocks);
         setSlotDuration(loadedDuration);
       } catch (err) {
-        console.error('Erro ao carregar disponibilidade:', err);
-        toast({ title: err instanceof Error ? err.message : 'Erro ao carregar disponibilidade' });
+        console.error('Erro ao carregar dados do mentor:', err);
+        toast({ 
+          title: 'Erro de Autenticação',
+          description: err instanceof Error ? err.message : 'Não foi possível carregar seus dados.' 
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    loadAvailability();
+    loadMentorData();
   }, []);
 
   // Delete a block by ID

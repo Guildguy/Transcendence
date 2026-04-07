@@ -65,8 +65,14 @@ public class MentorshipSessionService
 		}
 
 		Long mentorId = connection.mentor.id;
-		if (!_isWithinMentorAvailability(mentorId, dto.scheduledDate, dto.durationMinutes))
+		// Truncate seconds and nanoseconds to prevent precision errors
+		dto.scheduledDate = dto.scheduledDate.withSecond(0).withNano(0);
+		LocalDateTime truncatedDate = dto.scheduledDate;
+		
+		if (!_isWithinMentorAvailability(mentorId, truncatedDate, dto.durationMinutes))
 		{
+			System.out.println(String.format("[DEBUG] Availability check FAILED for Mentor Profile ID %d at %s. Connection ID: %d", 
+				mentorId, truncatedDate, dto.connectionId));
 			result.addError(
 				"scheduledDate",
 				"Sessão fora da disponibilidade do mentor. Ajuste para um bloco disponível."
@@ -74,6 +80,7 @@ public class MentorshipSessionService
 			return new Result(null, result);
 		}
 
+		baseSession.scheduledDate = truncatedDate;
 		baseSession.meetUrl = _generateMeetUrl();
 		return _persistSession(baseSession);
 	}
@@ -107,8 +114,13 @@ public class MentorshipSessionService
 				return new RecurrenceResult(null, result);
 			}
 
-			if (!_isWithinMentorAvailability(mentorId, sessionDate, dto.durationMinutes))
+			// Truncate seconds and nanoseconds for each recurrent instance
+			LocalDateTime truncatedDate = sessionDate.withSecond(0).withNano(0);
+
+			if (!_isWithinMentorAvailability(mentorId, truncatedDate, dto.durationMinutes))
 			{
+				System.out.println(String.format("[DEBUG] Recurring Availability check FAILED for Mentor Profile ID %d at week %d (%s)", 
+					mentorId, (i + 1), truncatedDate));
 				result.addError(
 					"scheduledDate",
 					"Sessão da semana " + (i + 1) + " fora da disponibilidade do mentor."
@@ -117,7 +129,7 @@ public class MentorshipSessionService
 			}
 
 			MentorshipSession session  = dto.toSession();
-			session.scheduledDate      = sessionDate;
+			session.scheduledDate      = truncatedDate;
 			session.meetUrl            = _generateMeetUrl();
 			session.recurrenceGroupId  = groupId;
 			session.recurrenceIndex    = i + 1;
@@ -173,6 +185,16 @@ public class MentorshipSessionService
 	public List<MentorshipSession> listUpcomingByConnection(Long connectionId)
 	{
 		return sessionRepository.findByConnectionIdAndScheduledDateAfter(connectionId, LocalDateTime.now());
+	}
+
+	public List<MentorshipSession> listByMentorProfile(Long mentorId)
+	{
+		return sessionRepository.findByMentorProfileId(mentorId);
+	}
+
+	public List<MentorshipSession> listByMenteeProfile(Long menteeId)
+	{
+		return sessionRepository.findByMenteeProfileId(menteeId);
 	}
 
 	public Result update(UpdateSessionDTO dto)
@@ -305,9 +327,15 @@ public class MentorshipSessionService
 			boolean startsInside = !sessionStart.isBefore(slot.startTime);
 			boolean endsInside = !sessionEnd.isAfter(slot.endTime);
 
+			System.out.println(String.format("[DEBUG] Checking Slot: %s %s-%s vs Session: %s-%s. Result: %s", 
+				slot.dayOfWeek, slot.startTime, slot.endTime, sessionStart, sessionEnd, (startsInside && endsInside)));
+
 			if (startsInside && endsInside)
 				return true;
 		}
+
+		System.out.println(String.format("[DEBUG] No matching availability found for Mentor %d on %s at %s (Duration: %d min)", 
+			mentorId, targetDay, sessionStart, durationMinutes));
 
 		return false;
 	}

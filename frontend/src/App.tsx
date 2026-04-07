@@ -65,6 +65,7 @@ function App() {
             <Route path="/book-session" element={<BookSessionWithMentor />} />
             <Route path="/book-session/:mentorId" element={<BookSessionWithMentor />} />
             <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+            <Route path="/manage-mentee/:menteeId" element={<BookSessionWithMentor />} />
           </Route>
 
           {/* FALLBACK */}

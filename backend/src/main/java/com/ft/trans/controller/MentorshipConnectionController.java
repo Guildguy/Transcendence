@@ -108,6 +108,14 @@ public class MentorshipConnectionController
 	public ResponseEntity<?> listMenteesByMentor(@PathVariable Long mentorId)
 	{
 		List<ConnectionResponseDTO> connections = connectionService.listMenteesByMentor(mentorId);
+		
+		// DEBUG: Print connections to console to verify IDs
+		System.out.println("[DEBUG] MentorshipConnectionController: Mentees for Mentor " + mentorId + ":");
+		for (ConnectionResponseDTO conn : connections) {
+			System.out.println(String.format("  - ConnID: %d, MenteeName: %s, MenteeProfileID: %d", 
+				conn.id, conn.menteeName, conn.menteeProfileId));
+		}
+		
 		return ResponseEntity.status(HttpStatus.OK).body(connections);
 	}
 

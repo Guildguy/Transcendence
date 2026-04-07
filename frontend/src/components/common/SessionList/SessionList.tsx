@@ -22,6 +22,7 @@ interface Session {
 type SessionListProps = {
   mentorId: string;
   menteeId?: string;
+  connectionId?: number | null;
   showHeader?: boolean;
   upcomingOnly?: boolean;
   daysLimit?: number;
@@ -39,7 +40,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 const SessionItem: React.FC<{ session: Session }> = ({ session }) => {
   const { status, isRecurrent, recurrenceIndex } = session;
   const isFuture = !isPast(parseISO(session.scheduledDate));
-  const config = statusConfig[status];
+  const config = statusConfig[status] || { label: status, className: 'badge-scheduled' };
 
   const startTime = format(parseISO(session.scheduledDate), 'HH:mm');
   const endTime = format(
@@ -87,6 +88,7 @@ const SessionItem: React.FC<{ session: Session }> = ({ session }) => {
 export function SessionList({ 
   mentorId, 
   menteeId, 
+  connectionId,
   showHeader = true,
   upcomingOnly = false,
   daysLimit = 14,
@@ -96,66 +98,42 @@ export function SessionList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch sessions from backend
   useEffect(() => {
     const fetchSessions = async () => {
       try {
         setLoading(true);
-        console.log(`[SessionList] Fetching sessions - mentorId: ${mentorId}, menteeId: ${menteeId}`);
         
-        // Validate mentorId - must be numeric
-        if (!mentorId || typeof mentorId !== 'string' || !mentorId.match(/^\d+$/)) {
-          console.warn('[SessionList] Invalid or missing mentorId:', mentorId);
-          setError('ID do mentor inválido');
+        let url = '';
+        // Best way: check by connection
+        if (connectionId && connectionId !== 0) {
+          url = upcomingOnly 
+            ? `/mentorship-sessions/connection/${connectionId}/upcoming`
+            : `/mentorship-sessions/connection/${connectionId}`;
+        } 
+        // Fallbacks
+        else if (mentorId && mentorId.toString().match(/^\d+$/)) {
+          url = `/mentorship-sessions/mentor/${mentorId}`;
+        } else if (menteeId && menteeId.toString().match(/^\d+$/)) {
+          url = `/mentorship-sessions/mentee/${menteeId}`;
+        }
+        
+        if (!url) {
           setSessions([]);
           setLoading(false);
           return;
         }
 
-        const mentorIdNum = parseInt(mentorId, 10);
+        console.log(`[SessionList] Fetching sessions from: ${url}`);
+        const response = await apiFetch(url);
         
-        // If both mentorId and menteeId are provided, try to fetch sessions for the specific pair
-        if (menteeId && typeof menteeId === 'string' && menteeId.match(/^\d+$/)) {
-          const menteeIdNum = parseInt(menteeId, 10);
-          
-          try {
-            console.log(`[SessionList] Trying to fetch sessions for mentor ${mentorIdNum} and mentee ${menteeIdNum}`);
-            const response = await apiFetch(`/mentorship-sessions/mentor/${mentorIdNum}/mentee/${menteeIdNum}`);
-            if (response.ok) {
-              const data = await response.json();
-              console.log('[SessionList] Sessions for mentor-mentee pair:', data);
-              setSessions(Array.isArray(data) ? data : []);
-              setError(null);
-              setLoading(false);
-              return;
-            }
-          } catch (err) {
-            console.warn('[SessionList] Failed to fetch mentor-mentee sessions:', err);
-          }
+        if (response.ok) {
+          const data = await response.json();
+          setSessions(Array.isArray(data) ? data : []);
+          setError(null);
+        } else {
+          console.warn(`[SessionList] Failed to fetch sessions: HTTP ${response.status}`);
+          setSessions([]);
         }
-
-        // Fallback: Fetch all sessions for the mentor
-        try {
-          console.log(`[SessionList] Fetching all sessions for mentor ${mentorIdNum}`);
-          const response = await apiFetch(`/mentorship-sessions/mentor/${mentorIdNum}`);
-          if (response.ok) {
-            const data = await response.json();
-            console.log('[SessionList] Sessions for mentor:', data);
-            setSessions(Array.isArray(data) ? data : []);
-            setError(null);
-            setLoading(false);
-            return;
-          } else {
-            console.warn(`[SessionList] Failed to fetch sessions: HTTP ${response.status}`);
-          }
-        } catch (err) {
-          console.warn('[SessionList] Error fetching sessions:', err);
-        }
-
-        // If we reach here, set empty state
-        console.warn('[SessionList] No sessions found');
-        setSessions([]);
-        setError(null);
       } catch (err) {
         console.error('[SessionList] Erro ao carregar sessões:', err);
         setError(err instanceof Error ? err.message : 'Erro ao carregar sessões');
@@ -165,12 +143,11 @@ export function SessionList({
       }
     };
 
-    if (mentorId) {
+    if (mentorId || menteeId || connectionId) {
       fetchSessions();
     }
-  }, [mentorId, menteeId]);
+  }, [mentorId, menteeId, connectionId, upcomingOnly]);
 
-  // Filter sessions based on options
   const filteredSessions = useMemo(() => {
     let filtered = sessions;
 
@@ -178,7 +155,6 @@ export function SessionList({
       const now = new Date();
       const futureDate = addDays(now, daysLimit);
 
-      // Only upcoming sessions within the time limit
       filtered = filtered.filter(s => {
         const sessionDate = parseISO(s.scheduledDate);
         return isWithinInterval(sessionDate, { start: now, end: futureDate }) && s.status === 'SCHEDULED';
@@ -190,12 +166,7 @@ export function SessionList({
 
   if (loading) {
     return (
-      <div style={{
-        textAlign: 'center',
-        padding: '2rem 1rem',
-        color: '#666',
-        fontSize: '0.95rem'
-      }}>
+      <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#666', fontSize: '0.95rem' }}>
         Carregando sessões...
       </div>
     );
@@ -203,12 +174,7 @@ export function SessionList({
 
   if (error && sessions.length === 0) {
     return (
-      <div style={{
-        textAlign: 'center',
-        padding: '2rem 1rem',
-        color: '#c00',
-        fontSize: '0.95rem'
-      }}>
+      <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#c00', fontSize: '0.95rem' }}>
         {error}
       </div>
     );
@@ -216,12 +182,7 @@ export function SessionList({
 
   if (filteredSessions.length === 0) {
     return (
-      <div style={{
-        textAlign: 'center',
-        padding: '2rem 1rem',
-        color: '#666',
-        fontSize: '0.95rem'
-      }}>
+      <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#666', fontSize: '0.95rem' }}>
         {emptyStateMessage}
       </div>
     );
