@@ -19,6 +19,7 @@ import './SlotSelector.css';
 interface SlotSelectorProps {
   mentorId: string;
   menteeId: string;
+  context?: 'mentor' | 'mentee';
 }
 
 const toMinutes = (t: string) => {
@@ -29,7 +30,7 @@ const toMinutes = (t: string) => {
 const fromMinutes = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
-export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
+export function SlotSelector({ mentorId, menteeId, context = 'mentor' }: SlotSelectorProps) {
   const { bookCustomSlot, getBackendAvailability, getAvailableBlocksForDate } = useMentoring();
 
   const [availabilityBlocks, setAvailabilityBlocks] = useState<TimeBlock[]>([]);
@@ -218,8 +219,14 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
             }}>
               <AlertCircle size={20} style={{ flexShrink: 0 }} />
               <div>
-                <strong>Nenhuma disponibilidade</strong>
-                <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>O mentor ainda não configurou sua disponibilidade.</p>
+                <strong>{context === 'mentee' 
+                    ? 'Nenhuma sessão agendada.' 
+                    : 'Nenhuma disponibilidade.'}</strong>
+                <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  {context === 'mentee' 
+                    ? 'O mentorado ainda não tem nenhuma sessão de mentoria agendada' 
+                    : 'O mentor ainda não configurou sua disponibilidade.'}
+                </p>
               </div>
             </div>
           )}

@@ -1,136 +1,95 @@
-import './BookSessionWithMentor.css'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import './ManageSessionWithMentee.css'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { MentoringProvider } from '../../components/common/BookingCalendar/MentoringContext'
 import { SlotSelector } from '../../components/common/SlotSelector/SlotSelector'
 import { SessionList } from '../../components/common/SessionList/SessionList'
-import mentorService, { type MentorDetailData } from '../../services/mentorService'
 import MenteeInfo from '../../components/common/MenteeInfo/MenteeInfo'
+import { apiFetch } from '../../services/api'
 
-interface Skill {
-  id: string;
-  name: string;
-}
-
-interface MentorLocationState {
-  mentorId?: number;
-  mentorName?: string;
-  mentorPosition?: string;
-  mentorSkills?: Skill[];
-  mentorXp?: number;
-  mentorAvatar?: string;
-  mentorIsActive?: boolean;
-  mentorBio?: string;
-  mentorRating?: number;
-  menteeCount?: number;
-}
-
-function BookSessionContent() {
-  const location = useLocation();
+function ManageSessionContent() {
   const navigate = useNavigate();
-  const { mentorId: urlMentorId } = useParams<{ mentorId?: string }>();
-  const [selectedMentor, setSelectedMentor] = useState<MentorDetailData | null>(null);
+  const { menteeId: urlMenteeId } = useParams<{ menteeId?: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Get real user ID from localStorage (authenticated user), not from mock context
+  // Get current user ID from localStorage (authenticated mentor)
   const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
 
-  const mentorState = location.state as MentorLocationState | null;
-
   useEffect(() => {
-    const loadMentor = async () => {
+    const loadMenteeData = async () => {
       setLoading(true);
       setError(null);
       try {
-        console.log('[BookSessionWithMentor] Starting mentor load...');
-        console.log('[BookSessionWithMentor] URL mentorId:', urlMentorId);
-        console.log('[BookSessionWithMentor] Location state:', mentorState);
+        console.log('[ManageSessionContent] Starting mentee load...');
+        console.log('[ManageSessionContent] URL menteeId:', urlMenteeId);
 
-        // Priority 1: Navigation state (best - has complete data from MentorCard)
-        if (mentorState?.mentorId) {
-          console.log('[BookSessionWithMentor] ✓ Using navigation state');
-          const mentor: MentorDetailData = {
-            id: mentorState.mentorId,
-            profileId: mentorState.mentorId,
-            userId: mentorState.mentorId,  // Use actual mentor ID, not 0
-            name: mentorState.mentorName || 'Mentor',
-            position: mentorState.mentorPosition || 'Position',
-            skills: mentorState.mentorSkills || [],
-            anosExperiencia: mentorState.mentorXp || 0,
-            isActive: mentorState.mentorIsActive !== false,
-            isAvailable: true,
-            avatarUrl: mentorState.mentorAvatar,
-            bio: mentorState.mentorBio || undefined,
-            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5.0,
-            menteeCount: mentorState.menteeCount || 0
-          };
-          setSelectedMentor(mentor);
-          setLoading(false);
-          return;
-        }
-
-        // Priority 2: Backend fetch with URL parameter
-        if (urlMentorId) {
-          const profileId = parseInt(urlMentorId, 10);
-          if (!isNaN(profileId)) {
+        // Fetch mentee data with URL parameter
+        if (urlMenteeId) {
+          const menteeId = parseInt(urlMenteeId, 10);
+          if (!isNaN(menteeId)) {
             try {
-              console.log(`[BookSessionWithMentor] Fetching from backend with profileId: ${profileId}`);
-              const mentor = await mentorService.getMentorDetails(profileId);
-              if (mentor) {
-                console.log('[BookSessionWithMentor] ✓ Backend fetch successful');
-                setSelectedMentor(mentor);
+              console.log(`[ManageSessionContent] Fetching mentee data with ID: ${menteeId}`);
+              const response = await apiFetch(`/users/${menteeId}`);
+              if (response.ok) {
+                await response.json();
+                console.log('[ManageSessionContent] ✓ Mentee data loaded successfully');
+                // Data will be fetched by MenteeInfo component
                 setLoading(false);
                 return;
+              } else if (response.status === 404) {
+                throw new Error('Mentorado não encontrado');
+              } else {
+                throw new Error(`Erro ao carregar dados: ${response.status}`);
               }
             } catch (err) {
-              console.warn('[BookSessionWithMentor] Backend fetch failed:', err);
+              console.error('[ManageSessionContent] Error fetching mentee:', err);
+              setError(err instanceof Error ? err.message : 'Erro ao carregar dados do mentorado');
             }
           }
+        } else {
+          setError('ID do mentorado não fornecido.');
         }
-
-        // No mentor found
-        console.error('[BookSessionWithMentor] No mentor data available');
-        setError('Mentor não encontrado. Por favor, volta à página de mentorias e tente novamente.');
       } catch (error) {
-        console.error('[BookSessionWithMentor] Unexpected error:', error);
+        console.error('[ManageSessionContent] Unexpected error:', error);
         setError(`Erro inesperado: ${error instanceof Error ? error.message : 'Tente novamente'}`);
       } finally {
         setLoading(false);
       }
     };
 
-    if (urlMentorId || mentorState?.mentorId) {
-      loadMentor();
+    if (urlMenteeId) {
+      loadMenteeData();
     } else {
-      setError('Nenhum mentor selecionado. Por favor, volta à página de mentorias.');
+      setError('Nenhum mentorado selecionado. Por favor, volta à página anterior.');
       setLoading(false);
     }
-  }, [urlMentorId, mentorState]);
+  }, [urlMenteeId]);
+
 
   if (loading) {
     return (
-      <div className="book-session-loading">
+      <div className="manage-session-loading">
         <div className="loading-content">
           <div className="loading-spinner"></div>
-          <p className="loading-text">Carregando dados do mentor...</p>
+          <p className="loading-text">Carregando dados do mentorado...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !selectedMentor) {
+  if (error) {
     return (
-      <div className="book-session-error">
+      <div className="manage-session-error">
         <div className="error-container">
           <div className="error-box">
-            <h2 className="error-title">Mentor não encontrado</h2>
-            <p className="error-message">{error || 'Não conseguimos carregar os dados do mentor.'}</p>
+            <h2 className="error-title">Erro ao carregar mentorado</h2>
+            <p className="error-message">{error}</p>
             <button
-              onClick={() => navigate('/mentorias')}
+              onClick={() => navigate(-1)}
               className="error-button"
             >
-              ← Voltar para mentorias
+              ← Voltar
             </button>
           </div>
         </div>
@@ -138,49 +97,43 @@ function BookSessionContent() {
     );
   }
 
-  const numericMenteeId = currentUserId ? parseInt(currentUserId, 10) : null;
-  const mentorIdStr = selectedMentor.userId?.toString() || selectedMentor.profileId?.toString() || '0';
+  const menteeIdNum = urlMenteeId ? parseInt(urlMenteeId, 10) : undefined;
+  const currentUserIdStr = currentUserId?.toString() || '0';
 
   return (
-    <div className="book-session-with-mentor">
-      <MenteeInfo
-        menteeId={selectedMentor.id || selectedMentor.profileId || selectedMentor.userId}
-        name={selectedMentor.name}
-        position={selectedMentor.position}
-        skills={selectedMentor.skills}
-        experience={selectedMentor.anosExperiencia}
-        isActive={selectedMentor.isActive}
-        avatarUrl={selectedMentor.avatarUrl}
-        bio={selectedMentor.bio}
-      />
+    <div className="manage-session-with-mentee">
+      <MenteeInfo menteeId={menteeIdNum} />
 
-      {selectedMentor.isAvailable && currentUserId && (
-        <div className="calendar-container">
-          <SlotSelector 
-            mentorId={mentorIdStr}
-            menteeId={numericMenteeId?.toString() || '0'}
-          />
-        </div>
+      {currentUserId && (
+        <>
+          <div className="calendar-container">
+            <SlotSelector 
+              mentorId={currentUserIdStr}
+              menteeId={urlMenteeId || '0'}
+              context="mentee"
+            />
+          </div>
+
+          <div className="calendar-container">
+            <SessionList 
+              mentorId={currentUserIdStr}
+              menteeId={urlMenteeId}
+              showHeader={true}
+              upcomingOnly={true}
+            />
+          </div>
+        </>
       )}
-
-      <div className="calendar-container">
-        <SessionList 
-          mentorId={mentorIdStr}
-          menteeId={numericMenteeId?.toString()}
-          showHeader={true}
-          upcomingOnly={true}
-        />
-      </div>
     </div>
   );
 }
 
-export function BookSessionWithMentor() {
+export function ManageSessionWithMentee() {
   return (
     <MentoringProvider>
-      <BookSessionContent />
+      <ManageSessionContent />
     </MentoringProvider>
   )
 }
 
-export default BookSessionWithMentor
+export default ManageSessionWithMentee
