@@ -4,9 +4,11 @@ import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
-import { apiFetch, loginFetch } from "../../services/api";
+import { apiFetch } from "../../services/api";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
+
+const PYTHON_API_URL = "http://localhost:8000";
 
 interface UserData {
   id?: number;
@@ -65,7 +67,11 @@ export const ProfilePage = () => {
         if (response.ok) {
           const data = await response.json();
           const user = data.user;
-          const profile = data.profiles && data.profiles.length > 0 ? data.profiles[0] : {};
+          const profiles = Array.isArray(data.profiles) ? data.profiles : [];
+          const profile =
+            profiles.find((p: any) => String(p.role || "").toUpperCase() === "MENTOR") ||
+            profiles[0] ||
+            {};
 
           const unifiedData: UserData = {
             id: user.id,
@@ -82,7 +88,7 @@ export const ProfilePage = () => {
             anosExperiencia: profile.anosExperiencia?.toString() || "0",
             level: profile.level || 0,
             xp: profile.xp || 0,
-            role: user.role || "mentor"
+            role: (profile.role || "MENTOR").toString()
           };
 
           const loadedSkills: Skill[] = profile.stacks || [];
@@ -135,6 +141,7 @@ export const ProfilePage = () => {
 
 const handleSaveAll = async () => {
   if (!userData || !userData.id) return;
+  const profileIdForStacks = userData.profile_id ?? userData.id;
 
   const userPayload = {
     id: userData.id,
@@ -157,8 +164,8 @@ const handleSaveAll = async () => {
   };
 
   const pythonStacksPayload = {
-    profile_id: userData.profile_id?.toString() || userData.id.toString(),
-    stacks: userSkills.map((skill: { name: any; }) => skill.name) 
+    profile_id: profileIdForStacks.toString(),
+    stacks: userSkills.map((skill: Skill) => skill.name)
   };
 
   try {
@@ -172,7 +179,7 @@ const handleSaveAll = async () => {
       body: JSON.stringify(profilePayload)
     });
 
-    const resStacks = await fetch(`http://localhost:8000/profile`, {
+    const resStacks = await fetch(`${PYTHON_API_URL}/profile`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pythonStacksPayload)
@@ -306,16 +313,18 @@ const handleSaveAll = async () => {
 
 useEffect(() => {
   const loadSkills = async () => {
-    if (!userData.profile_id) return;
+    const profileIdForSkills = userData.profile_id ?? userData.id;
+    if (!profileIdForSkills) return;
 
-    const idParaBusca = userData.profile_id.toString();
+    const idParaBusca = profileIdForSkills.toString();
     console.log("Buscando skills para o ID consolidado:", idParaBusca);
 
     try {
-      const response = await fetch(`http://localhost:8000/profile/${idParaBusca}`);
+      const response = await fetch(`${PYTHON_API_URL}/profile/${idParaBusca}`);
       if (response.ok) {
         const data = await response.json();
-        const formatted = data.stacks.map((s: string, i: number) => ({
+        const stacks = Array.isArray(data.stacks) ? data.stacks : [];
+        const formatted = stacks.map((s: string, i: number) => ({
           id: `sk_py_${i}`,
           name: s
         }));
@@ -328,7 +337,7 @@ useEffect(() => {
   };
 
   loadSkills();
-}, [userData.profile_id]);
+}, [userData.id, userData.profile_id]);
 
   return (
     <div className="perfil-container">
@@ -470,7 +479,7 @@ useEffect(() => {
             <Habilities 
               selectedSkills={userSkills} 
               onSkillsChange={handleSkillsChange} 
-              isEditable={true} 
+              isEditable={isEditing} 
               title="Habilidades apresentadas para mentorar"
             />
             
