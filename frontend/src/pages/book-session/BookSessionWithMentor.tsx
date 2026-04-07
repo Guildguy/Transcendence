@@ -9,6 +9,7 @@ import mentorService, { type MentorDetailData } from '../../services/mentorServi
 import { apiFetch } from '../../services/api'
 import { toast } from '../../hooks/use-toast'
 import MenteeInfo from '../../components/common/MenteeInfo/MenteeInfo'
+import { useChat } from '../../components/chat/ChatContext/ChatContext'
 
 interface Skill {
   id: string;
@@ -41,6 +42,8 @@ function BookSessionContent() {
   const [connectionId, setConnectionId] = useState<number | null>(null);
   const [menteeProfileId, setMenteeProfileId] = useState<number | null>(null);
   const [myMentorProfileId, setMyMentorProfileId] = useState<number | null>(null);
+  const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
+  const { setActiveChatId } = useChat();
   
   const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
   const myUserId = currentUserId ? parseInt(currentUserId, 10) : null;
@@ -287,6 +290,7 @@ function BookSessionContent() {
           connectionStatus={connectionStatus}
           onConnect={handleConnect}
           onLeave={handleLeave}
+          onChat={targetProfile.userId ? () => setActiveChatId(targetProfile.userId!) : undefined}
         />
       )}
 
@@ -296,12 +300,14 @@ function BookSessionContent() {
             mentorId={schedulerMentorId || '0'}
             menteeId={schedulerMenteeId || '0'}
             connectionId={connectionId}
+            onBooked={() => setSessionRefreshKey(k => k + 1)}
           />
         </div>
       )}
 
       <div className="calendar-container">
         <SessionList 
+          key={sessionRefreshKey}
           mentorId={schedulerMentorId || '0'}
           menteeId={schedulerMenteeId}
           connectionId={connectionId}

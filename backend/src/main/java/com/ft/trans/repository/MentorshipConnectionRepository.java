@@ -12,7 +12,7 @@ import com.ft.trans.entity.MentorshipConnection.ConnectionStatus;
 
 public interface MentorshipConnectionRepository extends JpaRepository<MentorshipConnection, Long>
 {
-	@Query("SELECT c FROM MentorshipConnection c JOIN FETCH c.mentor m JOIN FETCH m.user JOIN FETCH c.mentee WHERE c.id = :id")
+	@Query("SELECT c FROM MentorshipConnection c JOIN FETCH c.mentor m JOIN FETCH m.user JOIN FETCH c.mentee mt JOIN FETCH mt.user WHERE c.id = :id")
 	Optional<MentorshipConnection> findByIdFull(@Param("id") Long id);
 
 	@Query("SELECT c FROM MentorshipConnection c JOIN FETCH c.mentor JOIN FETCH c.mentee WHERE c.mentee.id = :menteeId")

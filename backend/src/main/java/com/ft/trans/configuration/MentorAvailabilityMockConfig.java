@@ -9,6 +9,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ft.trans.entity.DayOfWeekEnum;
@@ -22,7 +24,7 @@ public class MentorAvailabilityMockConfig {
 
     @Bean
     @Order(6)
-    CommandLineRunner loadMentorAvailabilityMocks(ProfileRepository profileRepository, MentorAvailabilityRepository availabilityRepository)
+    CommandLineRunner loadMentorAvailabilityMocks(ProfileRepository profileRepository, MentorAvailabilityRepository availabilityRepository, PlatformTransactionManager transactionManager)
     {
         return args -> {
             // Find profile with role MENTOR (mapped from previous seeds)
@@ -40,22 +42,22 @@ public class MentorAvailabilityMockConfig {
             }
  
             Date now = new Date(System.currentTimeMillis());
+            TransactionTemplate tx = new TransactionTemplate(transactionManager);
  
             for (int index = 0; index < mentors.size(); index++)
             {
                 Profile mentor = mentors.get(index);
                 Long profileId = mentor.id;
+                final int i = index;
  
-                // Always delete and re-seed to ensure the latest mock slots (like the TUESDAY hack) are present
-                availabilityRepository.deleteByMentor_Id(profileId);
-                
-                // Base mock data
-                seedAvailabilityByIndex(availabilityRepository, mentor, profileId, index, now);
-                
-                // GLOBAL HACK: Adding TUESDAY for ALL mentors for testing purposes today
-                // This ensures that any mentor selected (like ID 5) has availability on Tuesday
-                availabilityRepository.save(create(mentor, profileId, DayOfWeekEnum.TUESDAY, "08:00", "22:00", 60, now));
-                
+                // Wrap in transaction: Spring Data 4 requires explicit transaction for deleteBy* methods
+                tx.execute(status -> {
+                    availabilityRepository.deleteByMentor_Id(profileId);
+                    seedAvailabilityByIndex(availabilityRepository, mentor, profileId, i, now);
+                    availabilityRepository.save(create(mentor, profileId, DayOfWeekEnum.TUESDAY, "08:00", "22:00", 60, now));
+                    return null;
+                });
+ 
                 System.out.println("MentorAvailability mock (re)loaded for profileId=" + profileId + " (included Tuesday hack)");
             }
         };

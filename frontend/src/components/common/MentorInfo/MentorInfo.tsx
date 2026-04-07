@@ -20,6 +20,7 @@ interface MentorCardProps {
   connectionStatus?: 'none' | 'pending' | 'active' | 'loading';
   onConnect?: () => void;
   onLeave?: () => void;
+  onChat?: () => void;
 }
 
 const MentorCard: React.FC<MentorCardProps> = ({ 
@@ -33,6 +34,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
   connectionStatus = 'none',
   onConnect,
   onLeave,
+  onChat,
 }) => {
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
@@ -90,7 +92,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
       <div className="mentor-info-divider" />
 
       <div className="mentor-info-footer">
-        <IconButton variant="primary" icon={<MessageCircle size={18} />}>Conversar</IconButton>
+        <IconButton variant="primary" icon={<MessageCircle size={18} />} onClick={onChat}>Conversar</IconButton>
         <IconButton variant="secondary" icon={<Star size={18} />}>Avaliar</IconButton>
 
         {connectionStatus === 'loading' && (
