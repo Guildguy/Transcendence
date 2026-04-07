@@ -143,36 +143,61 @@ export const ProfilePage = () => {
     loadFullProfile();
   }, []);
 
-const handleSaveAll = async () => {
+  const handleSaveAll = async () => {
   console.log("INICIANDO SALVAMENTO...");
-  
+
   if (!userData.id) {
-    alert("Erro: userData.id está vazio!");
+    alert("Erro: ID do usuário não encontrado no estado.");
     return;
   }
 
+  // Montando o objeto com todos os campos para o Backend
   const payload = {
     user_id: userData.id,
     profile_id: userData.profile_id,
     position: userData.cargo,
     bio: userData.presentationText,
-    role: "MENTOR" // Tente forçar MENTOR aqui para ver se o 401 some
+    role: userData.role || "MENTOR",
+    github: userData.github,
+    linkedin: userData.linkedin,
+    instagram: userData.instagram,
+    // Convertendo para número, caso o backend espere um Integer
+    anosExperiencia: parseInt(userData.anosExperiencia) || 0 
   };
 
-  console.log("Enviando payload:", payload);
+  console.log("Enviando payload completo:", payload);
 
   try {
     const res = await apiFetch('/profiles', {
       method: 'PUT',
       body: JSON.stringify(payload)
     });
-    
-    console.log("Resposta do servidor:", res.status);
-    if (res.status === 401) {
-       alert("Erro 401: Você não tem permissão ou o token é inválido.");
+
+    if (res.ok) {
+      alert("Perfil atualizado com sucesso!");
+      
+      // 1. Sai do modo de edição (volta a mostrar o ícone de lápis)
+      setIsEditing(false);
+      
+      // 2. Atualiza o backup com os dados atuais que acabaram de ser salvos
+      // Isso evita que o botão 'Cancelar' reverta para dados antigos depois de um save
+      setBackupData(userData);
+      setBackupSkills(userSkills);
+
+    } else {
+      // Caso o servidor responda com erro (400, 401, 500, etc)
+      const errorData = await res.json().catch(() => ({}));
+      console.error("Erro do servidor:", res.status, errorData);
+      
+      if (res.status === 401) {
+        alert("Erro 401: Sua sessão expirou ou você não tem permissão.");
+      } else {
+        alert(`Erro ao salvar: ${errorData.message || 'Verifique os dados e tente novamente.'}`);
+      }
     }
   } catch (err) {
-    console.error("Erro na chamada:", err);
+    console.error("Erro de conexão na chamada API:", err);
+    alert("Não foi possível conectar ao servidor. Verifique sua internet.");
   }
 };
 
