@@ -64,6 +64,10 @@ export const ProfilePage = () => {
 
         if (response.ok) {
           const data = await response.json();
+          console.log("=== DEBUG BACKEND ===");
+  console.log("Objeto User completo:", data.user);
+  console.log("Role que veio do banco:", data.user.role);
+  console.log("Tipo do Role:", typeof data.user.role);
           const user = data.user;
           const profile = data.profiles && data.profiles.length > 0 ? data.profiles[0] : {};
 
@@ -82,7 +86,7 @@ export const ProfilePage = () => {
             anosExperiencia: profile.anosExperiencia?.toString() || "0",
             level: profile.level || 0,
             xp: profile.xp || 0,
-            role: user.role || "mentor"
+            role: user.role || ""
           };
 
           const loadedSkills: Skill[] = profile.stacks || [];
@@ -134,61 +138,35 @@ export const ProfilePage = () => {
   }, []);
 
 const handleSaveAll = async () => {
-  if (!userData || !userData.id) return;
+  console.log("INICIANDO SALVAMENTO...");
+  
+  if (!userData.id) {
+    alert("Erro: userData.id está vazio!");
+    return;
+  }
 
-  const userPayload = {
-    id: userData.id,
-    name: userData.nome,
-    email: userData.email,
-    phoneNumber: userData.telefone
-  };
-
-  const profilePayload = {
+  const payload = {
     user_id: userData.id,
     profile_id: userData.profile_id,
     position: userData.cargo,
     bio: userData.presentationText,
-    github: userData.github,
-    linkedin: userData.linkedin,
-    instagram: userData.instagram,
-    xp: userData.xp || 0,
-    anosExperiencia: parseInt(userData.anosExperiencia) || 0,
-    role: userData.role?.toUpperCase()
+    role: "MENTOR" // Tente forçar MENTOR aqui para ver se o 401 some
   };
 
-  const pythonStacksPayload = {
-    profile_id: userData.profile_id?.toString() || userData.id.toString(),
-    stacks: userSkills.map((skill: { name: any; }) => skill.name) 
-  };
+  console.log("Enviando payload:", payload);
 
   try {
-    const resUser = await apiFetch('/users', {
+    const res = await apiFetch('/profiles', {
       method: 'PUT',
-      body: JSON.stringify(userPayload)
+      body: JSON.stringify(payload)
     });
-
-    const resProfile = await apiFetch('/profiles', {
-      method: 'PUT',
-      body: JSON.stringify(profilePayload)
-    });
-
-    const resStacks = await fetch(`http://localhost:8000/profile`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pythonStacksPayload)
-    });
-
-    if (resProfile.ok && resStacks.ok && resUser.ok) {
-      alert("Perfil e habilidades atualizados com sucesso!");
-      setBackupData(userData);
-      setBackupSkills(userSkills);
-      setIsEditing(false);
-    } else {
-      alert("Erro ao salvar um dos componentes do perfil.");
+    
+    console.log("Resposta do servidor:", res.status);
+    if (res.status === 401) {
+       alert("Erro 401: Você não tem permissão ou o token é inválido.");
     }
-  } catch (e) {
-    console.error("Erro de conexão:", e);
-    alert("Erro de conexão com os servidores.");
+  } catch (err) {
+    console.error("Erro na chamada:", err);
   }
 };
 
@@ -364,7 +342,9 @@ useEffect(() => {
           <div className="perfil-coluna">
             <div className="perfil-titulo-secao">
               <span className="perfil-tag-titulo">
-                {abaAtiva === "gerais" ? "Pessoa Mentora" : "Dados de contato"}
+                {abaAtiva === "gerais" 
+                  ? (userData.role?.toLowerCase() === "mentor" ? "Pessoa Mentora" : "Pessoa Mentorada")
+                  : "Dados de contato"}
               </span>
 
               {isEditing ? (
@@ -471,9 +451,11 @@ useEffect(() => {
               selectedSkills={userSkills} 
               onSkillsChange={handleSkillsChange} 
               isEditable={true} 
-              title="Habilidades apresentadas para mentorar"
-            />
-            
+              title={
+                userData.role?.toLowerCase() === "mentor" 
+                  ? "Habilidades apresentadas para mentorar" 
+                  : "Habilidades que quero receber mentoria"}
+              />
             ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>
