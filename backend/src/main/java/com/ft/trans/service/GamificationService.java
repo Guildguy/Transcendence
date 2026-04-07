@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.ft.trans.controller.dto.GamificationEventRequest;
@@ -138,7 +139,6 @@ public class GamificationService {
         }
 
         Long totalXp = safeTotalXp(userId);
-        unlockLevelBadgesByXp(userId, totalXp, null);
         Level currentLevel = levelRepository.findTopByXpRequiredLessThanEqualOrderByXpRequiredDesc(totalXp);
         Level nextLevel = levelRepository.findTopByXpRequiredGreaterThanOrderByXpRequiredAsc(totalXp);
 
@@ -231,9 +231,16 @@ public class GamificationService {
         ua.createdAt = new Date(System.currentTimeMillis());
         ua.created_by = "gamification_event";
 
-        userAchievementRepository.save(ua);
-        if (unlocked != null) {
-            unlocked.add(achievement.name);
+        try {
+            userAchievementRepository.saveAndFlush(ua);
+            if (unlocked != null) {
+                unlocked.add(achievement.name);
+            }
+        } catch (DataIntegrityViolationException ex) {
+            if (userAchievementRepository.existsByUserIdAndAchievementId(userId, achievement.id)) {
+                return;
+            }
+            throw ex;
         }
     }
 
