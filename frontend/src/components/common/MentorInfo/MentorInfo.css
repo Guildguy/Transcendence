@@ -1,12 +1,18 @@
 .mentor-info-card {
-  background-color: var(--white, #ffffff);
-  border: 1px solid var(--purple-medium, #e5e7eb);
-  border-radius: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  max-width: 80%;
-  font-family: sans-serif;
-  color: #374151;
+  width: 100%;
+  width: 80vw;
+  margin: 12px auto 24px auto;
+  box-sizing: border-box;
+  background-color: var(--white);
+  border: 1px solid var(--gray-light);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.mentor-info-card:hover {
+  transform: translateY(-2px);
 }
 
 .mentor-info-card-header {
@@ -21,7 +27,7 @@
   height: 100px;
   min-width: 100px;
   border-radius: 50%;
-  border: 3px solid #1f2937;
+  border: 3px solid var(--text-dark);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,7 +42,7 @@
 }
 
 .mentor-avatar-icon {
-  color: #1f2937;
+  color: var(--text-dark);
 }
 
 .mentor-info-basic {
@@ -47,7 +53,7 @@
   margin: 0 0 4px 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-dark);
 }
 
 .mentor-info-details {
@@ -62,11 +68,16 @@
   gap: 6px;
   font-size: 0.825rem;
 }
+
+.status-dot-2 {
+  margin-top: 3px;
+}
+
 .mentor-info-bio {
   padding: unset;
   font-size: 1rem;
   line-height: 1.4;
-  color: #6b7280;
+  color: var(--gray-dark);
 }
 
 .mentor-info-skills-pills {
@@ -78,12 +89,12 @@
 }
 
 .skill-tag {
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--gray-medium);
   border-radius: 16px;
   padding: 6px 14px;
   font-size: 0.85rem;
-  color: #6366f1;
-  background-color: #f3f4f6;
+  color: var(--purple-primary);
+  background-color: var(--input-group-bg);
   font-weight: 500;
   display: inline-block;
   cursor: default;
@@ -92,19 +103,20 @@
 .skill-tag.btn-ver-mais {
   cursor: pointer;
   transition: all 0.2s ease;
-  border-color: #c7d2fe;
-  background-color: #c7d2fe;
-  color: #4338ca;
+  border-color: var(--purple-light);
+  background-color: var(--purple-light);
+  color: var(--purple-dark);
 }
 
 .skill-tag.btn-ver-mais:hover {
-  background-color: #b4c7fc;
-  border-color: #b4c7fc;
+  background-color: var(--purple-medium);
+  border-color: var(--purple-medium);
+  opacity: 0.8;
 }
 
 .no-skills-message {
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--gray-dark);
   font-style: italic;
   margin: 0;
 }
@@ -116,12 +128,11 @@
   font-size: 0.825rem;
 }
 
-.mentor-info-rating,
 .mentor-info-mentorships {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #374151;
+  color: var(--text-medium);
   font-weight: 500;
 }
 
@@ -131,7 +142,6 @@
   margin: 20px 0;
 }
 
-.mentor-info-rating svg,
 .mentor-info-mentorships svg {
   flex-shrink: 0;
 }

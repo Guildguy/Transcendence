@@ -2,7 +2,7 @@ import './BookSessionWithMentor.css'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import MentorInfo from '../../components/common/MentorInfo/MentorInfo'
-import { MentoringProvider, useMentoring } from '../../components/common/BookingCalendar/MentoringContext'
+import { MentoringProvider } from '../../components/common/BookingCalendar/MentoringContext'
 import { SlotSelector } from '../../components/common/SlotSelector/SlotSelector'
 import { SessionList } from '../../components/common/SessionList/SessionList'
 import mentorService, { type MentorDetailData } from '../../services/mentorService'
@@ -20,10 +20,12 @@ interface MentorLocationState {
   mentorXp?: number;
   mentorAvatar?: string;
   mentorIsActive?: boolean;
+  mentorBio?: string;
+  mentorRating?: number;
+  menteeCount?: number;
 }
 
 function BookSessionContent() {
-  const { mentors } = useMentoring();
   const location = useLocation();
   const navigate = useNavigate();
   const { mentorId: urlMentorId } = useParams<{ mentorId?: string }>();
@@ -59,9 +61,9 @@ function BookSessionContent() {
             isActive: mentorState.mentorIsActive !== false,
             isAvailable: true,
             avatarUrl: mentorState.mentorAvatar,
-            bio: 'Especialista em desenvolvimento e mentoria',
-            rating: 4.8,
-            menteeCount: 0
+            bio: mentorState.mentorBio || undefined,
+            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5.0,
+            menteeCount: mentorState.menteeCount || 0
           };
           setSelectedMentor(mentor);
           setLoading(false);
@@ -87,35 +89,6 @@ function BookSessionContent() {
           }
         }
 
-        // Priority 3: Mock data fallback
-        console.log('[BookSessionWithMentor] Using mock data fallback');
-        const mockMentor = mentors.find(m => m.id === urlMentorId) || mentors[0];
-        
-        if (mockMentor) {
-          const mentor: MentorDetailData = {
-            id: parseInt(mockMentor.id.replace('m', ''), 10) || 0,
-            profileId: parseInt(mockMentor.id.replace('m', ''), 10) || 0,
-            userId: parseInt(mockMentor.id.replace('m', ''), 10) || 0,
-            name: mockMentor.name,
-            position: mockMentor.role,
-            skills: mockMentor.skills.map((s: string, i: number) => ({
-              id: `skill-${i}`,
-              name: s
-            })),
-            anosExperiencia: parseInt(mockMentor.xp.replace(/\D/g, ''), 10) || 0,
-            isActive: true,
-            isAvailable: mockMentor.status === 'available',
-            avatarUrl: mockMentor.avatar,
-            bio: mockMentor.bio || 'Especialista em desenvolvimento e mentoria',
-            rating: 4.8,
-            menteeCount: 0
-          };
-          console.log('[BookSessionWithMentor] ✓ Mock data loaded');
-          setSelectedMentor(mentor);
-          setLoading(false);
-          return;
-        }
-
         // No mentor found
         console.error('[BookSessionWithMentor] No mentor data available');
         setError('Mentor não encontrado. Por favor, volta à página de mentorias e tente novamente.');
@@ -133,7 +106,7 @@ function BookSessionContent() {
       setError('Nenhum mentor selecionado. Por favor, volta à página de mentorias.');
       setLoading(false);
     }
-  }, [urlMentorId, mentorState, mentors]);
+  }, [urlMentorId, mentorState]);
 
   if (loading) {
     return (
@@ -154,7 +127,7 @@ function BookSessionContent() {
             <h2 className="error-title">Mentor não encontrado</h2>
             <p className="error-message">{error || 'Não conseguimos carregar os dados do mentor.'}</p>
             <button
-              onClick={() => navigate('/mentoros')}
+              onClick={() => navigate('/mentorias')}
               className="error-button"
             >
               ← Voltar para mentorias
@@ -178,6 +151,8 @@ function BookSessionContent() {
         isActive={selectedMentor.isActive}
         avatarUrl={selectedMentor.avatarUrl}
         bio={selectedMentor.bio}
+        rating={selectedMentor.rating}
+        menteeCount={selectedMentor.menteeCount}
       />
 
       {selectedMentor.isAvailable && currentUserId && (

@@ -1,7 +1,8 @@
 import React from 'react';
-import { User, Circle, Star, Users, MessageCircle, X, LogOut } from 'lucide-react';
+import { User, Circle, Users, MessageCircle, Star, LogOut } from 'lucide-react';
 import './MentorInfo.css';
 import IconButton from '../IconButton/IconButton';
+import Rating from '../Rating/Rating';
 
 interface Skill {
   id: string;
@@ -16,6 +17,8 @@ interface MentorCardProps {
   isActive: boolean;
   bio?: string;
   avatarUrl?: string;
+  rating?: number;
+  menteeCount?: number;
 }
 
 const MentorCard: React.FC<MentorCardProps> = ({ 
@@ -25,7 +28,9 @@ const MentorCard: React.FC<MentorCardProps> = ({
   experience, 
   isActive, 
   bio,
-  avatarUrl 
+  avatarUrl,
+  rating,
+  menteeCount
 }) => {
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
@@ -48,12 +53,12 @@ const MentorCard: React.FC<MentorCardProps> = ({
             {isActive ? 'Ativo' : 'Indisponível'}
             <Circle 
               size={12} 
-              fill={isActive ? "#4ade80" : "#fb7185"} 
+              fill={isActive ? "var(--is-active-green)" : "var(--is-inactive-red)"} 
               color="transparent" 
-              className="status-dot"
+              className="status-dot-2"
             />
           </div>
-          <p className="mentor-info-bio">{bio || "Especialista em arquitetura de microsserviços e liderança técnica. Apaixonado por mentoria e desenvolvimento de pessoas."}</p>
+          <p className="mentor-info-bio">{bio || "Opa, esse mentor ainda não preencheu sua bio."}</p>
           <div className="mentor-info-skills-pills">
             {displaySkills.length > 0 ? (
               <>
@@ -69,13 +74,12 @@ const MentorCard: React.FC<MentorCardProps> = ({
             )}
           </div>
           <div className="mentor-info-stats-section">
-              <div className="mentor-info-rating">
-                <Star size={16} fill="#fbbf24" color="transparent" className="mentor-rating-star" />
-                <span className="mentor-info-rating-text">4.8</span>
-              </div>
+              {rating !== undefined && (
+                <Rating rating={rating} />
+              )}
               <div className="mentor-info-mentorships">
                 <Users size={16} />
-                <span className="mentor-info-mentorships-text">4.8</span>
+                <span className="mentor-info-mentorships-text">{menteeCount ?? 0}</span>
               </div>
           </div>
         </div>
