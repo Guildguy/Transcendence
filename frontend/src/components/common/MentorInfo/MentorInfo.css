@@ -159,3 +159,36 @@
     padding: 16px;
   }
 }
+
+/* Rating Dialog Styles */
+.rating-stars-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 24px 0;
+}
+
+.rating-star-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.rating-star-btn:hover {
+  transform: scale(1.1);
+  background-color: var(--gray-light);
+}
+
+.rating-star-btn.active {
+  transform: scale(1.15);
+}
+
+.rating-star-btn svg {
+  stroke-width: 1.5;
+}

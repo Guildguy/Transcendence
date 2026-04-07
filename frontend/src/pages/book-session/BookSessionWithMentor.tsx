@@ -144,6 +144,7 @@ function BookSessionContent() {
   return (
     <div className="book-session-with-mentor">
       <MentorInfo
+        mentorId={selectedMentor.id || selectedMentor.profileId || selectedMentor.userId}
         name={selectedMentor.name}
         position={selectedMentor.position}
         skills={selectedMentor.skills}
