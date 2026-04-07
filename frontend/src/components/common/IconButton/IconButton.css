@@ -86,18 +86,25 @@
 }
 
 .icon-button--rating {
-  border-radius: 0px;
+  border-radius: 12px;
   background-color: transparent;
   color: var(--text-dark);
-  border: 2px solid var(--gray-medium);
+  border: 2px solid var(--gray-light);
 }
 
 .icon-button--rating:hover {
-  border-color: var(--gray-dark);
+  border-color: var(--rating-yellow-medium);
   color: var(--text-dark);
   background-color: var(--rating-yellow);
 }
 
 .icon-button--rating:active {
   transform: scale(0.98);
+  background-color: var(--rating-yellow);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
