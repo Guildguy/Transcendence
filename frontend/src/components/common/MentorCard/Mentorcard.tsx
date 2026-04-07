@@ -18,6 +18,7 @@ interface MentorCardProps {
   isActive: boolean;
   isAvailable: boolean; // Nova Prop vinda do MentorService
   avatarUrl?: string;
+  bio?: string;
 }
 
 const MentorCard: React.FC<MentorCardProps> = ({ 
@@ -28,7 +29,8 @@ const MentorCard: React.FC<MentorCardProps> = ({
   anosExperiencia, 
   isActive, 
   isAvailable, // Destruturando a nova prop
-  avatarUrl 
+  avatarUrl,
+  bio
 }) => {
   const navigate = useNavigate();
   const displaySkills = skills.slice(0, 5);
@@ -48,7 +50,8 @@ const MentorCard: React.FC<MentorCardProps> = ({
           mentorSkills: skills,
           mentorXp: anosExperiencia,
           mentorAvatar: avatarUrl,
-          mentorIsActive: isActive
+          mentorIsActive: isActive,
+          mentorBio: bio
         }
       });
     } else {

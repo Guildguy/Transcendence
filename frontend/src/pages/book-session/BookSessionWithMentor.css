@@ -1,23 +1,29 @@
 .book-session-with-mentor {
   display: flex;
   flex-direction: column;
-  gap: 20px;
   align-items: center;
-  background-color: var(--purple-bg);
+  background-color: var(--purple-bg-light);
   width: 100%;
   min-height: 100vh;
-  padding-top: 20px;
+  padding-top: 24px;
+  padding-bottom: 12px;
 }
 
 .calendar-container {
-  background-color: var(--white, #ffffff);
-  border: 1px solid var(--purple-medium, #e5e7eb);
-  border-radius: 20px;
-  padding: 40px;
-  min-width: 80%;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  font-family: sans-serif;
-  color: #374151;
+  width: 100%;
+  width: 80vw;
+  margin: 12px auto 24px auto;
+  box-sizing: border-box;
+  background-color: var(--white);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid var(--gray-light);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.calendar-container:hover {
+  transform: translateY(-2px);
 }
 
 /* Loading State Styles */

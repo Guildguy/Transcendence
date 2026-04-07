@@ -1,12 +1,39 @@
+.card {
+  background-color: var(--white);
+  border: 1px solid var(--gray-light);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
 .capacity-text {
   margin: 0;
   font-size: 0.95rem;
-  color: #666;
+  color: var(--text-medium);
   font-weight: 500;
+}
+  
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header h2, .card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-dark);
+}
+
+.capacity-card p {
+  margin: 0.5rem 0 1rem;
+  color: var(--text-medium);
 }
 
 .progress-bar {
-  background-color: #e0e0e0;
+  background-color: var(--white);
   border-radius: 8px;
   height: 8px;
   width: 100%;
@@ -80,6 +107,15 @@
   background-color: #fee;
   border-radius: 8px;
   padding: 1rem;
+}
+
+.mentee-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
 @media (max-width: 768px) {

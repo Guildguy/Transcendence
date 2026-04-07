@@ -1,0 +1,16 @@
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-medium);
+  font-weight: 500;
+}
+
+.rating-star {
+  flex-shrink: 0;
+}
+
+.rating-text {
+  display: flex;
+  align-items: center;
+}
