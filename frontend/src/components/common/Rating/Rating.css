@@ -14,3 +14,14 @@
   display: flex;
   align-items: center;
 }
+
+.rating-stars-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.submit-rating-btn {
+  margin-top: 16px;
+  justify-content: center;
+}

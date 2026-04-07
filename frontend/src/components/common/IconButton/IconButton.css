@@ -71,16 +71,33 @@
 
 .icon-button--withdraw {
   background-color: transparent;
-  color: #ef4444;
-  border: 2px solid #fecaca;
+  color: var(--is-inactive-red);
+  border: 2px solid var(--is-inactive-red);
 }
 
 .icon-button--withdraw:hover {
-  background-color: #fef2f2;
-  border-color: #ef4444;
-  color: #dc2626;
+  background-color: var(--red-pale);
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .icon-button--withdraw:active {
+  transform: scale(0.98);
+}
+
+.icon-button--rating {
+  border-radius: 0px;
+  background-color: transparent;
+  color: var(--text-dark);
+  border: 2px solid var(--gray-medium);
+}
+
+.icon-button--rating:hover {
+  border-color: var(--gray-dark);
+  color: var(--text-dark);
+  background-color: var(--rating-yellow);
+}
+
+.icon-button--rating:active {
   transform: scale(0.98);
 }

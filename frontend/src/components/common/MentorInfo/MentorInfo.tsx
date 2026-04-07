@@ -95,22 +95,24 @@ const MentorCard: React.FC<MentorCardProps> = ({
       </div>
 
       <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rating-dialog">
           <DialogHeader>
             <DialogTitle>
-              <h2>O quanto você curtiu esse mentor?</h2>
+              <h3>O quanto você curtiu esse mentor?</h3>
+              <p>Deixe sua avaliação:</p>
             </DialogTitle>
             <DialogDescription>
-              <p>Deixe sua avaliação:</p>
+              <p>Escolha uma nota de 0 a 5:</p>
             </DialogDescription>
           </DialogHeader>
           <div className="rating-stars-container">
             {[1, 2, 3, 4, 5].map((star) => (
-              <button key={star} className="rating-star-btn">
-                <Star size={32} />
-              </button>
+              <IconButton key={star} variant="rating">
+                <Star size={24} color='var(--rating-yellow-medium)'/>
+              </IconButton>
             ))}
           </div>
+          <IconButton variant="primary" className="submit-rating-btn">Enviar</IconButton>
         </DialogContent>
       </Dialog>
     </div>
