@@ -14,7 +14,7 @@ export const Sidebar = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [collapsed, setCollapsed] = useState(false);
-  const { setActiveChatId, activeChatId, onlineUsers } = useChat();
+  const { setActiveChatId, activeChatId, onlineUsers, contactsVersion } = useChat();
   const myId = Number(localStorage.getItem('userId'));
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export const Sidebar = () => {
     };
 
     if (myId && myId > 0) fetchUsers();
-  }, [myId]);
+  }, [myId, contactsVersion]);
 
   const filteredUsers = Array.isArray(users) ? users.filter(u => 
     u.name.toLowerCase().includes(searchTerm.toLowerCase())

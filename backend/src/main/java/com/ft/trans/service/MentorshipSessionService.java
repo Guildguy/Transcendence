@@ -32,16 +32,19 @@ public class MentorshipSessionService
 	private final MentorshipSessionRepository sessionRepository;
 	private final MentorAvailabilityRepository mentorAvailabilityRepository;
 	private final MentorshipConnectionRepository connectionRepository;
+	private final MeetService meetService;
 
 	public MentorshipSessionService(
 		MentorshipSessionRepository sessionRepository,
 		MentorAvailabilityRepository mentorAvailabilityRepository,
-		MentorshipConnectionRepository connectionRepository
+		MentorshipConnectionRepository connectionRepository,
+		MeetService meetService
 	)
 	{
 		this.sessionRepository = sessionRepository;
 		this.mentorAvailabilityRepository = mentorAvailabilityRepository;
 		this.connectionRepository = connectionRepository;
+		this.meetService = meetService;
 	}
 
 	public Result createSession(CreateSessionDTO dto)
@@ -81,7 +84,7 @@ public class MentorshipSessionService
 		}
 
 		baseSession.scheduledDate = truncatedDate;
-		baseSession.meetUrl = _generateMeetUrl();
+		baseSession.meetUrl = _getMeetUrl(connection, truncatedDate, dto.durationMinutes);
 		return _persistSession(baseSession);
 	}
 
@@ -102,6 +105,10 @@ public class MentorshipSessionService
 		Long mentorId = connection.mentor.id;
 		UUID groupId = UUID.randomUUID();
 		List<MentorshipSession> sessions = new ArrayList<>();
+
+		// Generate one Meet link shared across all recurrences to avoid 10 API calls
+		LocalDateTime firstDate = dto.scheduledDate.withSecond(0).withNano(0);
+		String recurringMeetUrl = _getMeetUrl(connection, firstDate, dto.durationMinutes);
 
 		for (int i = 0; i < MAX_RECURRENCE; i++)
 		{
@@ -130,7 +137,7 @@ public class MentorshipSessionService
 
 			MentorshipSession session  = dto.toSession();
 			session.scheduledDate      = truncatedDate;
-			session.meetUrl            = _generateMeetUrl();
+			session.meetUrl            = recurringMeetUrl;
 			session.recurrenceGroupId  = groupId;
 			session.recurrenceIndex    = i + 1;
 
@@ -237,7 +244,13 @@ public class MentorshipSessionService
 
 		if (dto.scheduledDate != null || dto.durationMinutes != null)
 		{
-			Long mentorId = dto.lastUpdateBy != null ? dto.lastUpdateBy : session.createdBy;
+			MentorshipConnection conn = connectionRepository.findByIdFull(session.connectionId).orElse(null);
+			if (conn == null)
+			{
+				result.addError("connectionId", "Conexão de mentoria não encontrada.");
+				return new Result(null, result);
+			}
+			Long mentorId = conn.mentor.id;
 			if (!_isWithinMentorAvailability(mentorId, session.scheduledDate, session.durationMinutes))
 			{
 				result.addError(
@@ -296,8 +309,20 @@ public class MentorshipSessionService
 		return _persistSession(session);
 	}
 
-	private String _generateMeetUrl()
+	private String _getMeetUrl(MentorshipConnection connection, LocalDateTime scheduledDate, int durationMinutes)
 	{
+		String mentorEmail = (connection.mentor != null && connection.mentor.user != null)
+			? connection.mentor.user.email : null;
+		String menteeEmail = (connection.mentee != null && connection.mentee.user != null)
+			? connection.mentee.user.email : null;
+
+		if (mentorEmail != null && menteeEmail != null) {
+			String link = meetService.createMeetSession(
+				mentorEmail, menteeEmail, "Sessão de Mentoria", scheduledDate, durationMinutes);
+			if (link != null) return link;
+		}
+
+		// Fallback to random URL if Meet API call fails
 		String part1 = UUID.randomUUID().toString().substring(0, 3);
 		String part2 = UUID.randomUUID().toString().substring(0, 4);
 		String part3 = UUID.randomUUID().toString().substring(0, 3);
@@ -361,7 +386,7 @@ public class MentorshipSessionService
 			return null;
 		}
 
-		MentorshipConnection connection = connectionRepository.findById(connectionId).orElse(null);
+		MentorshipConnection connection = connectionRepository.findByIdFull(connectionId).orElse(null);
 		if (connection == null)
 		{
 			result.addError("connectionId", "Conexão de mentoria não encontrada.");

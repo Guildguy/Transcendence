@@ -80,7 +80,8 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
         return;
       } else {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erro ao salvar sessão no backend');
+        const firstError = Array.isArray(errorData) ? errorData[0] : errorData;
+        throw new Error(firstError?.message || 'Erro ao salvar sessão no backend');
       }
     } catch (error) {
       console.error('[MentoringContext] Erro ao agendar sessão:', error);
