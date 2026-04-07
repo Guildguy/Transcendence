@@ -20,7 +20,7 @@ const RegisterLayout = lazy(() => import('./pages/register/RegisterLayout'))
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
 const HomeLogged = lazy(() => import('./pages/logged/HomeLogged'))
 const BookSessionWithMentor = lazy(() => import('./pages/book-session/BookSessionWithMentor'))
-const BookSessionWithMentee = lazy(() => import('./pages/book-session/BookSessionWithMentee'))
+const BookSessionWithMentee = lazy(() => import('./pages/manage-session/ManageSessionWithMentee'))
 const MentoriasPage = lazy(() => import('./pages/mentoria/MentoriasPage'))
 const MentorDashboard = lazy(() => import('./pages/mentor-dashboard/MentorDashboard'))
 
