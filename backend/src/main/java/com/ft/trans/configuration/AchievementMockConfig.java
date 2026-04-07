@@ -4,6 +4,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import com.ft.trans.entity.Achievement;
 import com.ft.trans.repository.AchievementRepository;
@@ -46,7 +47,14 @@ public class AchievementMockConfig
             return;
         }
 
-        repo.save(create(name, description, type, target, xp, iconUrl));
+        try {
+            repo.saveAndFlush(create(name, description, type, target, xp, iconUrl));
+        } catch (DataIntegrityViolationException ex) {
+            if (repo.findByName(name) != null) {
+                return;
+            }
+            throw ex;
+        }
     }
 
     private Achievement create(String name, String description, String type, int target, int xp, String iconUrl) {
