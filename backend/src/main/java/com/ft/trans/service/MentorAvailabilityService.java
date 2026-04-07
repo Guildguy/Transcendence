@@ -18,9 +18,9 @@ import com.ft.trans.dto.MentorAvailabilitySlotDTO;
 import com.ft.trans.dto.SaveMentorAvailabilityDTO;
 import com.ft.trans.entity.DayOfWeekEnum;
 import com.ft.trans.entity.MentorAvailability;
-import com.ft.trans.entity.User;
+import com.ft.trans.entity.Profile;
 import com.ft.trans.repository.MentorAvailabilityRepository;
-import com.ft.trans.repository.UserRepository;
+import com.ft.trans.repository.ProfileRepository;
 import com.ft.trans.validation.ValidationResult;
 
 @Service
@@ -29,12 +29,12 @@ public class MentorAvailabilityService {
     private static final Set<Integer> ALLOWED_SLOT_DURATIONS = Set.of(30, 60);
 
     private final MentorAvailabilityRepository mentorAvailabilityRepository;
-    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
 
-    public MentorAvailabilityService(MentorAvailabilityRepository mentorAvailabilityRepository, UserRepository userRepository)
+    public MentorAvailabilityService(MentorAvailabilityRepository mentorAvailabilityRepository, ProfileRepository profileRepository)
     {
         this.mentorAvailabilityRepository = mentorAvailabilityRepository;
-        this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
     }
 
     @Transactional
@@ -45,10 +45,10 @@ public class MentorAvailabilityService {
         if (validation.hasErrors())
             return new MentorAvailabilityServiceResult(null, validation);
 
-        User mentor = userRepository.findById(request.mentorId).orElse(null);
+        Profile mentor = profileRepository.findById(request.mentorId).orElse(null);
         if (mentor == null)
         {
-            validation.addError("mentorId", "Mentor nao encontrado.");
+            validation.addError("mentorId", "Perfil de mentor nao encontrado.");
             return new MentorAvailabilityServiceResult(null, validation);
         }
 

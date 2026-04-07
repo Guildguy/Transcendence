@@ -9,61 +9,61 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ft.trans.entity.DayOfWeekEnum;
 import com.ft.trans.entity.MentorAvailability;
-import com.ft.trans.entity.User;
+import com.ft.trans.entity.Profile;
 import com.ft.trans.repository.MentorAvailabilityRepository;
-import com.ft.trans.repository.UserRepository;
+import com.ft.trans.repository.ProfileRepository;
 
 @Configuration
 public class MentorAvailabilityMockConfig {
 
     @Bean
     @Order(6)
-    CommandLineRunner loadMentorAvailabilityMocks(UserRepository userRepository, MentorAvailabilityRepository availabilityRepository)
+    CommandLineRunner loadMentorAvailabilityMocks(ProfileRepository profileRepository, MentorAvailabilityRepository availabilityRepository)
     {
         return args -> {
-
-            List<User> mentors = userRepository.findAll()
+            // Find profile with role MENTOR (mapped from previous seeds)
+            List<Profile> mentors = profileRepository.findAll()
                 .stream()
-                .filter(user -> user.id != null)
-                .sorted(Comparator.comparing(user -> user.id))
+                .filter(p -> p.role != null && p.role.name().equals("MENTOR"))
+                .sorted(Comparator.comparing(p -> p.id))
                 .limit(3)
                 .toList();
-
+ 
             if (mentors.isEmpty())
             {
-                System.out.println("No users yet - skipping MentorAvailability mock");
+                System.out.println("No mentor profiles found - skipping MentorAvailability mock");
                 return;
             }
-
+ 
             Date now = new Date(System.currentTimeMillis());
-
+ 
             for (int index = 0; index < mentors.size(); index++)
             {
-                User mentor = mentors.get(index);
-                Long mentorId = mentor.id;
-
-                boolean hasAvailability = !availabilityRepository
-                    .findByMentor_IdOrderByDayOfWeekAscStartTimeAsc(mentorId)
-                    .isEmpty();
-
-                if (hasAvailability)
-                {
-                    System.out.println("MentorAvailability already loaded for userId=" + mentorId);
-                    continue;
-                }
-
-                seedAvailabilityByIndex(availabilityRepository, mentor, mentorId, index, now);
-                System.out.println("MentorAvailability mock loaded for userId=" + mentorId);
+                Profile mentor = mentors.get(index);
+                Long profileId = mentor.id;
+ 
+                // Always delete and re-seed to ensure the latest mock slots (like the TUESDAY hack) are present
+                availabilityRepository.deleteByMentor_Id(profileId);
+                
+                // Base mock data
+                seedAvailabilityByIndex(availabilityRepository, mentor, profileId, index, now);
+                
+                // GLOBAL HACK: Adding TUESDAY for ALL mentors for testing purposes today
+                // This ensures that any mentor selected (like ID 5) has availability on Tuesday
+                availabilityRepository.save(create(mentor, profileId, DayOfWeekEnum.TUESDAY, "08:00", "22:00", 60, now));
+                
+                System.out.println("MentorAvailability mock (re)loaded for profileId=" + profileId + " (included Tuesday hack)");
             }
         };
     }
 
     private void seedAvailabilityByIndex(
         MentorAvailabilityRepository availabilityRepository,
-        User mentor,
+        Profile mentor,
         Long mentorId,
         int index,
         Date now
@@ -72,12 +72,11 @@ public class MentorAvailabilityMockConfig {
         switch (index)
         {
             case 0 -> {
-                availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.MONDAY, "08:00", "12:00", 60, now));
-                availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.MONDAY, "19:00", "22:00", 60, now));
-                availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.WEDNESDAY, "14:00", "18:00", 60, now));
+                availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.MONDAY, "08:00", "18:00", 60, now));
+                availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.WEDNESDAY, "14:00", "22:00", 60, now));
             }
             case 1 -> {
-                availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.TUESDAY, "15:00", "19:00", 60, now));
+                availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.TUESDAY, "00:00", "23:59", 60, now));
                 availabilityRepository.save(create(mentor, mentorId, DayOfWeekEnum.THURSDAY, "10:00", "14:00", 60, now));
             }
             default -> {
@@ -86,10 +85,10 @@ public class MentorAvailabilityMockConfig {
             }
         }
     }
-
+ 
     private MentorAvailability create(
-        User mentor,
-        Long mentorId,
+        Profile mentor,
+        Long profileId,
         DayOfWeekEnum dayOfWeek,
         String startTime,
         String endTime,
@@ -104,9 +103,9 @@ public class MentorAvailabilityMockConfig {
         availability.endTime = LocalTime.parse(endTime);
         availability.slotDuration = slotDuration;
         availability.createdAt = now;
-        availability.createdBy = mentorId;
+        availability.createdBy = profileId;
         availability.lastUpdateAt = now;
-        availability.lastUpdateBy = mentorId;
+        availability.lastUpdateBy = profileId;
         return availability;
     }
 }

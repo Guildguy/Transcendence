@@ -16,6 +16,10 @@ interface MentorCardProps {
   isActive: boolean;
   bio?: string;
   avatarUrl?: string;
+  // Connection callbacks
+  connectionStatus?: 'none' | 'pending' | 'active' | 'loading';
+  onConnect?: () => void;
+  onLeave?: () => void;
 }
 
 const MentorCard: React.FC<MentorCardProps> = ({ 
@@ -25,7 +29,10 @@ const MentorCard: React.FC<MentorCardProps> = ({
   experience, 
   isActive, 
   bio,
-  avatarUrl 
+  avatarUrl,
+  connectionStatus = 'none',
+  onConnect,
+  onLeave,
 }) => {
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
@@ -85,7 +92,19 @@ const MentorCard: React.FC<MentorCardProps> = ({
       <div className="mentor-info-footer">
         <IconButton variant="primary" icon={<MessageCircle size={18} />}>Conversar</IconButton>
         <IconButton variant="secondary" icon={<Star size={18} />}>Avaliar</IconButton>
-        <IconButton variant="withdraw" icon={<LogOut size={18} />}>Deixar Mentoria</IconButton>
+
+        {connectionStatus === 'loading' && (
+          <IconButton variant="secondary" icon={<Circle size={18} />} disabled>Carregando...</IconButton>
+        )}
+        {connectionStatus === 'none' && (
+          <IconButton variant="primary" icon={<Users size={18} />} onClick={onConnect}>Conectar</IconButton>
+        )}
+        {connectionStatus === 'pending' && (
+          <IconButton variant="secondary" icon={<Circle size={18} />} disabled>Aguardando aprovação</IconButton>
+        )}
+        {connectionStatus === 'active' && (
+          <IconButton variant="withdraw" icon={<LogOut size={18} />} onClick={onLeave}>Deixar Mentoria</IconButton>
+        )}
       </div>
     </div>
   );
