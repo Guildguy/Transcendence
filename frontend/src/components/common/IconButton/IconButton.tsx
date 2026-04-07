@@ -2,7 +2,7 @@ import React from 'react';
 import './IconButton.css';
 
 interface IconButtonProps {
-  variant?: 'primary' | 'secondary' | 'withdraw';
+  variant?: 'primary' | 'secondary' | 'withdraw' | 'rating';
   className?: string;
   children: React.ReactNode;
   icon?: React.ReactNode;

@@ -15,8 +15,8 @@
   max-width: 32rem;
   transform: translate(-50%, -50%);
   gap: 1rem;
-  border: 1px solid #e5e7eb;
-  background-color: #ffffff;
+  border: 1px solid var(--text-medium);
+  background-color: var(--white);
   padding: 1.5rem;
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
@@ -56,13 +56,13 @@
 .dialog-title {
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin: 1.5rem 0 0 0;
 }
 
 .dialog-description {
   font-size: 1rem;
-  color: #6b7280;
-  margin-bottom: 1rem;
+  color: var(--text-medium);
+  margin: 0;
 }
 
 .dialog-footer {
@@ -76,4 +76,12 @@
   flex-direction: column;
   gap: 0.5rem;
   text-align: center;
+}
+
+.rating-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  padding-bottom: 3rem;
 }
