@@ -8,6 +8,8 @@ interface RatingProps {
 }
 
 const Rating: React.FC<RatingProps> = ({ rating, size = 16 }) => {
+  const numericRating = typeof rating === 'number' ? rating : parseFloat(rating as any);
+  
   return (
     <div className="rating">
       <Star 
@@ -16,7 +18,7 @@ const Rating: React.FC<RatingProps> = ({ rating, size = 16 }) => {
         color="transparent" 
         className="rating-star" 
       />
-      <span className="rating-text">{rating?.toFixed(1)}</span>
+      <span className="rating-text">{isNaN(numericRating) ? '0.0' : numericRating.toFixed(1)}</span>
     </div>
   );
 };

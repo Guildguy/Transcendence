@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User, Circle, Users, MessageCircle, Star, LogOut } from 'lucide-react';
 import './MentorInfo.css';
 import IconButton from '../IconButton/IconButton';
 import Rating from '../Rating/Rating';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '../Dialog/Dialog';
 
 interface Skill {
   id: string;
@@ -32,6 +33,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
   rating,
   menteeCount
 }) => {
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
 
@@ -88,9 +90,29 @@ const MentorCard: React.FC<MentorCardProps> = ({
 
       <div className="mentor-info-footer">
         <IconButton variant="primary" icon={<MessageCircle size={18} />}>Conversar</IconButton>
-        <IconButton variant="secondary" icon={<Star size={18} />}>Avaliar</IconButton>
+        <IconButton variant="secondary" icon={<Star size={18} />} onClick={() => setIsRatingDialogOpen(true)}>Avaliar</IconButton>
         <IconButton variant="withdraw" icon={<LogOut size={18} />}>Deixar Mentoria</IconButton>
       </div>
+
+      <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              <h2>O quanto você curtiu esse mentor?</h2>
+            </DialogTitle>
+            <DialogDescription>
+              <p>Deixe sua avaliação:</p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rating-stars-container">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button key={star} className="rating-star-btn">
+                <Star size={32} />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
