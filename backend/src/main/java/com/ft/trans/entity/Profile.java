@@ -15,6 +15,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -53,6 +55,32 @@ public class Profile implements IEntity
 	public Long			createdBy;
 	public Date			lastUpdateAt;
 	public Long			lastUpdateBy;
+
+	@PrePersist
+	private void onCreate()
+	{
+		Date now = new Date(System.currentTimeMillis());
+		if (this.createdAt == null)
+			this.createdAt = now;
+		if (this.lastUpdateAt == null)
+			this.lastUpdateAt = now;
+		if (this.createdBy == null && this.user != null && this.user.id != null)
+			this.createdBy = this.user.id;
+		if (this.lastUpdateBy == null)
+			this.lastUpdateBy = this.createdBy;
+	}
+
+	@PreUpdate
+	private void onUpdate()
+	{
+		if (this.createdAt == null)
+			this.createdAt = new Date(System.currentTimeMillis());
+		if (this.createdBy == null && this.user != null && this.user.id != null)
+			this.createdBy = this.user.id;
+		this.lastUpdateAt = new Date(System.currentTimeMillis());
+		if (this.lastUpdateBy == null)
+			this.lastUpdateBy = this.createdBy;
+	}
 
 	public void			setRole(String profileType)
 	{
