@@ -31,7 +31,7 @@ type ConnectionStatus = 'none' | 'pending' | 'active' | 'loading';
 function ManageSessionContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { menteeId: urlMenteeId } = useParams<{ mentorId?: string, menteeId?: string }>();
+  const { menteeId: urlMenteeId } = useParams<{ menteeId: string }>();
   const [selectedMentee, setSelectedMentee] = useState<MenteeDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

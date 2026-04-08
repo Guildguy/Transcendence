@@ -162,7 +162,7 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
         <div 
           key={mentee.id} 
           className="mentee-card clickable" 
-          onClick={() => navigate(`/manage-mentee/${mentee.id}`)}
+          onClick={() => navigate(`/manage-session/${mentee.id}`)}
         >
           <div className="mentee-card-content">
             <Avatar 
