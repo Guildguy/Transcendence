@@ -7,7 +7,7 @@
   width: 80vw;
   margin: 24px auto 32px auto;
   box-sizing: border-box;
-  background-color: white;
+  background-color: var(--white);
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);

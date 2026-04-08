@@ -11,6 +11,7 @@ export interface MentorCardData {
   isActive: boolean;
   isAvailable: boolean; // Indica se o mentor tem vagas (RN02 do Java)
   avatarUrl?: string;
+  bio?: string;
 }
 
 export interface MentorDetailData extends MentorCardData {
@@ -145,8 +146,9 @@ class MentorService {
           })),
           anosExperiencia: profile.anosExperiencia || 0,
           isActive: true,
-          isAvailable: isAvailable,
-          avatarUrl: finalAvatar
+          isAvailable: isAvailable, 
+          avatarUrl: finalAvatar,
+          bio: profile.bio
         };
 
         console.log(`[MentorCard] ${mentorCard.name} (ID: ${profile.id}) - Available: ${mentorCard.isAvailable}`);

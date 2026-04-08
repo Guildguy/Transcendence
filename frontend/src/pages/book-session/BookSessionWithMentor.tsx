@@ -24,6 +24,9 @@ interface MentorLocationState {
   mentorXp?: number;
   mentorAvatar?: string;
   mentorIsActive?: boolean;
+  mentorBio?: string;
+  mentorRating?: number;
+  menteeCount?: number;
 }
 
 type ConnectionStatus = 'none' | 'pending' | 'active' | 'loading';
@@ -55,6 +58,7 @@ function BookSessionContent() {
       setLoading(true);
       setError(null);
       try {
+        //DEVELOP:
         const profileId = urlMenteeId || urlMentorId;
         
         if (profileId) {
@@ -66,6 +70,48 @@ function BookSessionContent() {
               setTargetProfile(data);
               setLoading(false);
               return;
+        // console.log('[BookSessionWithMentor] Starting mentor load...');
+        // console.log('[BookSessionWithMentor] URL mentorId:', urlMentorId);
+        // console.log('[BookSessionWithMentor] Location state:', mentorState);
+
+        // // Priority 1: Navigation state (best - has complete data from MentorCard)
+        // if (mentorState?.mentorId) {
+        //   console.log('[BookSessionWithMentor] ✓ Using navigation state');
+        //   const mentor: MentorDetailData = {
+        //     id: mentorState.mentorId,
+        //     profileId: mentorState.mentorId,
+        //     userId: mentorState.mentorId,  // Use actual mentor ID, not 0
+        //     name: mentorState.mentorName || 'Mentor',
+        //     position: mentorState.mentorPosition || 'Position',
+        //     skills: mentorState.mentorSkills || [],
+        //     anosExperiencia: mentorState.mentorXp || 0,
+        //     isActive: mentorState.mentorIsActive !== false,
+        //     isAvailable: true,
+        //     avatarUrl: mentorState.mentorAvatar,
+        //     bio: mentorState.mentorBio || undefined,
+        //     rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5.0,
+        //     menteeCount: mentorState.menteeCount || 0
+        //   };
+        //   setSelectedMentor(mentor);
+        //   setLoading(false);
+        //   return;
+        // }
+
+        // // Priority 2: Backend fetch with URL parameter
+        // if (urlMentorId) {
+        //   const profileId = parseInt(urlMentorId, 10);
+        //   if (!isNaN(profileId)) {
+        //     try {
+        //       console.log(`[BookSessionWithMentor] Fetching from backend with profileId: ${profileId}`);
+        //       const mentor = await mentorService.getMentorDetails(profileId);
+        //       if (mentor) {
+        //         console.log('[BookSessionWithMentor] ✓ Backend fetch successful');
+        //         setSelectedMentor(mentor);
+        //         setLoading(false);
+        //         return;
+        //       }
+        //     } catch (err) {
+        //       console.warn('[BookSessionWithMentor] Backend fetch failed:', err);
             }
           } catch (err) {
             console.warn('[BookSessionWithMentor] Backend fetch failed', err);
@@ -88,6 +134,7 @@ function BookSessionContent() {
       setError('Nenhum perfil selecionado.');
       setLoading(false);
     }
+  //DEVELOP:
   }, [urlMentorId, urlMenteeId, mentorState]);
 
   // Load current user's profile IDs (MENTOR and MENTORADO)
@@ -229,6 +276,7 @@ function BookSessionContent() {
       toast({ title: 'Erro ao sair da mentoria', description: String(err) });
     }
   };
+  // }, [urlMentorId, mentorState]);
 
   if (loading) {
     return (
@@ -249,7 +297,7 @@ function BookSessionContent() {
             <h2 className="error-title">Perfil não encontrado</h2>
             <p className="error-message">{error || 'Não conseguimos carregar os dados.'}</p>
             <button
-              onClick={() => navigate(isMentorView ? '/mentor-dashboard' : '/mentoros')}
+              onClick={() => navigate(isMentorView ? '/mentor-dashboard' : '/mentorias')}
               className="error-button"
             >
               ← Voltar
@@ -268,6 +316,7 @@ function BookSessionContent() {
 
   return (
     <div className="book-session-with-mentor">
+      //DEVELOP:
       {isMentorView ? (
         <MenteeInfo
           name={targetProfile.name}
@@ -293,6 +342,18 @@ function BookSessionContent() {
           onChat={targetProfile.userId ? () => setActiveChatId(targetProfile.userId!) : undefined}
         />
       )}
+      // <MentorInfo
+      //   mentorId={selectedMentor.id || selectedMentor.profileId || selectedMentor.userId}
+      //   name={selectedMentor.name}
+      //   position={selectedMentor.position}
+      //   skills={selectedMentor.skills}
+      //   experience={selectedMentor.anosExperiencia}
+      //   isActive={selectedMentor.isActive}
+      //   avatarUrl={selectedMentor.avatarUrl}
+      //   bio={selectedMentor.bio}
+      //   rating={selectedMentor.rating}
+      //   menteeCount={selectedMentor.menteeCount}
+      // />
 
       {targetProfile.isAvailable && currentUserId && connectionStatus === 'active' && (
         <div className="calendar-container">
