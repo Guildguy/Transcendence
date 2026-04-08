@@ -545,22 +545,6 @@ useEffect(() => {
                     onChange={(val) => setUserData({ ...userData, anosExperiencia: val })}
                   />
                 </div>
-                <div className="xp-level-section">
-                  <InputGroup
-                    label="Level"
-                    value={userData.level?.toString() || "0"}
-                    isEditing={isEditing}
-                    isNumeric={true}
-                    onChange={(val) => setUserData({ ...userData, level: parseInt(val) || 0 })}
-                  />
-                  <InputGroup
-                    label="XP"
-                    value={userData.xp?.toString() || "0"}
-                    isEditing={isEditing}
-                    isNumeric={true}
-                    onChange={(val) => setUserData({ ...userData, xp: parseInt(val) || 0 })}
-                  />
-                </div>
               </>
             ) : (
               <>
