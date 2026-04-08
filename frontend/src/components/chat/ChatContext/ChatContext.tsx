@@ -18,6 +18,7 @@ interface ChatContextData {
   setActiveChatId: (id: number | null) => void;
   onlineUsers: Set<number>;
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  contactsVersion: number;
 }
 
 const ChatContext = createContext<ChatContextData>({} as ChatContextData);
@@ -26,6 +27,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages]       = useState<Message[]>([]);
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [onlineUsers]                 = useState<Set<number>>(new Set());
+  const [contactsVersion, setContactsVersion] = useState(0);
   const clientRef                     = useRef<Client | null>(null);
   const [stompClient, setStompClient] = useState<Client | null>(null);
 
@@ -97,11 +99,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       // Adiciona localmente para feedback instantâneo
       setMessages((prev) => [...prev, { ...payload, isRead: false, createdAt: new Date().toISOString() }]);
+      // Sinaliza que os contatos podem ter mudado (sidebar re-busca)
+      setContactsVersion((v) => v + 1);
     }
   };
 
   return (
-    <ChatContext.Provider value={{ messages, setMessages, sendMessage, activeChatId, setActiveChatId, onlineUsers }}>
+    <ChatContext.Provider value={{ messages, setMessages, sendMessage, activeChatId, setActiveChatId, onlineUsers, contactsVersion }}>
       {children}
     </ChatContext.Provider>
   );

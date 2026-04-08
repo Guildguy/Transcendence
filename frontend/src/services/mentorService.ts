@@ -211,7 +211,7 @@ class MentorService {
       // Since there's no GET /profiles/{id} endpoint, fetch all profiles and find by ID
       const response = await apiFetch(`/profiles`);
       if (!response.ok) {
-        console.warn(`[getMentorDetails] Failed to fetch profiles list: HTTP ${response.status}`);
+        console.warn(`[getMentorDetails] Profile with ID ${profileId} not found: HTTP ${response.status}`);
         return null;
       }
 
@@ -240,8 +240,7 @@ class MentorService {
       const userId = profileData.user?.id || profileData.userId;
 
       if (!userId) {
-        console.warn(`[getMentorDetails] No userId found in profile data:`, profileData);
-        return null;
+        console.error(`[getMentorDetails] No userId found for mentor ${profileId}`);
       }
 
       // Extract user data - could be nested or flat
@@ -277,11 +276,9 @@ class MentorService {
             console.log(`[getMentorDetails] Mentee count for ${userId}:`, menteeCount);
           }
         } catch (error) {
-          console.warn(`[getMentorDetails] Error fetching mentee count:`, error);
         }
       }
 
-      // Monta o objeto com detalhes expandidos
       const result: MentorDetailData = {
         id: profileData.id,
         userId: userId,

@@ -9,8 +9,10 @@ public class ConnectionResponseDTO
 	public Long			id;
 	public Long			mentorId;
 	public String		mentorName;
+	public Long			mentorProfileId;
 	public Long			menteeId;
 	public String		menteeName;
+	public Long			menteeProfileId;
 	public String		status;
 	public LocalDateTime	acceptedAt;
 	public LocalDateTime	createdAt;
@@ -18,14 +20,16 @@ public class ConnectionResponseDTO
 	public static ConnectionResponseDTO fromEntity(MentorshipConnection conn)
 	{
 		ConnectionResponseDTO dto = new ConnectionResponseDTO();
-		dto.id         = conn.id;
-		dto.mentorId   = conn.mentor != null ? conn.mentor.id : null;
-		dto.mentorName = conn.mentor != null ? conn.mentor.name : null;
-		dto.menteeId   = conn.mentee != null ? conn.mentee.id : null;
-		dto.menteeName = conn.mentee != null ? conn.mentee.name : null;
-		dto.status     = conn.status != null ? conn.status.name() : null;
-		dto.acceptedAt = conn.acceptedAt;
-		dto.createdAt  = conn.createdAt;
+		dto.id              = conn.id;
+		dto.mentorId        = (conn.mentor != null && conn.mentor.user != null) ? conn.mentor.user.id : null;
+		dto.mentorName      = (conn.mentor != null && conn.mentor.user != null) ? conn.mentor.user.name : null;
+		dto.mentorProfileId  = conn.mentor != null ? conn.mentor.id : null;
+		dto.menteeId        = (conn.mentee != null && conn.mentee.user != null) ? conn.mentee.user.id : null;
+		dto.menteeName      = (conn.mentee != null && conn.mentee.user != null) ? conn.mentee.user.name : null;
+		dto.menteeProfileId  = conn.mentee != null ? conn.mentee.id : null;
+		dto.status          = conn.status != null ? conn.status.name() : null;
+		dto.acceptedAt      = conn.acceptedAt;
+		dto.createdAt       = conn.createdAt;
 		return dto;
 	}
 }

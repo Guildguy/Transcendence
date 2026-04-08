@@ -52,66 +52,53 @@ public class MentorshipConnectionService
 		this.profileRepository     = profileRepository;
 	}
 
-	// ── RN01: Mentorado solicita mentoria ────────────────────────
+	// ── RN01: Mentorado solicita mentoria (usando Profile IDs) ────────────────────────
 	@Transactional
 	public Result requestConnection(RequestConnectionDTO dto)
 	{
 		ValidationResult result = new ValidationResult();
 
-		if (dto.mentorId == null)
-			result.addError("mentorId", "Mentor deve ser informado.");
-		if (dto.menteeId == null)
-			result.addError("menteeId", "Mentorado deve ser informado.");
+		if (dto.mentorProfileId == null)
+			result.addError("mentorProfileId", "ID do perfil do mentor deve ser informado.");
+		if (dto.menteeProfileId == null)
+			result.addError("menteeProfileId", "ID do perfil do mentorado deve ser informado.");
 		if (result.hasErrors())
 			return new Result(null, result);
 
-		if (dto.mentorId.equals(dto.menteeId))
+		if (dto.mentorProfileId.equals(dto.menteeProfileId))
 		{
-			result.addError("connection", "O mentor e o mentorado não podem ser a mesma pessoa.");
+			result.addError("connection", "O perfil de mentor e o perfil de mentorado não podem ser o mesmo.");
 			return new Result(null, result);
 		}
 
-		User mentor = userRepository.findById(dto.mentorId).orElse(null);
-		if (mentor == null)
+		Profile mentorProfile = profileRepository.findById(dto.mentorProfileId).orElse(null);
+		if (mentorProfile == null || mentorProfile.role != ProfileType.MENTOR)
 		{
-			result.addError("mentorId", "Mentor não encontrado.");
+			result.addError("mentorProfileId", "Perfil de Mentor não encontrado.");
 			return new Result(null, result);
 		}
 
-		User mentee = userRepository.findById(dto.menteeId).orElse(null);
-		if (mentee == null)
+		Profile menteeProfile = profileRepository.findById(dto.menteeProfileId).orElse(null);
+		if (menteeProfile == null || menteeProfile.role != ProfileType.MENTORADO)
 		{
-			result.addError("menteeId", "Mentorado não encontrado.");
+			result.addError("menteeProfileId", "Perfil de Mentorado não encontrado.");
 			return new Result(null, result);
 		}
 
-		// Validar perfis
-		Optional<Profile> mentorProfile = profileRepository.findByUserIdAndRole(dto.mentorId, ProfileType.MENTOR);
-		if (mentorProfile.isEmpty())
-		{
-			result.addError("mentorId", "Este usuário não possui perfil de Mentor.");
-			return new Result(null, result);
-		}
-
-		Optional<Profile> menteeProfile = profileRepository.findByUserIdAndRole(dto.menteeId, ProfileType.MENTORADO);
-		if (menteeProfile.isEmpty())
-		{
-			result.addError("menteeId", "Este usuário não possui perfil de Mentorado.");
-			return new Result(null, result);
-		}
-
-		// Verificar se já existe conexão ativa (PENDING ou APPROVED)
+		// Verificar se já existe conexão ativa (PENDING ou APPROVED) entre estes PERFIS
 		List<ConnectionStatus> activeStatuses = List.of(ConnectionStatus.PENDING, ConnectionStatus.APPROVED);
 		boolean alreadyExists = connectionRepository
-			.existsByMentor_IdAndMentee_IdAndStatusIn(dto.mentorId, dto.menteeId, activeStatuses);
+			.existsByMentorProfileIdAndMenteeProfileIdAndStatusIn(dto.mentorProfileId, dto.menteeProfileId, activeStatuses);
+		
 		if (alreadyExists)
 		{
-			result.addError("connection", "Já existe uma solicitação pendente ou conexão ativa com este mentor.");
+			result.addError("connection", "Já existe uma solicitação pendente ou conexão ativa com este perfil de mentor.");
 			return new Result(null, result);
 		}
 
-		// RN02: Verificar capacidade do mentor
-		MentorCapacityDTO capacity = _getMentorCapacity(dto.mentorId, mentorProfile.get().id);
+		// RN02: Verificar capacidade do mentor (passando UserID do mentor e ProfileID do mentor)
+		Long mentorUserId = mentorProfile.user != null ? mentorProfile.user.id : null;
+		MentorCapacityDTO capacity = _getMentorCapacity(mentorUserId, dto.mentorProfileId);
 		if (!capacity.isAvailable)
 		{
 			result.addError("capacity",
@@ -121,8 +108,8 @@ public class MentorshipConnectionService
 		}
 
 		MentorshipConnection connection = new MentorshipConnection();
-		connection.mentor      = mentor;
-		connection.mentee      = mentee;
+		connection.mentor      = mentorProfile;
+		connection.mentee      = menteeProfile;
 		connection.status      = ConnectionStatus.PENDING;
 		connection.createdAt   = LocalDateTime.now();
 		connection.createdBy   = dto.createdBy;
@@ -138,7 +125,7 @@ public class MentorshipConnectionService
 	{
 		ValidationResult result = new ValidationResult();
 
-		MentorshipConnection connection = connectionRepository.findById(connectionId).orElse(null);
+		MentorshipConnection connection = connectionRepository.findByIdFull(connectionId).orElse(null);
 		if (connection == null)
 		{
 			result.addError("connectionId", "Conexão não encontrada.");
@@ -151,21 +138,26 @@ public class MentorshipConnectionService
 			return new Result(null, result);
 		}
 
-		if (!connection.mentor.id.equals(mentorUserId))
+		// Verificar se o usuário autenticado que está aceitando é o DONO do perfil de mentor
+		// Forçamos o carregamento do perfil com usuário para evitar o erro de NULL
+		Profile fullMentorProfile = profileRepository.findByIdWithUser(connection.mentor.id).orElse(null);
+		
+		if (fullMentorProfile == null || fullMentorProfile.user == null) {
+			System.err.println("[acceptConnection] CRITICAL: Mentor Profile or User still NULL for Connection ID: " + connectionId);
+			result.addError("mentor", "Não foi possível validar o dono do perfil de mentor.");
+			return new Result(null, result);
+		}
+		
+		System.out.println("[acceptConnection] DB Mentor User: " + fullMentorProfile.user.id + " | Incoming User: " + mentorUserId);
+
+		if (!fullMentorProfile.user.id.equals(mentorUserId))
 		{
-			result.addError("mentor", "Apenas o mentor desta conexão pode aceitá-la.");
+			result.addError("mentor", "Apenas o usuário dono deste perfil de mentor pode aceitar a conexão.");
 			return new Result(null, result);
 		}
 
 		// RN02: Revalidar capacidade
-		Optional<Profile> mentorProfile = profileRepository.findByUserIdAndRole(mentorUserId, ProfileType.MENTOR);
-		if (mentorProfile.isEmpty())
-		{
-			result.addError("mentor", "Perfil de Mentor não encontrado.");
-			return new Result(null, result);
-		}
-
-		MentorCapacityDTO capacity = _getMentorCapacity(mentorUserId, mentorProfile.get().id);
+		MentorCapacityDTO capacity = _getMentorCapacity(mentorUserId, fullMentorProfile.id);
 		if (!capacity.isAvailable)
 		{
 			result.addError("capacity",
@@ -186,7 +178,7 @@ public class MentorshipConnectionService
 		// Criar registro no mentorship_count
 		MentorshipCount count = new MentorshipCount();
 		count.connection      = connection;
-		count.mentorProfileId = mentorProfile.get().id;
+		count.mentorProfileId = fullMentorProfile.id;
 		count.status          = "APROVADO";
 		count.limitOfMentee   = capacity.maxMentees;
 		count.createdAt       = LocalDateTime.now();
@@ -213,7 +205,7 @@ public class MentorshipConnectionService
 	{
 		ValidationResult result = new ValidationResult();
 
-		MentorshipConnection connection = connectionRepository.findById(connectionId).orElse(null);
+		MentorshipConnection connection = connectionRepository.findByIdFull(connectionId).orElse(null);
 		if (connection == null)
 		{
 			result.addError("connectionId", "Conexão não encontrada.");
@@ -226,9 +218,10 @@ public class MentorshipConnectionService
 			return new Result(null, result);
 		}
 
-		if (!connection.mentor.id.equals(mentorUserId))
+		// Verificar se o usuário autenticado que está rejeitando é o DONO do perfil de mentor
+		if (connection.mentor.user == null || !connection.mentor.user.id.equals(mentorUserId))
 		{
-			result.addError("mentor", "Apenas o mentor desta conexão pode rejeitá-la.");
+			result.addError("mentor", "Apenas o usuário dono deste perfil de mentor pode rejeitar a conexão.");
 			return new Result(null, result);
 		}
 
@@ -245,7 +238,7 @@ public class MentorshipConnectionService
 	{
 		ValidationResult result = new ValidationResult();
 
-		MentorshipConnection connection = connectionRepository.findById(connectionId).orElse(null);
+		MentorshipConnection connection = connectionRepository.findByIdFull(connectionId).orElse(null);
 		if (connection == null)
 		{
 			result.addError("connectionId", "Conexão não encontrada.");
@@ -258,11 +251,11 @@ public class MentorshipConnectionService
 			return new Result(null, result);
 		}
 
-		boolean isMentor = connection.mentor.id.equals(userId);
-		boolean isMentee = connection.mentee.id.equals(userId);
+		boolean isMentor = connection.mentor.user != null && connection.mentor.user.id.equals(userId);
+		boolean isMentee = connection.mentee.user != null && connection.mentee.user.id.equals(userId);
 		if (!isMentor && !isMentee)
 		{
-			result.addError("userId", "Apenas o mentor ou o mentorado podem encerrar esta mentoria.");
+			result.addError("userId", "Apenas o dono do perfil de mentor ou do perfil de mentorado pode encerrar esta mentoria.");
 			return new Result(null, result);
 		}
 
@@ -286,36 +279,36 @@ public class MentorshipConnectionService
 
 	// ── Listagens ────────────────────────────────────────────────
 
-	public List<ConnectionResponseDTO> listMentorsByMentee(Long menteeId)
+	/** Retorna TODAS as conexões de um perfil de mentorado */
+	public List<ConnectionResponseDTO> listMentorsByMentee(Long menteeProfileId)
 	{
-		List<MentorshipConnection> connections = connectionRepository
-			.findByMentee_IdAndStatus(menteeId, ConnectionStatus.APPROVED);
+		List<MentorshipConnection> connections = connectionRepository.findByMenteeId(menteeProfileId);
 		return connections.stream().map(ConnectionResponseDTO::fromEntity).toList();
 	}
 
-	public List<ConnectionResponseDTO> listMenteesByMentor(Long mentorId)
+	public List<ConnectionResponseDTO> listMenteesByMentor(Long mentorProfileId)
 	{
 		List<MentorshipConnection> connections = connectionRepository
-			.findByMentor_IdAndStatus(mentorId, ConnectionStatus.APPROVED);
+			.findByMentorIdAndStatus(mentorProfileId, ConnectionStatus.APPROVED);
 		return connections.stream().map(ConnectionResponseDTO::fromEntity).toList();
 	}
 
-	public List<ConnectionResponseDTO> listPendingByMentor(Long mentorId)
+	public List<ConnectionResponseDTO> listPendingByMentor(Long mentorProfileId)
 	{
 		List<MentorshipConnection> connections = connectionRepository
-			.findByMentor_IdAndStatus(mentorId, ConnectionStatus.PENDING);
+			.findByMentorIdAndStatus(mentorProfileId, ConnectionStatus.PENDING);
 		return connections.stream().map(ConnectionResponseDTO::fromEntity).toList();
 	}
 
 	public List<ConnectionResponseDTO> listAllByMentor(Long mentorId)
 	{
-		List<MentorshipConnection> connections = connectionRepository.findByMentor_Id(mentorId);
+		List<MentorshipConnection> connections = connectionRepository.findByMentorId(mentorId);
 		return connections.stream().map(ConnectionResponseDTO::fromEntity).toList();
 	}
 
 	public List<ConnectionResponseDTO> listAllByMentee(Long menteeId)
 	{
-		List<MentorshipConnection> connections = connectionRepository.findByMentee_Id(menteeId);
+		List<MentorshipConnection> connections = connectionRepository.findByMenteeId(menteeId);
 		return connections.stream().map(ConnectionResponseDTO::fromEntity).toList();
 	}
 
