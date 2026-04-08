@@ -57,6 +57,7 @@ input[type="number"].custom-input {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 300px;
 }
 
 .perfil-badge {
@@ -66,7 +67,7 @@ input[type="number"].custom-input {
   border-radius: var(--borda-raio-redondo);
   font-size: 0.875rem;
   font-weight: 500;
-  width: 12rem;
+  width: 100%;
   text-align: center;
 }
 
