@@ -60,15 +60,17 @@ const MentoriasPage = () => {
       setLoading(true);
       try {
         // 1. Busca todos os mentores para a vitrine
+        // O serviço garante que apenas usuários/perfis com role MENTOR são retornados
         const todos = await mentorService.getAllMentorsForCards();
-        console.log("Mentors loaded from service:", todos);
+        console.log("Mentors loaded from service (filtered for MENTOR role):", todos);
+        console.log(`Total mentores com role MENTOR: ${todos.length}`);
         console.log("Sample mentor data:", todos[0]);
         setMentoresDisponiveis(todos);
 
         // 2. Busca conexões do usuário logado (Meus Mentores)
         // OBS: Aqui você deve passar o ID do usuário logado (vindo do seu Contexto ou JWT)
         // Exemplo fixo com ID 1 apenas para ilustração
-        const logadoId = 1; 
+        const logadoId = 1;
         const conexoes = await mentorService.getMyMentors(logadoId);
         setMeusMentores(conexoes);
 

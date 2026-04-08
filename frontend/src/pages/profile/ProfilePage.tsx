@@ -4,6 +4,7 @@ import "./ProfilePage.css";
 import InputGroup from "../../components/common/InputGroup/InputGroup";
 import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
+import ProgressBar from "../../components/common/ProgressBar/ProgressBar";
 import { apiFetch } from "../../services/api";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
@@ -17,14 +18,15 @@ interface UserData {
   email: string;
   avatarUrl: string;
   cargo: string;
-  presentationText: string; 
-  anosExperiencia: string; 
+  presentationText: string;
+  anosExperiencia: string;
   github: string;
   linkedin: string;
   instagram: string;
   telefone: string;
   level?: number;
   xp?: number;
+  nextLevelXp?: number | null;
   role: string;
 }
 
@@ -56,16 +58,20 @@ export const ProfilePage = () => {
   useEffect(() => {
     const loadFullProfile = async () => {
       const loggedUserId = localStorage.getItem('userId');
-      
+
       console.log('=== ProfilePage useEffect ===');
       console.log('ID do usuário sendo buscado:', loggedUserId);
-
 
       try {
         const response = await apiFetch(`/users/${loggedUserId}`);
 
         if (response.ok) {
           const data = await response.json();
+          console.log("=== DEBUG BACKEND ===");
+          console.log("Objeto User completo:", data.user);
+          console.log("Role que veio do banco:", data.user.role);
+          console.log("Tipo do Role:", typeof data.user.role);
+
           const user = data.user;
           const profiles = Array.isArray(data.profiles) ? data.profiles : [];
           const profile =
@@ -73,12 +79,30 @@ export const ProfilePage = () => {
             profiles[0] ||
             {};
 
+          let level = profile.level || 0;
+          let xp = profile.xp || 0;
+          let nextLevelXp: number | null = null;
+
+          // Fetch gamification data for more accurate XP and level
+          try {
+            const gamificationRes = await apiFetch(`/gamification/users/${loggedUserId}/summary`);
+            if (gamificationRes.ok) {
+              const gamificationData = await gamificationRes.json();
+              level = gamificationData?.currentLevel ?? level;
+              xp = gamificationData?.totalXp ?? xp;
+              nextLevelXp = gamificationData?.nextLevelXp ?? null;
+              console.log("Gamification data loaded:", { level, xp, nextLevelXp });
+            }
+          } catch (err) {
+            console.warn("Failed to load gamification data, using profile values:", err);
+          }
+
           const unifiedData: UserData = {
             id: user.id,
             profile_id: profile.id,
             nome: user.name || "",
             email: user.email || "",
-            avatarUrl:user.avatarUrl || "",
+            avatarUrl: user.avatarUrl || "",
             telefone: user.phoneNumber || "",
             cargo: profile.position || "",
             presentationText: profile.bio || "",
@@ -86,8 +110,9 @@ export const ProfilePage = () => {
             linkedin: profile.linkedin || "",
             instagram: profile.instagram || "",
             anosExperiencia: profile.anosExperiencia?.toString() || "0",
-            level: profile.level || 0,
-            xp: profile.xp || 0,
+            level,
+            xp,
+            nextLevelXp,
             role: (profile.role || "MENTOR").toString()
           };
 
@@ -106,21 +131,21 @@ export const ProfilePage = () => {
         }
       } catch (error) {
         console.warn("Backend offline ou usuário não encontrado. Carregando Mock...");
-        
+
         const mockUser: UserData = {
           id: Number(loggedUserId),
-          nome: "Marcelo Dias Machado", 
+          nome: "Marcelo Dias Machado",
           cargo: "Desenvolvedor Mentor",
-          email: "mrl.jose123@gmail.com", 
+          email: "mrl.jose123@gmail.com",
           avatarUrl: "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80",
           presentationText: "Apaixonado por tecnologia e mentoria...",
-          anosExperiencia: "5", 
+          anosExperiencia: "5",
           github: "github.com/marcelo",
-          linkedin: "linkedin.com/in/marcelo", 
+          linkedin: "linkedin.com/in/marcelo",
           instagram: "@marcelo",
-          telefone: "11949335709", 
-          level: 10, 
-          xp: 500, 
+          telefone: "11949335709",
+          level: 10,
+          xp: 500,
           role: "mentor",
         };
         const mockSkills: Skill[] = [
@@ -135,67 +160,86 @@ export const ProfilePage = () => {
         setBackupSkills(mockSkills);
       }
     };
-    
+
     loadFullProfile();
   }, []);
 
-const handleSaveAll = async () => {
-  if (!userData || !userData.id) return;
-  const profileIdForStacks = userData.profile_id ?? userData.id;
+  const handleSaveAll = async () => {
+  console.log("INICIANDO SALVAMENTO...");
 
-  const userPayload = {
-    id: userData.id,
-    name: userData.nome,
-    email: userData.email,
-    phoneNumber: userData.telefone
-  };
+  if (!userData.id) {
+    alert("Erro: ID do usuário não encontrado no estado.");
+    return;
+  }
 
-  const profilePayload = {
+  // Montando o objeto com todos os campos para o Backend
+  const payload = {
     user_id: userData.id,
     profile_id: userData.profile_id,
     position: userData.cargo,
     bio: userData.presentationText,
+    role: userData.role || "MENTOR",
     github: userData.github,
     linkedin: userData.linkedin,
     instagram: userData.instagram,
-    xp: userData.xp || 0,
     anosExperiencia: parseInt(userData.anosExperiencia) || 0,
-    role: userData.role?.toUpperCase()
+    level: userData.level || 0,
+    xp: userData.xp || 0
   };
 
-  const pythonStacksPayload = {
-    profile_id: profileIdForStacks.toString(),
-    stacks: userSkills.map((skill: Skill) => skill.name)
+  // Payload para o Python API (skills/habilidades)
+  const pythonPayload = {
+    profile_id: userData.profile_id?.toString() || userData.id.toString(),
+    stacks: userSkills.map(skill => skill.name)
   };
+
+  console.log("Enviando payload completo:", payload);
+  console.log("Enviando skills para Python API:", pythonPayload);
 
   try {
-    const resUser = await apiFetch('/users', {
+    // Requisição 1: Salvar dados do perfil no Backend principal
+    const res = await apiFetch('/profiles', {
       method: 'PUT',
-      body: JSON.stringify(userPayload)
+      body: JSON.stringify(payload)
     });
 
-    const resProfile = await apiFetch('/profiles', {
-      method: 'PUT',
-      body: JSON.stringify(profilePayload)
+    // Requisição 2: Salvar skills no Python API
+    const resPython = await fetch(`${PYTHON_API_URL}/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pythonPayload)
     });
 
-    const resStacks = await fetch(`${PYTHON_API_URL}/profile`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pythonStacksPayload)
-    });
-
-    if (resProfile.ok && resStacks.ok && resUser.ok) {
+    if (res.ok && resPython.ok) {
       alert("Perfil e habilidades atualizados com sucesso!");
+
+      // 1. Sai do modo de edição (volta a mostrar o ícone de lápis)
+      setIsEditing(false);
+
+      // 2. Atualiza o backup com os dados atuais que acabaram de ser salvos
+      // Isso evita que o botão 'Cancelar' reverta para dados antigos depois de um save
       setBackupData(userData);
       setBackupSkills(userSkills);
-      setIsEditing(false);
+
     } else {
-      alert("Erro ao salvar um dos componentes do perfil.");
+      // Caso alguma requisição falhe
+      const errorData = await res.json().catch(() => ({}));
+      const errorDataPython = await resPython.json().catch(() => ({}));
+
+      console.error("Erro do servidor principal:", res.status, errorData);
+      console.error("Erro do Python API:", resPython.status, errorDataPython);
+
+      if (!res.ok && res.status === 401) {
+        alert("Erro 401: Sua sessão expirou ou você não tem permissão.");
+      } else if (!resPython.ok) {
+        alert(`Erro ao salvar habilidades: ${errorDataPython.detail || 'Verifique os dados e tente novamente.'}`);
+      } else {
+        alert(`Erro ao salvar: ${errorData.message || 'Verifique os dados e tente novamente.'}`);
+      }
     }
-  } catch (e) {
-    console.error("Erro de conexão:", e);
-    alert("Erro de conexão com os servidores.");
+  } catch (err) {
+    console.error("Erro de conexão na chamada API:", err);
+    alert("Não foi possível conectar ao servidor. Verifique sua internet.");
   }
 };
 
@@ -328,29 +372,82 @@ useEffect(() => {
           id: `sk_py_${i}`,
           name: s
         }));
+        console.log("Skills carregadas com sucesso:", formatted);
         setUserSkills(formatted);
         setBackupSkills(formatted);
+      } else if (response.status === 404) {
+        // Se não houver skills salvos ainda, apenas use array vazio
+        console.log("Nenhuma skill salva ainda para este perfil");
+        setUserSkills([]);
+        setBackupSkills([]);
+      } else {
+        console.warn("Erro ao buscar skills:", response.status);
       }
     } catch (err) {
-      console.error("Erro ao conectar com o Python:", err);
+      console.error("Erro ao conectar com o Python API:", err);
+      // Continue mesmo se não conseguir carregar skills do Python
     }
   };
 
   loadSkills();
 }, [userData.id, userData.profile_id]);
 
+// Sincronizar dados de gamification com as badges
+useEffect(() => {
+  const loadGamificationData = async () => {
+    const loggedUserId = localStorage.getItem('userId');
+    if (!loggedUserId) return;
+
+    try {
+      const gamificationRes = await apiFetch(`/gamification/users/${loggedUserId}/summary`);
+      if (gamificationRes.ok) {
+        const gamificationData = await gamificationRes.json();
+        const newLevel = gamificationData?.currentLevel ?? userData.level;
+        const newXp = gamificationData?.totalXp ?? userData.xp;
+        const newNextLevelXp = gamificationData?.nextLevelXp ?? userData.nextLevelXp;
+
+        if (newLevel !== userData.level || newXp !== userData.xp || newNextLevelXp !== userData.nextLevelXp) {
+          console.log("Atualizando badges de gamification:", { newLevel, newXp, newNextLevelXp });
+          setUserData(prev => ({
+            ...prev,
+            level: newLevel,
+            xp: newXp,
+            nextLevelXp: newNextLevelXp
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn("Erro ao atualizar dados de gamification:", err);
+    }
+  };
+
+  // Carregar gamification data a cada 30 segundos para manter badges atualizadas
+  const interval = setInterval(loadGamificationData, 30000);
+
+  // Carregar também ao montar o componente
+  loadGamificationData();
+
+  return () => clearInterval(interval);
+}, []);
+
   return (
     <div className="perfil-container">
       <div className="perfil-header">
-        <Avatar 
-          avatarUrl={userData.avatarUrl} 
-          size={128} 
-          isEditable={true} 
+        <Avatar
+          avatarUrl={userData.avatarUrl}
+          size={128}
+          isEditable={true}
           onImageChange={(file) => handleImageUpload(file)}
         />
         <div className="perfil-badges">
-          <div className="perfil-badge">Level: {userData.level}</div>
-          <div className="perfil-badge">XP: {userData.xp}</div>
+          <ProgressBar
+            currentXp={userData.xp || 0}
+            nextLevelXp={userData.nextLevelXp}
+            currentLevel={userData.level || 0}
+            size="medium"
+          />
+          <div className="perfil-badge">Level: {userData.level || 0}</div>
+          <div className="perfil-badge">XP: {userData.xp || 0}</div>
         </div>
       </div>
 
@@ -373,7 +470,9 @@ useEffect(() => {
           <div className="perfil-coluna">
             <div className="perfil-titulo-secao">
               <span className="perfil-tag-titulo">
-                {abaAtiva === "gerais" ? "Pessoa Mentora" : "Dados de contato"}
+                {abaAtiva === "gerais" 
+                  ? (userData.role?.toLowerCase() === "mentor" ? "Pessoa Mentora" : "Pessoa Mentorada")
+                  : "Dados de contato"}
               </span>
 
               {isEditing ? (
@@ -431,6 +530,22 @@ useEffect(() => {
                     onChange={(val) => setUserData({ ...userData, anosExperiencia: val })}
                   />
                 </div>
+                <div className="xp-level-section">
+                  <InputGroup
+                    label="Level"
+                    value={userData.level?.toString() || "0"}
+                    isEditing={isEditing}
+                    isNumeric={true}
+                    onChange={(val) => setUserData({ ...userData, level: parseInt(val) || 0 })}
+                  />
+                  <InputGroup
+                    label="XP"
+                    value={userData.xp?.toString() || "0"}
+                    isEditing={isEditing}
+                    isNumeric={true}
+                    onChange={(val) => setUserData({ ...userData, xp: parseInt(val) || 0 })}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -479,10 +594,12 @@ useEffect(() => {
             <Habilities 
               selectedSkills={userSkills} 
               onSkillsChange={handleSkillsChange} 
-              isEditable={isEditing} 
-              title="Habilidades apresentadas para mentorar"
-            />
-            
+              isEditable={true} 
+              title={
+                userData.role?.toLowerCase() === "mentor" 
+                  ? "Habilidades apresentadas para mentorar" 
+                  : "Habilidades que quero receber mentoria"}
+              />
             ) : (
               <div className="perfil-caixa-senha">
                 <h3>Alterar a Senha:</h3>
