@@ -1,5 +1,5 @@
 import './ManageSessionWithMentee.css'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { MentoringProvider } from '../../components/common/BookingCalendar/MentoringContext'
 import { SlotSelector } from '../../components/common/SlotSelector/SlotSelector'
@@ -8,7 +8,7 @@ import MenteeInfo from '../../components/common/MenteeInfo/MenteeInfo'
 import { apiFetch } from '../../services/api'
 import { toast } from '../../hooks/use-toast'
 import { useChat } from '../../components/chat/ChatContext/ChatContext'
-import mentorService, { type MenteeDetailData } from '../../services/mentorService'
+import menteeService, { type MenteeDetailData } from '../../services/menteeService'
 
 interface Skill {
   id: string;
@@ -31,7 +31,7 @@ type ConnectionStatus = 'none' | 'pending' | 'active' | 'loading';
 function ManageSessionContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { mentorId: urlMentorId, menteeId: urlMenteeId } = useParams<{ mentorId?: string, menteeId?: string }>();
+  const { menteeId: urlMenteeId } = useParams<{ mentorId?: string, menteeId?: string }>();
   const [selectedMentee, setSelectedMentee] = useState<MenteeDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,6 @@ function ManageSessionContent() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('none');
   const [connectionId, setConnectionId] = useState<number | null>(null);
   const [mentorProfileId, setMentorProfileId] = useState<number | null>(null);
-  const [myMenteeProfileId, setMyMenteeProfileId] = useState<number | null>(null);
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
   const { setActiveChatId } = useChat();
   
@@ -53,11 +52,12 @@ function ManageSessionContent() {
       setLoading(true);
       setError(null);
       try {
+        // Priority 1: Load from location state (passed from previous page)
         if (menteeState?.menteeId) {
           const mentee: MenteeDetailData = {
             id: menteeState.menteeId,
             profileId: menteeState.menteeId,
-            userId: menteeState.menteeId, 
+            userId: menteeState.menteeId,
             name: menteeState.menteeName || 'Mentee',
             position: menteeState.menteePosition || 'Position',
             skills: menteeState.menteeSkills || [],
@@ -72,41 +72,35 @@ function ManageSessionContent() {
           return;
         }
 
-        // Fetch mentee data with URL parameter
+        // Priority 2: Load from URL parameter
         if (urlMenteeId) {
           const menteeId = parseInt(urlMenteeId, 10);
           if (!isNaN(menteeId)) {
-            try {
-              const mentee = await mentorService.getMenteeDetails(menteeId);
-              if (mentee) {
-                setSelectedMentee(mentee);
-                setLoading(false);
-                return;
-              }
-            } catch (err) {
-              console.warn('[ManageSessionWithMentee] Backend fetch failed:', err);
+            const mentee = await menteeService.getMenteeDetails(menteeId);
+            if (mentee) {
+              setSelectedMentee(mentee);
+              setLoading(false);
+              return;
+            } else {
               setError('Mentorado não encontrado. Por favor, volte à página anterior.');
               setLoading(false);
               return;
             }
           }
         }
-      
-              if (urlMentorId || urlMenteeId ||menteeState?.menteeId) {
-                loadProfile();
-              } else {
-                setError('Nenhum perfil selecionado.');
-                setLoading(false);
-              }
-            } catch (err) {
-              console.error('[ManageSessionWithMentee] Error loading profile:', err);
-              setError('Erro ao carregar o perfil.');
-              setLoading(false);
-            }
-          };
-      
-          loadProfile();
-        }, [urlMentorId, urlMenteeId, menteeState]);
+
+        // No valid data source
+        setError('Nenhum perfil selecionado.');
+        setLoading(false);
+      } catch (err) {
+        console.error('[ManageSessionWithMentee] Error loading mentee data:', err);
+        setError('Erro ao carregar o perfil.');
+        setLoading(false);
+      }
+    };
+
+    loadMenteeData();
+  }, [urlMenteeId, menteeState]);
 
 // Load current user's profile IDs (MENTOR and MENTORADO)
 useEffect(() => {
@@ -117,23 +111,16 @@ useEffect(() => {
       if (res.ok) {
         const data = await res.json();
         const profiles: any[] = data.profiles || [];
-        
-        // Find MENTORADO profile
-        const mProfile = profiles.find(p => p.role?.toUpperCase() === 'MENTOR');
-        if (mProfile) {
-          console.log('[BookSessionWithMentor] Found Mentee Profile ID:', mProfile.id);
-          setMentorProfileId(mProfile.id);
-        }
-        
+
         // Find MENTOR profile
-        const mentorP = profiles.find(p => p.role?.toUpperCase() === 'MENTORADO');
-        if (mentorP) {
-          console.log('[BookSessionWithMentor] Found Mentor Profile ID:', mentorP.id);
-          setMyMenteeProfileId(mentorP.id);
+        const mentorProfile = profiles.find(p => p.role?.toUpperCase() === 'MENTOR');
+        if (mentorProfile) {
+          console.log('[ManageSessionWithMentee] Found Mentor Profile ID:', mentorProfile.id);
+          setMentorProfileId(mentorProfile.id);
         }
       }
     } catch (err) {
-      console.error('[BookSessionWithMentor] Error loading user profiles:', err);
+      console.error('[ManageSessionWithMentee] Error loading user profiles:', err);
     }
   };
   loadMyProfiles();
@@ -195,7 +182,7 @@ useEffect(() => {
         }
       }
     } catch (err) {
-      console.error('[BookSessionWithMentor] Error loading mentor side connection:', err);
+      console.error('[ManageSessionWithMentee] Error loading mentor side connection:', err);
     }
   };
   loadMentorConnection();
@@ -293,16 +280,19 @@ const schedulerMenteeId = mentorProfileId?.toString();
   return (
     <div className="manage-session-with-mentee">
       <MenteeInfo
-          menteeId={selectedMentee.id || selectedMentee.profileId || selectedMentee.userId}
-          name={selectedMentee.name}
-          position={selectedMentee.position}
-          experience={selectedMentee.anosExperiencia}
-          avatarUrl={selectedMentee.avatarUrl}
-          bio={selectedMentee.bio}
-          connectionStatus={connectionStatus}
-          onLeave={handleLeave}
-          onChat={selectedMentee.userId ? () => setActiveChatId(selectedMentee.userId!) : undefined}
-        />
+        menteeId={selectedMentee.id || selectedMentee.profileId || selectedMentee.userId}
+        name={selectedMentee.name}
+        position={selectedMentee.position}
+        experience={selectedMentee.anosExperiencia}
+        avatarUrl={selectedMentee.avatarUrl}
+        bio={selectedMentee.bio}
+        isActive={selectedMentee.isActive}
+        skills={selectedMentee.skills}
+        connectionStatus={connectionStatus}
+        onConnect={handleConnect}
+        onLeave={handleLeave}
+        onChat={selectedMentee.userId ? () => setActiveChatId(selectedMentee.userId!) : undefined}
+      />
 
       {selectedMentee.isAvailable && currentUserId && connectionStatus === 'active' && (
         <div className="calendar-container">

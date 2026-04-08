@@ -18,6 +18,10 @@ interface MenteeCardProps {
   isActive?: boolean;
   bio?: string;
   avatarUrl?: string;
+  connectionStatus?: 'none' | 'pending' | 'active' | 'loading';
+  onLeave?: () => Promise<void>;
+  onChat?: () => void;
+  onConnect?: () => Promise<void>;
 }
 
 const MenteeCard: React.FC<MenteeCardProps> = ({ 
@@ -29,6 +33,10 @@ const MenteeCard: React.FC<MenteeCardProps> = ({
   isActive: initialIsActive, 
   bio: initialBio,
   avatarUrl: initialAvatarUrl,
+  connectionStatus,
+  onLeave,
+  onChat,
+  onConnect,
 }) => {
   const [name, setName] = useState(initialName || "");
   const [position, setPosition] = useState(initialPosition || "");
@@ -157,8 +165,52 @@ const MenteeCard: React.FC<MenteeCardProps> = ({
       <div className="mentee-info-divider" />
 
       <div className="mentee-info-footer">
-        <IconButton variant="primary" icon={<MessageCircle size={18} />}>Conversar</IconButton>
-        <IconButton variant="withdraw" icon={<LogOut size={18} />}>Deixar Mentoria</IconButton>
+        {connectionStatus === 'none' && (
+          <IconButton 
+            variant="primary" 
+            icon={<MessageCircle size={18} />}
+            onClick={onConnect}
+            disabled={!onConnect}
+          >
+            Solicitar Mentoria
+          </IconButton>
+        )}
+        {connectionStatus === 'pending' && (
+          <IconButton 
+            variant="secondary" 
+            disabled={true}
+          >
+            Solicitação Pendente
+          </IconButton>
+        )}
+        {connectionStatus === 'active' && (
+          <>
+            <IconButton 
+              variant="primary" 
+              icon={<MessageCircle size={18} />}
+              onClick={onChat}
+              disabled={!onChat}
+            >
+              Conversar
+            </IconButton>
+            <IconButton 
+              variant="withdraw" 
+              icon={<LogOut size={18} />}
+              onClick={onLeave}
+              disabled={!onLeave}
+            >
+              Deixar Mentoria
+            </IconButton>
+          </>
+        )}
+        {connectionStatus === 'loading' && (
+          <IconButton 
+            variant="secondary" 
+            disabled={true}
+          >
+            Carregando...
+          </IconButton>
+        )}
       </div>
     </div>
   );
