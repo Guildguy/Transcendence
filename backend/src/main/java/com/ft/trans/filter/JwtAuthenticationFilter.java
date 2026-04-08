@@ -77,7 +77,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            writeUnauthorized(response, "Authentication failed");
+            System.err.println("[JwtAuthenticationFilter] Internal error processing request: " + e.getMessage());
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Internal server error processing authentication\"}");
         }
     }
 

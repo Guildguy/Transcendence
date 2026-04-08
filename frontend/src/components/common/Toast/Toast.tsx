@@ -40,7 +40,7 @@ const Toast = React.forwardRef<
     // Add slight delay to avoid closing immediately on open
     const timer = setTimeout(() => {
       document.addEventListener("mousedown", handleClickOutside);
-    }, 100);
+    }, 800);
 
     return () => {
       clearTimeout(timer);

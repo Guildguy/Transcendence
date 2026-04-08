@@ -29,7 +29,7 @@ public class MentorAvailability implements IEntity
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_id", nullable = false)
-    public User mentor;
+    public Profile mentor;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week", nullable = false)
