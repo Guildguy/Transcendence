@@ -35,6 +35,15 @@ public class ProfileController {
 		return (this.profileService.list());
 	}
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable Long id) {
+        Profile profile = this.profileService.findById(id);
+        if (profile == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(profile);
+    }
+
     @PutMapping
     public ResponseEntity<?> putProfile(@RequestBody UpdateProfileDTO profile) {
         Result result = this.profileService.update(profile);

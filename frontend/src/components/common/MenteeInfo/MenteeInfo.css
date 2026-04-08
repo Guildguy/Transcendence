@@ -1,0 +1,93 @@
+/* Reusing MentorInfo's grid and layout properties for consistency */
+.mentee-info-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.mentee-info-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.status-dot {
+    margin-left: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.mentor-info-card-header {
+    display: flex;
+    gap: 20px;
+}
+
+.mentor-info-avatar-container {
+    flex-shrink: 0;
+}
+
+.mentor-avatar-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #8a2be2;
+}
+
+.mentor-avatar-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.mentor-info-name {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.mentor-info-details {
+    color: #6b7280;
+    margin: 4px 0;
+}
+
+.mentor-info-status {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #059669;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.mentor-info-bio {
+    color: #4b5563;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+.mentor-info-divider {
+    height: 1px;
+    background-color: #f3f4f6;
+    margin: 20px 0;
+}
+
+.mentor-info-footer {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}

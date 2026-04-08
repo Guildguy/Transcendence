@@ -7,6 +7,7 @@ interface IconButtonProps {
   children: React.ReactNode;
   icon?: React.ReactNode;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -15,11 +16,13 @@ const IconButton: React.FC<IconButtonProps> = ({
   children,
   icon,
   onClick,
+  disabled = false,
 }) => {
   return (
     <button
-      className={`icon-button icon-button--${variant} ${className}`}
-      onClick={onClick}
+      className={`icon-button icon-button--${variant} ${className} ${disabled ? 'disabled' : ''}`}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
     >
       {icon && <span className="icon-button-icon">{icon}</span>}
       <span className="icon-button-text">{children}</span>

@@ -2,10 +2,12 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { Session, TimeBlock } from './types.ts';
 import { addDays, format } from 'date-fns';
 import { getMentorAvailability } from '../../../services/mentorAvailabilityService';
+import { apiFetch } from '../../../services/api.ts';
 
 interface BookCustomSlotParams {
   mentorId: string;
   menteeId: string;
+  connectionId: number;
   date: string;
   startTime: string;
   endTime: string;
@@ -14,7 +16,7 @@ interface BookCustomSlotParams {
 
 interface MentoringContextType {
   sessions: Session[];
-  bookCustomSlot: (params: BookCustomSlotParams) => void;
+  bookCustomSlot: (params: BookCustomSlotParams) => Promise<void>;
   cancelSession: (sessionId: string) => void;
   getSessionsForMentor: (mentorId: string) => Session[];
   getSessionsForMentee: (menteeId: string) => Session[];
@@ -31,45 +33,60 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
   const generateMeetLink = () =>
     `https://meet.google.com/${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}`;
 
-  const bookCustomSlot = useCallback(({ mentorId, menteeId, date, startTime, endTime, isRecurring }: BookCustomSlotParams) => {
-    const meetLink = generateMeetLink();
-    const newSessions: Session[] = [];
+  const bookCustomSlot = useCallback(async ({ mentorId, menteeId, connectionId, date, startTime, endTime, isRecurring }: BookCustomSlotParams) => {
+    console.log(`[MentoringContext] Booking session for connection ${connectionId}: ${date} at ${startTime}`);
+    
+    // Calculate duration in minutes for the backend
+    const toMinutes = (t: string) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const durationMinutes = toMinutes(endTime) - toMinutes(startTime);
+    const scheduledDate = `${date}T${startTime}:00`;
+    const myUserId = localStorage.getItem('userId');
 
-    if (isRecurring) {
-      const baseDate = new Date(date + 'T12:00:00');
-      for (let i = 0; i < 10; i++) {
-        const sessionDate = addDays(baseDate, i * 7);
-        const dateStr = format(sessionDate, 'yyyy-MM-dd');
-        newSessions.push({
-          id: `s-${Date.now()}-${i}`,
+    try {
+      const response = await apiFetch('/mentorship-sessions', {
+        method: 'POST',
+        body: JSON.stringify({
+          connectionId,
+          scheduledDate,
+          durationMinutes,
+          isRecurrent: isRecurring,
+          createdBy: myUserId
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const createdSessions = Array.isArray(data) ? data : [data];
+        
+        // Map backend sessions to frontend Session type
+        const newSessions: Session[] = createdSessions.map((s: any, i: number) => ({
+          id: s.id.toString(),
           mentorId,
           menteeId,
-          date: dateStr,
-          startTime,
-          endTime,
+          date: s.scheduledDate.split('T')[0],
+          startTime: s.scheduledDate.split('T')[1].substring(0, 5),
+          endTime: endTime, // backend might not return duration directly here in the same format
           status: 'scheduled',
-          meetLink,
-          isRecurring: true,
-          recurrenceCount: i + 1,
+          meetLink: s.meetUrl,
+          isRecurring: s.isRecurrent,
+          recurrenceCount: s.recurrenceIndex,
           maxRecurrence: 10,
-        });
-      }
-    } else {
-      newSessions.push({
-        id: `s-${Date.now()}`,
-        mentorId,
-        menteeId,
-        date,
-        startTime,
-        endTime,
-        status: 'scheduled',
-        meetLink,
-        isRecurring: false,
-        maxRecurrence: 10,
-      });
-    }
+        }));
 
-    setSessions(prev => [...prev, ...newSessions]);
+        setSessions(prev => [...prev, ...newSessions]);
+        return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const firstError = Array.isArray(errorData) ? errorData[0] : errorData;
+        throw new Error(firstError?.message || 'Erro ao salvar sessão no backend');
+      }
+    } catch (error) {
+      console.error('[MentoringContext] Erro ao agendar sessão:', error);
+      throw error;
+    }
   }, []);
 
   const cancelSession = useCallback((sessionId: string) => {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../Avatar/Avatar';
 import './MenteeList.css';
 import { apiFetch } from '../../../services/api';
@@ -13,8 +14,10 @@ interface ConnectionResponseDTO {
   id: number;
   mentorId: number;
   mentorName: string;
+  mentorProfileId: number;
   menteeId: number;
   menteeName: string;
+  menteeProfileId: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   acceptedAt: string;
   createdAt: string;
@@ -89,6 +92,7 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
   const [mentees, setMentees] = useState<Mentee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadMentees = async () => {
@@ -107,7 +111,7 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
         const activeMentees: Mentee[] = connections
           .filter(conn => conn.status === 'APPROVED')
           .map(conn => ({
-            id: conn.menteeId,
+            id: conn.menteeProfileId,
             name: conn.menteeName,
             avatarUrl: undefined // Backend doesn't provide avatar in this response
           }));
@@ -155,7 +159,11 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
   return (
     <div className="mentees-grid">
       {mentees.map((mentee) => (
-        <div key={mentee.id} className="mentee-card">
+        <div 
+          key={mentee.id} 
+          className="mentee-card clickable" 
+          onClick={() => navigate(`/manage-mentee/${mentee.id}`)}
+        >
           <div className="mentee-card-content">
             <Avatar 
               avatarUrl={mentee.avatarUrl}
