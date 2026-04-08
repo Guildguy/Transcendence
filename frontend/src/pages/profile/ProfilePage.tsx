@@ -116,14 +116,29 @@ export const ProfilePage = () => {
             role: (profile.role || "MENTOR").toString()
           };
 
+          let finalData = unifiedData;
+          try {
+            const summaryResponse = await apiFetch(`/gamification/users/${user.id}/summary`);
+            if (summaryResponse.ok) {
+              const summary = await summaryResponse.json();
+              finalData = {
+                ...unifiedData,
+                level: summary?.currentLevel ?? unifiedData.level ?? 0,
+                xp: summary?.totalXp ?? unifiedData.xp ?? 0,
+              };
+            }
+          } catch (summaryError) {
+            console.warn("Falha ao carregar summary de gamificação no Profile:", summaryError);
+          }
+
           const loadedSkills: Skill[] = profile.stacks || [];
 
-          setUserData(unifiedData);
+          setUserData(finalData);
 
           if (profile.id)
             loadProfileImage(profile.id);
 
-          setBackupData(unifiedData);
+          setBackupData(finalData);
           setUserSkills(loadedSkills);
           setBackupSkills(loadedSkills);
         } else {

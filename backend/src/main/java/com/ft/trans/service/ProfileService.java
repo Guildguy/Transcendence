@@ -44,9 +44,28 @@ public class ProfileService {
 
 	public Result	update(UpdateProfileDTO profileDTO)
 	{
-		Profile profile = profileDTO.toProfile();
-		profile.user = userRepository.findById(profileDTO.user_id).orElse(null);
-		return _persistProfile(profile);
+		Profile existingProfile = this.profileRepository.findById(profileDTO.profile_id).orElse(null);
+		if (existingProfile == null)
+		{
+			ValidationResult result = new ValidationResult();
+			result.addError("Profile", "Perfil não encontrado para o id fornecido.");
+			return new Result(null, result);
+		}
+
+		existingProfile.user = userRepository.findById(profileDTO.user_id).orElse(null);
+		existingProfile.avatarUrl = profileDTO.avatarUrl;
+		existingProfile.position = profileDTO.position;
+		existingProfile.bio = profileDTO.bio;
+		if (profileDTO.role != null)
+			existingProfile.setRole(profileDTO.role);
+		existingProfile.xp = profileDTO.xp;
+		existingProfile.level = profileDTO.level;
+		existingProfile.linkedin = profileDTO.linkedin;
+		existingProfile.github = profileDTO.github;
+		existingProfile.instagram = profileDTO.instagram;
+		existingProfile.anosExperiencia = profileDTO.anosExperiencia;
+
+		return _persistProfile(existingProfile);
 	}
 
     public Result	_persistProfile(Profile profile)
