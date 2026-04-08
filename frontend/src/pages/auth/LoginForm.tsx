@@ -132,11 +132,6 @@ function LoginForm() {
           <img src={logo_google} alt="Google" />
           <span>Continuar com Google</span>
         </button>
-
-        <button type="button" className="social-btn">
-          <img src={logo_42} alt="42" />
-          <span>Continuar com a 42</span>
-        </button>
       </div>
 
       <button type="submit" className="auth-submit">
