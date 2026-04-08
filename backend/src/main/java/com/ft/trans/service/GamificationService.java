@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.ft.trans.controller.dto.GamificationEventRequest;
@@ -108,6 +110,7 @@ public class GamificationService {
         }
 
         Long totalXp = safeTotalXp(user.id);
+        unlockLevelBadgesByXp(user.id, totalXp, unlocked);
         Level currentLevel = levelRepository.findTopByXpRequiredLessThanEqualOrderByXpRequiredDesc(totalXp);
         Level nextLevel = levelRepository.findTopByXpRequiredGreaterThanOrderByXpRequiredAsc(totalXp);
 
@@ -144,11 +147,12 @@ public class GamificationService {
                 .collect(Collectors.toMap(a -> a.id, a -> a));
 
         List<GamificationSummaryResponse.AchievementItem> unlocked = userAchievementRepository.findByUserId(userId)
-                .stream()
-                .map(ua -> achievementMap.get(ua.achievementId))   // ← achivementMap, não achievementNames
-                .filter(Objects::nonNull)
-                .map(a -> new GamificationSummaryResponse.AchievementItem(a.name, a.iconUrl))  // ← mapeia para AchievementItem
-                .toList();
+            .stream()
+            .map(ua -> new UnlockedAchievementView(ua.id, achievementMap.get(ua.achievementId)))
+            .filter(view -> Objects.nonNull(view.achievement()))
+            .sorted(this::compareAchievementOrder)
+            .map(view -> new GamificationSummaryResponse.AchievementItem(view.achievement().name, view.achievement().iconUrl))
+            .toList();
 
         List<GamificationSummaryResponse.HistoryItem> recent = xpHistoryRepository.findTop10ByUserIdOrderByIdDesc(userId)
                 .stream()
@@ -227,7 +231,64 @@ public class GamificationService {
         ua.createdAt = new Date(System.currentTimeMillis());
         ua.created_by = "gamification_event";
 
-        userAchievementRepository.save(ua);
-        unlocked.add(achievement.name);
+        try {
+            userAchievementRepository.saveAndFlush(ua);
+            if (unlocked != null) {
+                unlocked.add(achievement.name);
+            }
+        } catch (DataIntegrityViolationException ex) {
+            if (userAchievementRepository.existsByUserIdAndAchievementId(userId, achievement.id)) {
+                return;
+            }
+            throw ex;
+        }
+    }
+
+    private void unlockLevelBadgesByXp(Long userId, Long totalXp, List<String> unlocked) {
+        if (totalXp == null) {
+            return;
+        }
+
+        Level currentLevel = levelRepository.findTopByXpRequiredLessThanEqualOrderByXpRequiredDesc(totalXp);
+        if (currentLevel == null || currentLevel.level == null) {
+            return;
+        }
+
+        int levelReached = currentLevel.level;
+
+        for (Achievement achievement : achievementRepository.findByType("LEVEL")) {
+            if (achievement.target == null) {
+                continue;
+            }
+
+            if (levelReached >= achievement.target) {
+                unlockAchievement(userId, achievement, unlocked);
+            }
+        }
+    }
+
+    private record UnlockedAchievementView(Long unlockId, Achievement achievement) {}
+
+    private int compareAchievementOrder(UnlockedAchievementView a, UnlockedAchievementView b) {
+        boolean aIsLevel = isLevelAchievement(a.achievement());
+        boolean bIsLevel = isLevelAchievement(b.achievement());
+
+        if (aIsLevel && bIsLevel) {
+            return Integer.compare(safeTarget(a.achievement()), safeTarget(b.achievement()));
+        }
+
+        if (aIsLevel != bIsLevel) {
+            return aIsLevel ? -1 : 1;
+        }
+
+        return Comparator.nullsLast(Long::compareTo).compare(a.unlockId(), b.unlockId());
+    }
+
+    private boolean isLevelAchievement(Achievement achievement) {
+        return achievement != null && achievement.type != null && achievement.type.equalsIgnoreCase("LEVEL");
+    }
+
+    private int safeTarget(Achievement achievement) {
+        return achievement != null && achievement.target != null ? achievement.target : Integer.MAX_VALUE;
     }
 }
