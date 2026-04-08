@@ -105,6 +105,7 @@ public class UserService {
 				if (!isUpdate)
 	            	user.encodePassword();
 	            savedUser = this.userRepository.save(user);
+				savedUser = ensureAuditActors(savedUser, isUpdate);
 	        } catch (org.springframework.dao.DataIntegrityViolationException e) {
 	            String errorMsg = e.getMostSpecificCause().getMessage();
 			
@@ -154,6 +155,7 @@ public class UserService {
 		newUser.encodePassword();
 
 		User savedUser = userRepository.save(newUser);
+		savedUser = ensureAuditActors(savedUser, false);
 
 		// Criar um perfil padrão para o novo usuário
 		if (savedUser != null) {
@@ -162,6 +164,38 @@ public class UserService {
 			profile.setRole("MENTORADO"); // Role padrão
 			profileService._persistProfile(profile);
 		}
+
+		return savedUser;
+	}
+
+	private User ensureAuditActors(User savedUser, boolean isUpdate)
+	{
+		if (savedUser == null)
+			return null;
+
+		boolean shouldPersistAuditActor = false;
+
+		if (!isUpdate)
+		{
+			if (savedUser.createdBy == null)
+			{
+				savedUser.createdBy = savedUser.id;
+				shouldPersistAuditActor = true;
+			}
+			if (savedUser.lastUpdateBy == null)
+			{
+				savedUser.lastUpdateBy = savedUser.createdBy != null ? savedUser.createdBy : savedUser.id;
+				shouldPersistAuditActor = true;
+			}
+		}
+		else if (savedUser.lastUpdateBy == null)
+		{
+			savedUser.lastUpdateBy = savedUser.id;
+			shouldPersistAuditActor = true;
+		}
+
+		if (shouldPersistAuditActor)
+			return this.userRepository.save(savedUser);
 
 		return savedUser;
 	}

@@ -36,25 +36,26 @@ export async function apiFetch(
   options: FetchOptions = {}
 ): Promise<Response> {
   const { skipAuth = false, ...fetchOptions } = options;
-
-  // Monta a URL completa
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
 
-  // Inicializa headers
+  console.log(`>>> Chamando API: ${fetchOptions.method || 'GET'} ${url}`); // LOG DE TESTE
+
   const headers = new Headers(fetchOptions.headers || {});
 
-  // Adiciona o JWT se não for para pular autenticação
   if (!skipAuth) {
     const token = getAuthToken();
+    console.log(">>> Token recuperado:", token ? "Token encontrado" : "TOKEN VAZIO!"); 
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
   }
 
-  // Garante que Content-Type seja JSON se tiver body
   if (fetchOptions.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
+
+  // Log dos headers finais antes do fetch
+  console.log(">>> Headers enviados:", Object.fromEntries(headers.entries()));
 
   return fetch(url, {
     ...fetchOptions,
