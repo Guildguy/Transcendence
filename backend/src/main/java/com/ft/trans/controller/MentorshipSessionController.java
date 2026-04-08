@@ -73,6 +73,20 @@ public class MentorshipSessionController
 		return ResponseEntity.status(HttpStatus.OK).body(sessions);
 	}
 
+	@GetMapping("/mentor/{mentorId}")
+	public ResponseEntity<?> listByMentor(@PathVariable Long mentorId)
+	{
+		List<MentorshipSession> sessions = this.sessionService.listByMentorProfile(mentorId);
+		return ResponseEntity.status(HttpStatus.OK).body(sessions);
+	}
+
+	@GetMapping("/mentee/{menteeId}")
+	public ResponseEntity<?> listByMentee(@PathVariable Long menteeId)
+	{
+		List<MentorshipSession> sessions = this.sessionService.listByMenteeProfile(menteeId);
+		return ResponseEntity.status(HttpStatus.OK).body(sessions);
+	}
+
 	@PutMapping
 	public ResponseEntity<?> updateSession(@RequestBody UpdateSessionDTO dto)
 	{

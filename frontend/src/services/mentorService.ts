@@ -188,34 +188,20 @@ class MentorService {
     try {
       console.log(`[getMentorDetails] Starting fetch for profileId: ${profileId}`);
       
-      // Since there's no GET /profiles/{id} endpoint, fetch all profiles and find by ID
-      const response = await apiFetch(`/profiles`);
+      // Call the new direct endpoint GET /profiles/{id}
+      const response = await apiFetch(`/profiles/${profileId}`);
       if (!response.ok) {
-        console.warn(`[getMentorDetails] Failed to fetch profiles list: HTTP ${response.status}`);
+        console.warn(`[getMentorDetails] Profile with ID ${profileId} not found: HTTP ${response.status}`);
         return null;
       }
       
-      const allProfiles = await response.json();
-      console.log(`[getMentorDetails] All profiles:`, allProfiles);
+      const profileData = await response.json();
       
-      // Find the profile by ID
-      const profileData = Array.isArray(allProfiles) 
-        ? allProfiles.find((p: any) => p.id === profileId)
-        : null;
-        
-      if (!profileData) {
-        console.warn(`[getMentorDetails] Profile with ID ${profileId} not found in list`);
-        return null;
-      }
-      
-      console.log(`[getMentorDetails] Profile data received:`, profileData);
-      
-      // Extract userId - could be in nested user object or direct field
-      const userId = profileData.user?.id || profileData.userId;
+      // Flexible userId extraction: supports nested object, user_id field, or flat field
+      const userId = profileData.user?.id || profileData.userId || profileData.user_id || (typeof profileData.user === 'number' ? profileData.user : null);
       
       if (!userId) {
-        console.warn(`[getMentorDetails] No userId found in profile data:`, profileData);
-        return null;
+        console.error(`[getMentorDetails] No userId found for mentor ${profileId}`);
       }
       
       // Extract user data - could be nested or flat
@@ -251,11 +237,9 @@ class MentorService {
             console.log(`[getMentorDetails] Mentee count for ${userId}:`, menteeCount);
           }
         } catch (error) {
-          console.warn(`[getMentorDetails] Error fetching mentee count:`, error);
         }
       }
 
-      // Monta o objeto com detalhes expandidos
       const result: MentorDetailData = {
         id: profileData.id,
         userId: userId,

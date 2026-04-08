@@ -54,30 +54,34 @@ function HomeLogged() {
         // segue para fallback
       }
 
-      // Carrega solicitações pendentes
-      if (resolvedProfileId !== null) {
+      // Carrega solicitações pendentes — agora usa o profileId do mentor
+      if (resolvedProfileId) {
         try {
-          const incomingRes = await apiFetch(`/mentorships/incoming/${resolvedProfileId}`)
+          console.log(`[HomeLogged] Fetching pending requests for Mentor Profile ID: ${resolvedProfileId}`);
+          const incomingRes = await apiFetch(`/mentorship-connections/mentor/${resolvedProfileId}/pending`)
           if (incomingRes.ok) {
             const data: any[] = await incomingRes.json()
-            if (data.length > 0) {
+            console.log('[HomeLogged] Pending requests received:', data);
+            if (Array.isArray(data) && data.length > 0) {
               setRequests(data.map(m => ({
                 id: m.id,
-                name: m.menteeName ?? m.menteeProfileId ?? `Mentorado #${m.id}`,
-                avatar: extractBase64FromAvatarUrl(m.avatarUrl) || undefined,
+                name: m.menteeName || `Mentorado #${m.menteeId}`,
+                avatar: undefined,
               })))
             } else {
-              // Backend respondeu vazio → sem pendências reais, não usa mock
+              console.log('[HomeLogged] No pending requests found');
               setRequests([])
             }
           } else {
-            // Erro de rede/servidor → fallback
-            setRequests(mockRequests.map(r => ({ id: r.id, name: r.name })))
+            console.warn('[HomeLogged] Failed to fetch pending requests:', incomingRes.status);
+            setRequests([])
           }
-        } catch {
-          setRequests(mockRequests.map(r => ({ id: r.id, name: r.name })))
+        } catch (err) {
+          console.error('[HomeLogged] Error fetching pending requests:', err);
+          setRequests([])
         }
       } else {
+        console.log('[HomeLogged] User is not a mentor or mentorProfileId not resolved yet');
         setRequests([])
       }
 
@@ -107,32 +111,36 @@ function HomeLogged() {
     loadHomeData()
   }, [])
 
-  // 2. Accept/Decline conectados ao backend, com remoção otimista da lista
+  // 2. Accept/Decline → usa PATCH /mentorship-connections/{id}/accept?mentorUserId=
   const handleAccept = async (id: number) => {
-    if (mentorProfileId === null) return
+    const userId = localStorage.getItem('userId')
+    if (!userId) return
 
+    console.log(`[HomeLogged] Accepting connection ID: ${id} for mentor user: ${userId}`);
     setRequests(prev => prev.filter(r => r.id !== id))
     try {
-      await apiFetch(`/mentorships/${id}/accept`, {
-        method: 'POST',
-        body: JSON.stringify({ actorProfileId: mentorProfileId }),
+      const res = await apiFetch(`/mentorship-connections/${id}/accept?mentorUserId=${userId}`, {
+        method: 'PATCH',
       })
-    } catch {
-      // falha silenciosa — a remoção otimista já deu feedback visual
+      if (!res.ok) console.error('[HomeLogged] Failed to accept connection:', res.status);
+    } catch (err) {
+      console.error('[HomeLogged] Error accepting connection:', err);
     }
   }
 
   const handleDecline = async (id: number) => {
-    if (mentorProfileId === null) return
+    const userId = localStorage.getItem('userId')
+    if (!userId) return
 
+    console.log(`[HomeLogged] Rejecting connection ID: ${id} for mentor user: ${userId}`);
     setRequests(prev => prev.filter(r => r.id !== id))
     try {
-      await apiFetch(`/mentorships/${id}/reject`, {
-        method: 'POST',
-        body: JSON.stringify({ actorProfileId: mentorProfileId }),
+      const res = await apiFetch(`/mentorship-connections/${id}/reject?mentorUserId=${userId}`, {
+        method: 'PATCH',
       })
-    } catch {
-      // falha silenciosa
+      if (!res.ok) console.error('[HomeLogged] Failed to reject connection:', res.status);
+    } catch (err) {
+      console.error('[HomeLogged] Error rejecting connection:', err);
     }
   }
 

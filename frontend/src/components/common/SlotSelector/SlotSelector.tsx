@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { apiFetch } from '../../../services/api';
 import { useMentoring } from '../BookingCalendar/MentoringContext';
 import BookingCalendar from '../BookingCalendar/BookingCalendar';
 import Button from '../Button/Button';
@@ -19,6 +20,8 @@ import './SlotSelector.css';
 interface SlotSelectorProps {
   mentorId: string;
   menteeId: string;
+  connectionId: number | null;
+  onBooked?: () => void;
 }
 
 const toMinutes = (t: string) => {
@@ -29,19 +32,55 @@ const toMinutes = (t: string) => {
 const fromMinutes = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
-export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
-  const { bookCustomSlot, getBackendAvailability, getAvailableBlocksForDate } = useMentoring();
+interface BackendSession {
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
+export function SlotSelector({ mentorId, menteeId, connectionId, onBooked }: SlotSelectorProps) {
+  const { bookCustomSlot, getBackendAvailability } = useMentoring();
 
   const [availabilityBlocks, setAvailabilityBlocks] = useState<TimeBlock[]>([]);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [bookedSessions, setBookedSessions] = useState<BackendSession[]>([]);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedBlockIdx, setSelectedBlockIdx] = useState<number | null>(null);
   const [selectedStartTime, setSelectedStartTime] = useState<string | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState<number>(60); // minutes
+  const [selectedDuration, setSelectedDuration] = useState<number>(60);
   const [isRecurring, setIsRecurring] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Load booked sessions whenever connectionId changes
+  useEffect(() => {
+    if (!connectionId) return;
+    let cancelled = false;
+    apiFetch(`/mentorship-sessions/connection/${connectionId}`)
+      .then(res => res.ok ? res.json() : [])
+      .then((data: any[]) => {
+        if (cancelled) return;
+        const sessions: BackendSession[] = (Array.isArray(data) ? data : [])
+          .filter(s => s.status === 'SCHEDULED')
+          .map(s => {
+            const sd: string = typeof s.scheduledDate === 'string'
+              ? s.scheduledDate
+              : Array.isArray(s.scheduledDate)
+                ? `${s.scheduledDate[0]}-${String(s.scheduledDate[1]).padStart(2,'0')}-${String(s.scheduledDate[2]).padStart(2,'0')}T${String(s.scheduledDate[3]).padStart(2,'0')}:${String(s.scheduledDate[4] ?? 0).padStart(2,'0')}`
+                : String(s.scheduledDate);
+            const timePart = sd.includes('T') ? sd.split('T')[1].substring(0, 5) : '00:00';
+            return {
+              date: sd.split('T')[0],
+              startTime: timePart,
+              endTime: fromMinutes(toMinutes(timePart) + (s.durationMinutes ?? 60)),
+            };
+          });
+        setBookedSessions(sessions);
+      })
+      .catch(err => console.error('[SlotSelector] Error loading booked sessions:', err));
+    return () => { cancelled = true; };
+  }, [connectionId]);
 
   // Fetch availability from backend on mount or when mentorId changes
   useEffect(() => {
@@ -68,11 +107,33 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
 
   const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
 
-  // Get available time blocks for selected date
+  // Get available time blocks for selected date, excluding already-booked slots
   const blocks = useMemo(() => {
     if (!dateStr || availabilityBlocks.length === 0) return [];
-    return getAvailableBlocksForDate(mentorId, dateStr, availabilityBlocks);
-  }, [dateStr, mentorId, availabilityBlocks, getAvailableBlocksForDate]);
+    const dateObj = new Date(dateStr + 'T12:00:00');
+    const dayOfWeek = dateObj.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+    const dayBlocks = availabilityBlocks.filter(b => b.day === dayOfWeek);
+    if (dayBlocks.length === 0) return [];
+    const sessionsThatDay = bookedSessions.filter(s => s.date === dateStr);
+    const freeWindows: { startTime: string; endTime: string }[] = [];
+    for (const block of dayBlocks) {
+      const blockStart = block.startHour * 60 + block.startMinute;
+      const blockEnd = block.endHour * 60 + block.endMinute;
+      const booked = sessionsThatDay
+        .map(s => ({ start: toMinutes(s.startTime), end: toMinutes(s.endTime) }))
+        .filter(b => b.start < blockEnd && b.end > blockStart)
+        .sort((a, b) => a.start - b.start);
+      let cursor = blockStart;
+      for (const b of booked) {
+        if (cursor < b.start && b.start - cursor >= 60)
+          freeWindows.push({ startTime: fromMinutes(cursor), endTime: fromMinutes(b.start) });
+        cursor = Math.max(cursor, b.end);
+      }
+      if (cursor < blockEnd && blockEnd - cursor >= 60)
+        freeWindows.push({ startTime: fromMinutes(cursor), endTime: fromMinutes(blockEnd) });
+    }
+    return freeWindows;
+  }, [dateStr, availabilityBlocks, bookedSessions]);
 
   const selectedBlock = selectedBlockIdx !== null ? blocks[selectedBlockIdx] : null;
 
@@ -116,11 +177,13 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const ds = format(d, 'yyyy-MM-dd');
-      const b = getAvailableBlocksForDate(mentorId, ds, availabilityBlocks);
-      if (b.length > 0) dates.add(ds);
+      const dateObj = new Date(ds + 'T12:00:00');
+      const dayOfWeek = dateObj.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+      const dayBlocks = availabilityBlocks.filter(b => b.day === dayOfWeek);
+      if (dayBlocks.length > 0) dates.add(ds);
     }
     return dates;
-  }, [mentorId, availabilityBlocks, getAvailableBlocksForDate]);
+  }, [availabilityBlocks]);
 
   const isDayAvailable = (date: Date) => availableDates.has(format(date, 'yyyy-MM-dd'));
 
@@ -131,25 +194,42 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
     setIsRecurring(false);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedStartTime || !dateStr) return;
-    bookCustomSlot({
-      mentorId,
-      menteeId,
-      date: dateStr,
-      startTime: selectedStartTime,
-      endTime,
-      isRecurring,
-    });
-    toast({
-      title: 'Mentoria agendada!',
-      description: isRecurring
-        ? 'Agendamento recorrente criado (10 sessões semanais).'
-        : `Sessão agendada para ${format(selectedDate!, "dd/MM/yyyy")} das ${selectedStartTime} às ${endTime}.`,
-    });
-    setShowConfirm(false);
-    setSelectedDate(undefined);
-    resetSelection();
+
+    if (!connectionId) {
+      alert('Não foi possível identificar uma conexão ativa para este agendamento.');
+      return;
+    }
+
+    try {
+      await bookCustomSlot({
+        mentorId,
+        menteeId,
+        connectionId,
+        date: dateStr,
+        startTime: selectedStartTime,
+        endTime,
+        isRecurring,
+      });
+
+      // Optimistic update: block the just-booked slot immediately
+      setBookedSessions(prev => [...prev, { date: dateStr, startTime: selectedStartTime, endTime }]);
+      setSelectedDate(undefined);
+      setShowConfirm(false);
+      resetSelection();
+      onBooked?.();
+      toast({
+        title: 'Sessão agendada com sucesso!',
+        description: `${format(selectedDate!, 'dd/MM/yyyy', { locale: ptBR })} às ${selectedStartTime}`,
+      });
+    } catch (err) {
+      console.error('[SlotSelector] Falha ao agendar:', err);
+      toast({
+        title: 'Erro ao agendar sessão',
+        description: err instanceof Error ? err.message : 'Tente novamente.',
+      });
+    }
   };
 
   const formatDuration = (mins: number) => {
@@ -354,9 +434,9 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-display">Confirmar Agendamento</DialogTitle>
-              <DialogDescription>
+              <DialogDescription asChild>
                 {selectedDate && selectedStartTime && (
-                  <div className="slot-selector-dialog-description">
+                  <span className="slot-selector-dialog-description-content" style={{ display: 'block' }}>
                     <p><strong>Data:</strong> {format(selectedDate, "dd/MM/yyyy (EEEE)", { locale: ptBR })}</p>
                     <p><strong>Horário:</strong> {selectedStartTime} – {endTime} ({formatDuration(selectedDuration)})</p>
                     {isRecurring && (
@@ -365,7 +445,7 @@ export function SlotSelector({ mentorId, menteeId }: SlotSelectorProps) {
                       </Badge>
                     )}
                     <p className="slot-selector-dialog-info">Um link do Google Meet será gerado automaticamente.</p>
-                  </div>
+                  </span>
                 )}
               </DialogDescription>
             </DialogHeader>

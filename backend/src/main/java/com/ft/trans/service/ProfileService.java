@@ -38,6 +38,10 @@ public class ProfileService {
         return (this.profileRepository.findAll());
     }
 
+    public Profile findById(Long id) {
+        return this.profileRepository.findByIdWithUser(id).orElse(null);
+    }
+
 	public Result	update(UpdateProfileDTO profileDTO)
 	{
 		Profile profile = profileDTO.toProfile();

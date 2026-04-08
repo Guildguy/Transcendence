@@ -35,11 +35,11 @@ public class MentorshipConnection implements IEntity
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "mentor_id", nullable = false)
-	public User				mentor;
+	public Profile			mentor;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "mentee_id", nullable = false)
-	public User				mentee;
+	public Profile			mentee;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
@@ -66,13 +66,13 @@ public class MentorshipConnection implements IEntity
 		ValidationResult result = new ValidationResult();
 
 		if (mentor == null || mentor.id == null)
-			result.addError("mentorId", "Mentor deve ser informado.");
+			result.addError("mentorProfileId", "Perfil de Mentor deve ser informado.");
 		if (mentee == null || mentee.id == null)
-			result.addError("menteeId", "Mentorado deve ser informado.");
+			result.addError("menteeProfileId", "Perfil de Mentorado deve ser informado.");
 		if (mentor != null && mentee != null
 			&& mentor.id != null && mentee.id != null
 			&& mentor.id.equals(mentee.id))
-			result.addError("connection", "O mentor e o mentorado não podem ser a mesma pessoa.");
+			result.addError("connection", "O perfil de mentor e o perfil de mentorado não podem ser o mesmo.");
 
 		return result;
 	}

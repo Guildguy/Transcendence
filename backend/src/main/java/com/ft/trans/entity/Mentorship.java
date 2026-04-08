@@ -37,11 +37,11 @@ public class Mentorship implements IEntity
     public Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mentor_profile_id", nullable = false)
+    @JoinColumn(name = "mentor_id", nullable = false)
     public Profile mentorProfile;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mentee_profile_id", nullable = false)
+    @JoinColumn(name = "mentee_id", nullable = false)
     public Profile menteeProfile;
 
     @Column(nullable = false)

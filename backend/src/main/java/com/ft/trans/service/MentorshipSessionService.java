@@ -32,16 +32,19 @@ public class MentorshipSessionService
 	private final MentorshipSessionRepository sessionRepository;
 	private final MentorAvailabilityRepository mentorAvailabilityRepository;
 	private final MentorshipConnectionRepository connectionRepository;
+	private final MeetService meetService;
 
 	public MentorshipSessionService(
 		MentorshipSessionRepository sessionRepository,
 		MentorAvailabilityRepository mentorAvailabilityRepository,
-		MentorshipConnectionRepository connectionRepository
+		MentorshipConnectionRepository connectionRepository,
+		MeetService meetService
 	)
 	{
 		this.sessionRepository = sessionRepository;
 		this.mentorAvailabilityRepository = mentorAvailabilityRepository;
 		this.connectionRepository = connectionRepository;
+		this.meetService = meetService;
 	}
 
 	public Result createSession(CreateSessionDTO dto)
@@ -65,8 +68,14 @@ public class MentorshipSessionService
 		}
 
 		Long mentorId = connection.mentor.id;
-		if (!_isWithinMentorAvailability(mentorId, dto.scheduledDate, dto.durationMinutes))
+		// Truncate seconds and nanoseconds to prevent precision errors
+		dto.scheduledDate = dto.scheduledDate.withSecond(0).withNano(0);
+		LocalDateTime truncatedDate = dto.scheduledDate;
+		
+		if (!_isWithinMentorAvailability(mentorId, truncatedDate, dto.durationMinutes))
 		{
+			System.out.println(String.format("[DEBUG] Availability check FAILED for Mentor Profile ID %d at %s. Connection ID: %d", 
+				mentorId, truncatedDate, dto.connectionId));
 			result.addError(
 				"scheduledDate",
 				"Sessão fora da disponibilidade do mentor. Ajuste para um bloco disponível."
@@ -74,7 +83,8 @@ public class MentorshipSessionService
 			return new Result(null, result);
 		}
 
-		baseSession.meetUrl = _generateMeetUrl();
+		baseSession.scheduledDate = truncatedDate;
+		baseSession.meetUrl = _getMeetUrl(connection, truncatedDate, dto.durationMinutes);
 		return _persistSession(baseSession);
 	}
 
@@ -96,6 +106,10 @@ public class MentorshipSessionService
 		UUID groupId = UUID.randomUUID();
 		List<MentorshipSession> sessions = new ArrayList<>();
 
+		// Generate one Meet link shared across all recurrences to avoid 10 API calls
+		LocalDateTime firstDate = dto.scheduledDate.withSecond(0).withNano(0);
+		String recurringMeetUrl = _getMeetUrl(connection, firstDate, dto.durationMinutes);
+
 		for (int i = 0; i < MAX_RECURRENCE; i++)
 		{
 			LocalDateTime sessionDate = dto.scheduledDate.plusWeeks(i);
@@ -107,8 +121,13 @@ public class MentorshipSessionService
 				return new RecurrenceResult(null, result);
 			}
 
-			if (!_isWithinMentorAvailability(mentorId, sessionDate, dto.durationMinutes))
+			// Truncate seconds and nanoseconds for each recurrent instance
+			LocalDateTime truncatedDate = sessionDate.withSecond(0).withNano(0);
+
+			if (!_isWithinMentorAvailability(mentorId, truncatedDate, dto.durationMinutes))
 			{
+				System.out.println(String.format("[DEBUG] Recurring Availability check FAILED for Mentor Profile ID %d at week %d (%s)", 
+					mentorId, (i + 1), truncatedDate));
 				result.addError(
 					"scheduledDate",
 					"Sessão da semana " + (i + 1) + " fora da disponibilidade do mentor."
@@ -117,8 +136,8 @@ public class MentorshipSessionService
 			}
 
 			MentorshipSession session  = dto.toSession();
-			session.scheduledDate      = sessionDate;
-			session.meetUrl            = _generateMeetUrl();
+			session.scheduledDate      = truncatedDate;
+			session.meetUrl            = recurringMeetUrl;
 			session.recurrenceGroupId  = groupId;
 			session.recurrenceIndex    = i + 1;
 
@@ -175,6 +194,16 @@ public class MentorshipSessionService
 		return sessionRepository.findByConnectionIdAndScheduledDateAfter(connectionId, LocalDateTime.now());
 	}
 
+	public List<MentorshipSession> listByMentorProfile(Long mentorId)
+	{
+		return sessionRepository.findByMentorProfileId(mentorId);
+	}
+
+	public List<MentorshipSession> listByMenteeProfile(Long menteeId)
+	{
+		return sessionRepository.findByMenteeProfileId(menteeId);
+	}
+
 	public Result update(UpdateSessionDTO dto)
 	{
 		ValidationResult result = new ValidationResult();
@@ -215,7 +244,13 @@ public class MentorshipSessionService
 
 		if (dto.scheduledDate != null || dto.durationMinutes != null)
 		{
-			Long mentorId = dto.lastUpdateBy != null ? dto.lastUpdateBy : session.createdBy;
+			MentorshipConnection conn = connectionRepository.findByIdFull(session.connectionId).orElse(null);
+			if (conn == null)
+			{
+				result.addError("connectionId", "Conexão de mentoria não encontrada.");
+				return new Result(null, result);
+			}
+			Long mentorId = conn.mentor.id;
 			if (!_isWithinMentorAvailability(mentorId, session.scheduledDate, session.durationMinutes))
 			{
 				result.addError(
@@ -274,8 +309,20 @@ public class MentorshipSessionService
 		return _persistSession(session);
 	}
 
-	private String _generateMeetUrl()
+	private String _getMeetUrl(MentorshipConnection connection, LocalDateTime scheduledDate, int durationMinutes)
 	{
+		String mentorEmail = (connection.mentor != null && connection.mentor.user != null)
+			? connection.mentor.user.email : null;
+		String menteeEmail = (connection.mentee != null && connection.mentee.user != null)
+			? connection.mentee.user.email : null;
+
+		if (mentorEmail != null && menteeEmail != null) {
+			String link = meetService.createMeetSession(
+				mentorEmail, menteeEmail, "Sessão de Mentoria", scheduledDate, durationMinutes);
+			if (link != null) return link;
+		}
+
+		// Fallback to random URL if Meet API call fails
 		String part1 = UUID.randomUUID().toString().substring(0, 3);
 		String part2 = UUID.randomUUID().toString().substring(0, 4);
 		String part3 = UUID.randomUUID().toString().substring(0, 3);
@@ -305,9 +352,15 @@ public class MentorshipSessionService
 			boolean startsInside = !sessionStart.isBefore(slot.startTime);
 			boolean endsInside = !sessionEnd.isAfter(slot.endTime);
 
+			System.out.println(String.format("[DEBUG] Checking Slot: %s %s-%s vs Session: %s-%s. Result: %s", 
+				slot.dayOfWeek, slot.startTime, slot.endTime, sessionStart, sessionEnd, (startsInside && endsInside)));
+
 			if (startsInside && endsInside)
 				return true;
 		}
+
+		System.out.println(String.format("[DEBUG] No matching availability found for Mentor %d on %s at %s (Duration: %d min)", 
+			mentorId, targetDay, sessionStart, durationMinutes));
 
 		return false;
 	}
@@ -333,7 +386,7 @@ public class MentorshipSessionService
 			return null;
 		}
 
-		MentorshipConnection connection = connectionRepository.findById(connectionId).orElse(null);
+		MentorshipConnection connection = connectionRepository.findByIdFull(connectionId).orElse(null);
 		if (connection == null)
 		{
 			result.addError("connectionId", "Conexão de mentoria não encontrada.");
