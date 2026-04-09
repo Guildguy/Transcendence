@@ -8,12 +8,13 @@
   --purple-medium: #615AA4;
   --purple-dark: #393182;
   --purple-bg: #e9e9ff;
+  --purple-bg-light: #f8f8ff;
   
   /* Neutrals */
   --white: #ffffff;
   --text-dark: #1a1a2e;
   --text-medium: #4a4a6a;
-  --gray-light: #f3f4f6;
+  --gray-light: #e5e7eb;
   --gray-medium: #d1d5db;
   --gray-dark: #9ca3af;
   
@@ -23,6 +24,12 @@
   --badge-text: #ffffff;
   --stat-bar-green: #4ECF8C;
   --input-group-bg: #f5f5f5;
+  --is-active-green: #38d584;
+  --is-inactive-red: #CF5C4E;
+  --red: #D64838;
+  --red-pale: #fed6d2;
+  --rating-yellow: #fbbf24;
+  --rating-yellow-medium: #ea990e;
 }
 
 /* ===========================

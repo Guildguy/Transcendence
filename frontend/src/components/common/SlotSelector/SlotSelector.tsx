@@ -22,6 +22,7 @@ interface SlotSelectorProps {
   menteeId: string;
   connectionId: number | null;
   onBooked?: () => void;
+  context?: 'mentor' | 'mentee';
 }
 
 const toMinutes = (t: string) => {
@@ -38,8 +39,8 @@ interface BackendSession {
   endTime: string;
 }
 
-export function SlotSelector({ mentorId, menteeId, connectionId, onBooked }: SlotSelectorProps) {
-  const { bookCustomSlot, getBackendAvailability } = useMentoring();
+export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, context }: SlotSelectorProps) {
+  const { bookCustomSlot, getBackendAvailability, getAvailableBlocksForDate } = useMentoring();
 
   const [availabilityBlocks, setAvailabilityBlocks] = useState<TimeBlock[]>([]);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
@@ -298,8 +299,14 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked }: Slo
             }}>
               <AlertCircle size={20} style={{ flexShrink: 0 }} />
               <div>
-                <strong>Nenhuma disponibilidade</strong>
-                <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>O mentor ainda não configurou sua disponibilidade.</p>
+                <strong>{context === 'mentee' 
+                    ? 'Nenhuma sessão agendada.' 
+                    : 'Nenhuma disponibilidade.'}</strong>
+                <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  {context === 'mentee' 
+                    ? 'O mentorado ainda não tem nenhuma sessão de mentoria agendada' 
+                    : 'O mentor ainda não configurou sua disponibilidade.'}
+                </p>
               </div>
             </div>
           )}

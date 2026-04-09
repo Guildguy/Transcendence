@@ -5,11 +5,10 @@ import MentorInfo from '../../components/common/MentorInfo/MentorInfo'
 import { MentoringProvider } from '../../components/common/BookingCalendar/MentoringContext'
 import { SlotSelector } from '../../components/common/SlotSelector/SlotSelector'
 import { SessionList } from '../../components/common/SessionList/SessionList'
-import mentorService, { type MentorDetailData } from '../../services/mentorService'
 import { apiFetch } from '../../services/api'
 import { toast } from '../../hooks/use-toast'
-import MenteeInfo from '../../components/common/MenteeInfo/MenteeInfo'
 import { useChat } from '../../components/chat/ChatContext/ChatContext'
+import mentorService, { type MentorDetailData } from '../../services/mentorService'
 
 interface Skill {
   id: string;
@@ -24,6 +23,9 @@ interface MentorLocationState {
   mentorXp?: number;
   mentorAvatar?: string;
   mentorIsActive?: boolean;
+  mentorBio?: string;
+  mentorRating?: number;
+  menteeCount?: number;
 }
 
 type ConnectionStatus = 'none' | 'pending' | 'active' | 'loading';
@@ -32,11 +34,9 @@ function BookSessionContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { mentorId: urlMentorId, menteeId: urlMenteeId } = useParams<{ mentorId?: string, menteeId?: string }>();
-  const [targetProfile, setTargetProfile] = useState<MentorDetailData | null>(null);
+  const [selectedMentor, setSelectedMentor] = useState<MentorDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const isMentorView = !!urlMenteeId;
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('none');
   const [connectionId, setConnectionId] = useState<number | null>(null);
@@ -55,40 +55,63 @@ function BookSessionContent() {
       setLoading(true);
       setError(null);
       try {
-        const profileId = urlMenteeId || urlMentorId;
-        
-        if (profileId) {
-          const id = parseInt(profileId, 10);
-          console.log(`[BookSessionWithMentor] Loading details for Profile ID: ${id} (Mode: ${isMentorView ? 'Mentor' : 'Mentee'})`);
-          try {
-            const data = await mentorService.getMentorDetails(id);
-            if (data) {
-              setTargetProfile(data);
+        // Priority 1: Navigation state (best - has complete data from MentorCard)
+        if (mentorState?.mentorId) {
+          const mentor: MentorDetailData = {
+            id: mentorState.mentorId,
+            profileId: mentorState.mentorId,
+            userId: mentorState.mentorId, 
+            name: mentorState.mentorName || 'Mentor',
+            position: mentorState.mentorPosition || 'Position',
+            skills: mentorState.mentorSkills || [],
+            anosExperiencia: mentorState.mentorXp || 0,
+            isActive: mentorState.mentorIsActive !== false,
+            isAvailable: true,
+            avatarUrl: mentorState.mentorAvatar,
+            bio: mentorState.mentorBio || undefined,
+            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5.0,
+            menteeCount: mentorState.menteeCount || 0
+          };
+          setSelectedMentor(mentor);
+          setLoading(false);
+          return;
+        }
+
+        // Priority 2: Backend fetch with URL parameter
+        if (urlMentorId) {
+          const profileId = parseInt(urlMentorId, 10);
+          if (!isNaN(profileId)) {
+            try {
+              const mentor = await mentorService.getMentorDetails(profileId);
+              if (mentor) {
+                setSelectedMentor(mentor);
+                setLoading(false);
+                return;
+              }
+            } catch (err) {
+              console.warn('[BookSessionWithMentor] Backend fetch failed:', err);
+              setError('Mentor não encontrado. Por favor, volte à página de mentorias.');
               setLoading(false);
               return;
             }
-          } catch (err) {
-            console.warn('[BookSessionWithMentor] Backend fetch failed', err);
           }
         }
-
-        // No profile found
-        setError(isMentorView ? 'Mentorado não encontrado.' : 'Mentor não encontrado. Por favor, volte à página de mentorias.');
-      } catch (error) {
-        console.error('[BookSessionWithMentor] Unexpected error:', error);
-        setError(`Erro inesperado: ${error instanceof Error ? error.message : 'Tente novamente'}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (urlMentorId || urlMenteeId || mentorState?.mentorId) {
-      loadProfile();
-    } else {
-      setError('Nenhum perfil selecionado.');
-      setLoading(false);
-    }
-  }, [urlMentorId, urlMenteeId, mentorState]);
+      
+              if (urlMentorId || urlMenteeId || mentorState?.mentorId) {
+                loadProfile();
+              } else {
+                setError('Nenhum perfil selecionado.');
+                setLoading(false);
+              }
+            } catch (err) {
+              console.error('[BookSessionWithMentor] Error loading profile:', err);
+              setError('Erro ao carregar o perfil.');
+              setLoading(false);
+            }
+          };
+      
+          loadProfile();
+        }, [urlMentorId, urlMenteeId, mentorState]);
 
   // Load current user's profile IDs (MENTOR and MENTORADO)
   useEffect(() => {
@@ -123,7 +146,7 @@ function BookSessionContent() {
 
   // Load connection status between current user's profile and the target profile
   useEffect(() => {
-    if (!menteeProfileId || !targetProfile || isMentorView) return;
+    if (!menteeProfileId || !selectedMentor) return;
 
     const loadConnection = async () => {
       const timer = setTimeout(() => setConnectionStatus('none'), 5000);
@@ -136,7 +159,7 @@ function BookSessionContent() {
         
         const conn = connections.find(
           (c: { mentorProfileId: number; status: string; id: number }) =>
-            Number(c.mentorProfileId) === Number(targetProfile.profileId)
+            Number(c.mentorProfileId) === Number(selectedMentor.profileId)
         );
         if (!conn) {
           setConnectionStatus('none');
@@ -156,11 +179,11 @@ function BookSessionContent() {
     };
 
     loadConnection();
-  }, [menteeProfileId, targetProfile, isMentorView]);
+  }, [menteeProfileId, selectedMentor]);
 
   // If in mentor view, we need to find the connection ID for the action buttons
   useEffect(() => {
-    if (!isMentorView || !targetProfile || !myUserId) return;
+    if (!selectedMentor || !myUserId) return;
 
     const loadMentorConnection = async () => {
       try {
@@ -169,7 +192,7 @@ function BookSessionContent() {
           const connections = await res.json();
           const conn = connections.find(
             (c: { menteeProfileId: number; status: string; id: number }) =>
-              Number(c.menteeProfileId) === Number(targetProfile.profileId)
+              Number(c.menteeProfileId) === Number(selectedMentor.profileId)
           );
           if (conn && conn.status === 'APPROVED') {
             setConnectionId(conn.id);
@@ -181,10 +204,10 @@ function BookSessionContent() {
       }
     };
     loadMentorConnection();
-  }, [isMentorView, targetProfile, myUserId]);
+  }, [selectedMentor, myUserId]);
 
   const handleConnect = async () => {
-    if (!menteeProfileId || !targetProfile || !targetProfile.profileId) {
+    if (!menteeProfileId || !selectedMentor || !selectedMentor.profileId) {
       toast({ title: 'Atenção', description: 'Carregando informações do perfil...' });
       return;
     }
@@ -194,7 +217,7 @@ function BookSessionContent() {
       const res = await apiFetch('/mentorship-connections', {
         method: 'POST',
         body: JSON.stringify({ 
-          mentorProfileId: targetProfile.profileId, 
+          mentorProfileId: selectedMentor.profileId, 
           menteeProfileId: menteeProfileId,
           createdBy: myUserId
         }),
@@ -241,7 +264,7 @@ function BookSessionContent() {
     );
   }
 
-  if (error || !targetProfile) {
+  if (error || !selectedMentor) {
     return (
       <div className="book-session-error">
         <div className="error-container">
@@ -249,7 +272,7 @@ function BookSessionContent() {
             <h2 className="error-title">Perfil não encontrado</h2>
             <p className="error-message">{error || 'Não conseguimos carregar os dados.'}</p>
             <button
-              onClick={() => navigate(isMentorView ? '/mentor-dashboard' : '/mentoros')}
+              onClick={() => navigate('/mentorias')}
               className="error-button"
             >
               ← Voltar
@@ -263,38 +286,31 @@ function BookSessionContent() {
   // Define Profile IDs for scheduling components
   // If I am the mentor viewing a mentee: mentorId is my Mentor Profile, menteeId is the target profile
   // If I am the mentee viewing a mentor: mentorId is target profile, menteeId is my Mentee Profile
-  const schedulerMentorId = isMentorView ? myMentorProfileId?.toString() : targetProfile.profileId?.toString();
-  const schedulerMenteeId = isMentorView ? targetProfile.profileId?.toString() : menteeProfileId?.toString();
+  // const schedulerMentorId = myMentorProfileId?.toString() : selectedMentor.profileId?.toString();
+  // const schedulerMenteeId = isMentorView ? selectedMentor.profileId?.toString() : menteeProfileId?.toString();
+  const schedulerMentorId = selectedMentor.profileId?.toString();
+  const schedulerMenteeId = menteeProfileId?.toString();
 
   return (
     <div className="book-session-with-mentor">
-      {isMentorView ? (
-        <MenteeInfo
-          name={targetProfile.name}
-          position={targetProfile.position}
-          experience={targetProfile.anosExperiencia}
-          avatarUrl={targetProfile.avatarUrl}
-          bio={targetProfile.bio}
-          connectionStatus={connectionStatus}
-          onLeave={handleLeave}
-        />
-      ) : (
         <MentorInfo
-          name={targetProfile.name}
-          position={targetProfile.position}
-          skills={targetProfile.skills}
-          experience={targetProfile.anosExperiencia}
-          isActive={targetProfile.isActive}
-          avatarUrl={targetProfile.avatarUrl}
-          bio={targetProfile.bio}
+          mentorId={selectedMentor.id || selectedMentor.profileId || selectedMentor.userId}
+          name={selectedMentor.name}
+          position={selectedMentor.position}
+          skills={selectedMentor.skills}
+          experience={selectedMentor.anosExperiencia}
+          isActive={selectedMentor.isActive}
+          avatarUrl={selectedMentor.avatarUrl}
+          bio={selectedMentor.bio}
+          rating={selectedMentor.rating}
+          menteeCount={selectedMentor.menteeCount}
           connectionStatus={connectionStatus}
           onConnect={handleConnect}
           onLeave={handleLeave}
-          onChat={targetProfile.userId ? () => setActiveChatId(targetProfile.userId!) : undefined}
+          onChat={selectedMentor.userId ? () => setActiveChatId(selectedMentor.userId!) : undefined}
         />
-      )}
 
-      {targetProfile.isAvailable && currentUserId && connectionStatus === 'active' && (
+      {selectedMentor.isAvailable && currentUserId && connectionStatus === 'active' && (
         <div className="calendar-container">
           <SlotSelector 
             mentorId={schedulerMentorId || '0'}

@@ -1,7 +1,10 @@
-import React from 'react';
-import { User, Circle, Star, Users, MessageCircle, X, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Circle, Users, MessageCircle, Star, LogOut } from 'lucide-react';
 import './MentorInfo.css';
 import IconButton from '../IconButton/IconButton';
+import Rating from '../Rating/Rating';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../Dialog/Dialog';
+import { apiFetch } from '../../../services/api';
 
 interface Skill {
   id: string;
@@ -9,6 +12,7 @@ interface Skill {
 }
 
 interface MentorCardProps {
+  mentorId?: number | string;
   name: string;
   position: string;
   skills: Skill[];
@@ -21,9 +25,12 @@ interface MentorCardProps {
   onConnect?: () => void;
   onLeave?: () => void;
   onChat?: () => void;
+  rating?: number;
+  menteeCount?: number;
 }
 
 const MentorCard: React.FC<MentorCardProps> = ({ 
+  mentorId,
   name, 
   position, 
   skills, 
@@ -35,9 +42,52 @@ const MentorCard: React.FC<MentorCardProps> = ({
   onConnect,
   onLeave,
   onChat,
+  rating,
+  menteeCount
 }) => {
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [currentRating, setCurrentRating] = useState<number | undefined>(rating);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
+
+  const handleStarClick = (starValue: number) => {
+    setSelectedRating(starValue);
+  };
+
+  const handleSubmitRating = async () => {
+    if (selectedRating === null || !mentorId) return;
+
+    setIsSubmitting(true);
+    try {
+      console.log(`Submitting rating for mentor ${mentorId}: ${selectedRating}`);
+      
+      const response = await apiFetch(`/mentors/${mentorId}/rating`, {
+        method: 'POST',
+        body: JSON.stringify({ rating: selectedRating })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Rating submission failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Rating submission response:', data);
+      
+      // Update the displayed rating
+      setCurrentRating(selectedRating);
+      
+      // Reset and close dialog
+      setSelectedRating(null);
+      setIsRatingDialogOpen(false);
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      alert('Erro ao enviar avaliação. Por favor, tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="mentor-info-card">
@@ -57,12 +107,12 @@ const MentorCard: React.FC<MentorCardProps> = ({
             {isActive ? 'Ativo' : 'Indisponível'}
             <Circle 
               size={12} 
-              fill={isActive ? "#4ade80" : "#fb7185"} 
+              fill={isActive ? "var(--is-active-green)" : "var(--is-inactive-red)"} 
               color="transparent" 
-              className="status-dot"
+              className="status-dot-2"
             />
           </div>
-          <p className="mentor-info-bio">{bio || "Especialista em arquitetura de microsserviços e liderança técnica. Apaixonado por mentoria e desenvolvimento de pessoas."}</p>
+          <p className="mentor-info-bio">{bio || "Opa, esse mentor ainda não preencheu a bio."}</p>
           <div className="mentor-info-skills-pills">
             {displaySkills.length > 0 ? (
               <>
@@ -78,13 +128,12 @@ const MentorCard: React.FC<MentorCardProps> = ({
             )}
           </div>
           <div className="mentor-info-stats-section">
-              <div className="mentor-info-rating">
-                <Star size={16} fill="#fbbf24" color="transparent" className="mentor-rating-star" />
-                <span className="mentor-info-rating-text">4.8</span>
-              </div>
+              {currentRating !== undefined && (
+                <Rating rating={currentRating} />
+              )}
               <div className="mentor-info-mentorships">
                 <Users size={16} />
-                <span className="mentor-info-mentorships-text">4.8</span>
+                <span className="mentor-info-mentorships-text">{menteeCount ?? 0}</span>
               </div>
           </div>
         </div>
@@ -93,7 +142,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
 
       <div className="mentor-info-footer">
         <IconButton variant="primary" icon={<MessageCircle size={18} />} onClick={onChat}>Conversar</IconButton>
-        <IconButton variant="secondary" icon={<Star size={18} />}>Avaliar</IconButton>
+        <IconButton variant="secondary" icon={<Star size={18} />} onClick={() => setIsRatingDialogOpen(true)}>Avaliar</IconButton>
 
         {connectionStatus === 'loading' && (
           <IconButton variant="secondary" icon={<Circle size={18} />} disabled>Carregando...</IconButton>
@@ -108,6 +157,38 @@ const MentorCard: React.FC<MentorCardProps> = ({
           <IconButton variant="withdraw" icon={<LogOut size={18} />} onClick={onLeave}>Deixar Mentoria</IconButton>
         )}
       </div>
+
+      <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
+        <DialogContent className="rating-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              O quanto você curtiu esse mentor?
+            </DialogTitle>
+            <DialogDescription>
+              Escolha uma nota de 0 a 5:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rating-stars-container">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <IconButton 
+                key={star} 
+                variant="rating"
+                onClick={() => handleStarClick(star)}
+                className={selectedRating !== null && star <= selectedRating ? 'active' : ''}
+              >
+                <Star size={24} fill={selectedRating !== null && star <= selectedRating ? 'var(--rating-yellow-medium)' : 'none'} color='var(--rating-yellow-medium)'/>
+              </IconButton>
+            ))}
+          </div>
+          <IconButton 
+            variant="primary" 
+            onClick={handleSubmitRating} 
+            disabled={selectedRating === null || isSubmitting}
+          >
+            {isSubmitting ? 'Enviando...' : 'Enviar'}
+          </IconButton>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
