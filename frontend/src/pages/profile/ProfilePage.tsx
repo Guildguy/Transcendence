@@ -455,12 +455,6 @@ useEffect(() => {
           onImageChange={(file) => handleImageUpload(file)}
         />
         <div className="perfil-badges">
-          <ProgressBar
-            currentXp={userData.xp || 0}
-            nextLevelXp={userData.nextLevelXp}
-            currentLevel={userData.level || 0}
-            size="medium"
-          />
           <div className="perfil-badge">Level: {userData.level || 0}</div>
           <div className="perfil-badge">XP: {userData.xp || 0}</div>
         </div>
@@ -517,7 +511,7 @@ useEffect(() => {
                 <InputGroup
                   placeholder="Nome Completo"
                   value={userData.nome}
-                  isEditing={isEditing}
+                  isEditing={false}
                   onChange={(val) => setUserData({ ...userData, nome: val })}
                 />
                 <DropdownList
@@ -573,14 +567,14 @@ useEffect(() => {
                 <InputGroup
                   placeholder="E-mail"
                   value={userData.email}
-                  isEditing={isEditing}
+                  isEditing={false}
                   onChange={(val) => setUserData({ ...userData, email: val })}
                 />
                 <InputGroup
                   placeholder="Telefone"
                   value={userData.telefone}
                   isNumeric={true}
-                  isEditing={isEditing}
+                  isEditing={false}
                   onChange={(val) =>
                     setUserData({ ...userData, telefone: val })
                   }
