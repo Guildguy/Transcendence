@@ -130,17 +130,18 @@ export async function saveMentorAvailability(
 }
 
 export async function saveMentorCapacity(
-  mentorId: string | number,
-  maxMentees: number
+  mentorProfileId: string | number,
+  limitOfMentee: number
 ): Promise<{ currentMentees: number; maxMentees: number }> {
-  const normalizedMentorId = normalizeMentorId(mentorId);
+  const normalizedMentorProfileId = normalizeMentorId(mentorProfileId);
 
   const payload = {
-    maxMentees: maxMentees,
+    mentorProfileId: normalizedMentorProfileId,
+    limitOfMentee: limitOfMentee,
   };
 
-  const response = await apiFetch(`/mentorship-connections/mentor/${normalizedMentorId}/capacity`, {
-    method: 'PUT',
+  const response = await apiFetch(`/mentorship-connections/limit`, {
+    method: 'POST',
     body: JSON.stringify(payload),
   });
 
