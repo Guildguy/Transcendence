@@ -22,7 +22,7 @@ DOCKER_COMPOSE		:= $(shell \
 VOLUMES				:= postgres_data \
 						mongo_data \
 						grafana_data
-
+						
 VOLUMES_DIRECTORY   := $(VOLUMES:%=./data/%)
 
 SERVICES			:= api \
@@ -35,7 +35,8 @@ SERVICES			:= api \
 					   node-exporter \
 					   cadvisor \
 					   postgres-exporter \
-					   mongodb-exporter
+					   mongodb-exporter \
+					   nginx
 
 ifdef SERVICE
 	SERVICES 		:= $(SERVICE)
