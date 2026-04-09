@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Circle, Users, MessageCircle, Star, LogOut } from 'lucide-react';
 import './MentorInfo.css';
 import IconButton from '../IconButton/IconButton';
@@ -13,6 +13,7 @@ interface Skill {
 
 interface MentorCardProps {
   mentorId?: number | string;
+  menteeProfileId?: number;
   name: string;
   position: string;
   skills: Skill[];
@@ -31,6 +32,7 @@ interface MentorCardProps {
 
 const MentorCard: React.FC<MentorCardProps> = ({ 
   mentorId,
+  menteeProfileId,
   name, 
   position, 
   skills, 
@@ -49,15 +51,20 @@ const MentorCard: React.FC<MentorCardProps> = ({
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [currentRating, setCurrentRating] = useState<number | undefined>(rating);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const canRate = connectionStatus === 'active' && Boolean(mentorId) && Boolean(menteeProfileId);
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
+
+  useEffect(() => {
+    setCurrentRating(rating);
+  }, [rating, mentorId]);
 
   const handleStarClick = (starValue: number) => {
     setSelectedRating(starValue);
   };
 
   const handleSubmitRating = async () => {
-    if (selectedRating === null || !mentorId) return;
+    if (selectedRating === null || !mentorId || !menteeProfileId) return;
 
     setIsSubmitting(true);
     try {
@@ -65,7 +72,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
       
       const response = await apiFetch(`/mentors/${mentorId}/rating`, {
         method: 'POST',
-        body: JSON.stringify({ rating: selectedRating })
+        body: JSON.stringify({ rating: selectedRating, menteeProfileId })
       });
       
       if (!response.ok) {
@@ -75,8 +82,9 @@ const MentorCard: React.FC<MentorCardProps> = ({
       const data = await response.json();
       console.log('Rating submission response:', data);
       
-      // Update the displayed rating
-      setCurrentRating(selectedRating);
+      // Update with backend summary (integer average), fallback to selected value.
+      const resolvedRating = typeof data?.averageRating === 'number' ? data.averageRating : selectedRating;
+      setCurrentRating(resolvedRating);
       
       // Reset and close dialog
       setSelectedRating(null);
@@ -142,7 +150,14 @@ const MentorCard: React.FC<MentorCardProps> = ({
 
       <div className="mentor-info-footer">
         <IconButton variant="primary" icon={<MessageCircle size={18} />} onClick={onChat}>Conversar</IconButton>
-        <IconButton variant="secondary" icon={<Star size={18} />} onClick={() => setIsRatingDialogOpen(true)}>Avaliar</IconButton>
+        <IconButton
+          variant="secondary"
+          icon={<Star size={18} />}
+          onClick={() => canRate && setIsRatingDialogOpen(true)}
+          disabled={!canRate}
+        >
+          Avaliar
+        </IconButton>
 
         {connectionStatus === 'loading' && (
           <IconButton variant="secondary" icon={<Circle size={18} />} disabled>Carregando...</IconButton>
@@ -165,7 +180,7 @@ const MentorCard: React.FC<MentorCardProps> = ({
               O quanto você curtiu esse mentor?
             </DialogTitle>
             <DialogDescription>
-              Escolha uma nota de 0 a 5:
+              Escolha uma nota de 1 a 5:
             </DialogDescription>
           </DialogHeader>
           <div className="rating-stars-container">
