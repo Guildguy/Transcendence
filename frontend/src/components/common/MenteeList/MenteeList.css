@@ -1,11 +1,18 @@
 .save-capacity-button {
-  background-color: var(--purple-primary);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
+  text-align: center;
+  align-items: center;
+  max-width: 120px;
+  max-height: 42px;
   border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.875rem;
+  background-color: var(--purple-light);
+  color: var(--text-dark);
+  border:1px solid var(--purple-primary);
+}
+
+.save-capacity-button:hover {
+  color: var(--white);
+  background-color: var(--purple-primary);
 }
 
 .card {
@@ -72,7 +79,7 @@
 }
 
 .progress {
-  background-color: #8a2be2;
+  background-color: var(--purple-primary);
   height: 100%;
   border-radius: 8px;
   transition: width 0.3s ease;
@@ -82,7 +89,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f9f9f9;
+  background-color: var(--gray-light);
   padding: 1rem;
   border-radius: 8px;
   transition: background-color 0.2s ease, transform 0.2s ease;
@@ -93,9 +100,8 @@
 }
 
 .mentee-card.clickable:hover {
-  background-color: #f0f0f0;
+  background-color: var(--gray-medium);
   transform: translateY(-2px);
-  border-color: #8a2be2;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
@@ -110,7 +116,7 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #333;
+  color: var(--text-dark);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -118,7 +124,7 @@
 
 .mentee-arrow {
   font-size: 1.5rem;
-  color: #8a2be2;
+  color: var(--purple-primary);
   margin-left: 0.5rem;
   flex-shrink: 0;
 }
@@ -134,13 +140,13 @@
 .mentee-list-loading {
   text-align: center;
   padding: 2rem 1rem;
-  color: #666;
+  color: var(--gray-medium);
   font-size: 0.95rem;
 }
 
 .mentee-list-error {
-  color: #c00;
-  background-color: #fee;
+  color: var(--red);
+  background-color: var(--red-pale);
   border-radius: 8px;
   padding: 1rem;
 }
@@ -149,7 +155,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f9f9f9;
+  background-color:  var(--purple-bg-light);
   padding: 1rem;
   border-radius: 8px;
 }

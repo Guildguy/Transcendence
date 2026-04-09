@@ -195,13 +195,13 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
         // Fetch avatars for each mentee in parallel using just the profileId
         const activeMentees: Mentee[] = await Promise.all(
           approvedConnections.map(async (conn) => {
-            // Use menteeService to fetch just the avatar image
-            const avatarUrl = await menteeService.fetchProfileImage(conn.menteeProfileId);
+            // Use menteeService to get full mentee details including correct name
+            const menteeDetails = await menteeService.getMenteeDetails(conn.menteeProfileId);
             
             return {
               id: conn.menteeProfileId,
-              name: conn.menteeName || 'Mentorado(a)',
-              avatarUrl: avatarUrl || undefined
+              name: menteeDetails?.name || conn.menteeName || 'Mentorado(a)',
+              avatarUrl: menteeDetails?.avatarUrl
             };
           })
         );
