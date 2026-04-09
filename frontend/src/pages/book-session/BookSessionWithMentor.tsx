@@ -51,16 +51,34 @@ function BookSessionContent() {
   const mentorState = location.state as MentorLocationState | null;
 
   useEffect(() => {
+    const profileIdFromState = mentorState?.mentorId;
+    const parsedProfileId = urlMentorId ? parseInt(urlMentorId, 10) : NaN;
+    const profileIdFromUrl = Number.isNaN(parsedProfileId) ? null : parsedProfileId;
+    const targetProfileId = profileIdFromState ?? profileIdFromUrl;
+
     const loadProfile = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        // Priority 1: Navigation state (best - has complete data from MentorCard)
+        if (!targetProfileId) {
+          setError('Nenhum perfil selecionado.');
+          setSelectedMentor(null);
+          return;
+        }
+
+        // Always prefer backend data to keep rating and mentee count persistent.
+        const mentorFromApi = await mentorService.getMentorDetails(targetProfileId);
+        if (mentorFromApi) {
+          setSelectedMentor(mentorFromApi);
+          return;
+        }
+
+        // Fallback for initial navigation if backend data is temporarily unavailable.
         if (mentorState?.mentorId) {
-          const mentor: MentorDetailData = {
+          const mentorFallback: MentorDetailData = {
             id: mentorState.mentorId,
             profileId: mentorState.mentorId,
-            userId: mentorState.mentorId, 
             name: mentorState.mentorName || 'Mentor',
             position: mentorState.mentorPosition || 'Position',
             skills: mentorState.mentorSkills || [],
@@ -69,49 +87,52 @@ function BookSessionContent() {
             isAvailable: true,
             avatarUrl: mentorState.mentorAvatar,
             bio: mentorState.mentorBio || undefined,
-            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5.0,
+            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5,
             menteeCount: mentorState.menteeCount || 0
           };
-          setSelectedMentor(mentor);
-          setLoading(false);
+          setSelectedMentor(mentorFallback);
           return;
         }
 
-        // Priority 2: Backend fetch with URL parameter
-        if (urlMentorId) {
-          const profileId = parseInt(urlMentorId, 10);
-          if (!isNaN(profileId)) {
-            try {
-              const mentor = await mentorService.getMentorDetails(profileId);
-              if (mentor) {
-                setSelectedMentor(mentor);
-                setLoading(false);
-                return;
-              }
-            } catch (err) {
-              console.warn('[BookSessionWithMentor] Backend fetch failed:', err);
-              setError('Mentor não encontrado. Por favor, volte à página de mentorias.');
-              setLoading(false);
-              return;
-            }
-          }
-        }
-      
-              if (urlMentorId || urlMenteeId || mentorState?.mentorId) {
-                loadProfile();
-              } else {
-                setError('Nenhum perfil selecionado.');
-                setLoading(false);
-              }
-            } catch (err) {
-              console.error('[BookSessionWithMentor] Error loading profile:', err);
-              setError('Erro ao carregar o perfil.');
-              setLoading(false);
-            }
+        setError('Mentor não encontrado. Por favor, volte à página de mentorias.');
+        setSelectedMentor(null);
+      } catch (err) {
+        console.error('[BookSessionWithMentor] Error loading profile:', err);
+
+        if (mentorState?.mentorId) {
+          const mentorFallback: MentorDetailData = {
+            id: mentorState.mentorId,
+            profileId: mentorState.mentorId,
+            name: mentorState.mentorName || 'Mentor',
+            position: mentorState.mentorPosition || 'Position',
+            skills: mentorState.mentorSkills || [],
+            anosExperiencia: mentorState.mentorXp || 0,
+            isActive: mentorState.mentorIsActive !== false,
+            isAvailable: true,
+            avatarUrl: mentorState.mentorAvatar,
+            bio: mentorState.mentorBio || undefined,
+            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5,
+            menteeCount: mentorState.menteeCount || 0
           };
-      
-          loadProfile();
-        }, [urlMentorId, urlMenteeId, mentorState]);
+          setSelectedMentor(mentorFallback);
+          return;
+        }
+
+        setError('Erro ao carregar o perfil.');
+        setSelectedMentor(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (targetProfileId || urlMenteeId || mentorState?.mentorId) {
+      loadProfile();
+    } else {
+      setError('Nenhum perfil selecionado.');
+      setLoading(false);
+      setSelectedMentor(null);
+    }
+  }, [urlMentorId, urlMenteeId, mentorState]);
 
   // Load current user's profile IDs (MENTOR and MENTORADO)
   useEffect(() => {
@@ -294,7 +315,8 @@ function BookSessionContent() {
   return (
     <div className="book-session-with-mentor">
         <MentorInfo
-          mentorId={selectedMentor.id || selectedMentor.profileId || selectedMentor.userId}
+          mentorId={selectedMentor.profileId || selectedMentor.id || selectedMentor.userId}
+          menteeProfileId={menteeProfileId ?? undefined}
           name={selectedMentor.name}
           position={selectedMentor.position}
           skills={selectedMentor.skills}

@@ -23,6 +23,21 @@ export interface MentorDetailData extends MentorCardData {
 }
 
 class MentorService {
+
+  private async fetchMentorRating(profileId: number): Promise<number> {
+    try {
+      const response = await apiFetch(`/mentors/${profileId}/rating`);
+      if (!response.ok) return 5;
+
+      const data = await response.json();
+      const parsed = Number(data?.averageRating);
+      if (!Number.isFinite(parsed)) return 5;
+
+      return Math.max(1, Math.min(5, Math.ceil(parsed)));
+    } catch {
+      return 5;
+    }
+  }
   
   /**
    * Busca a imagem de perfil no backend Java (8080)
@@ -281,6 +296,8 @@ class MentorService {
         }
       }
 
+      const mentorRating = await this.fetchMentorRating(profileData.id);
+
       const result: MentorDetailData = {
         id: profileData.id,
         userId: userId,
@@ -295,7 +312,7 @@ class MentorService {
         isActive: userActive,
         isAvailable: true,
         bio: profileData.bio || 'Especialista em desenvolvimento e mentoria',
-        rating: profileData.rating || 4.8,
+        rating: mentorRating,
         menteeCount: menteeCount,
         avatarUrl: profileData.avatarUrl
       };
