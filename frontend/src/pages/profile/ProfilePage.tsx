@@ -9,7 +9,7 @@ import { apiFetch } from "../../services/api";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
 
-const PYTHON_API_URL = "http://localhost:8000";
+const PYTHON_API_URL = "https://ft-trans.42.fr/api/python";
 
 interface UserData {
   id?: number;

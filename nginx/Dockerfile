@@ -8,7 +8,7 @@ RUN mkdir -p /etc/nginx/ssl && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/transcendence.key \
     -out /etc/nginx/ssl/transcendence.crt \
-    -subj "/C=BR/ST=SP/L=Sao Paulo/O=42sp/CN=ft_trans.42.fr"
+    -subj "/C=BR/ST=SP/L=Sao Paulo/O=42sp/CN=ft-trans.42.fr"
 
 RUN rm /etc/nginx/conf.d/default.conf
 

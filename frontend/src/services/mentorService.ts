@@ -1,6 +1,6 @@
 import { apiFetch } from './api'; // Seu wrapper customizado
 
-const PYTHON_API_URL = 'http://localhost:8000';
+const PYTHON_API_URL = "https://ft-trans.42.fr/api/python";
 
 export interface MentorCardData {
   id: number;

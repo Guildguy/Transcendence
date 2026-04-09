@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://madias-m.42.fr/api/java";
+const API_BASE_URL = "https://ft-trans.42.fr/api/java";
 
 /**
  * Obtém o JWT do localStorage

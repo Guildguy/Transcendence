@@ -173,7 +173,7 @@ const handleSaveAll = async () => {
     });
 
     // Requisição 2: Skills no Python/MongoDB
-    const resStacks = await fetch(`http://localhost:8000/profile`, { // Verifique se a porta do Python é 8000
+    const resStacks = await fetch(`https://ft-trans.42.fr/api/python`, { // Verifique se a porta do Python é 8000
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pythonStacksPayload)
@@ -307,7 +307,7 @@ useEffect(() => {
     console.log("Buscando skills para o ID consolidado:", idParaBusca);
 
     try {
-      const response = await fetch(`http://localhost:8000/profile/${idParaBusca}`);
+      const response = await fetch(`https://ft-trans.42.fr/api/python/profile/${idParaBusca}`);
       if (response.ok) {
         const data = await response.json();
         const formatted = data.stacks.map((s: string, i: number) => ({
