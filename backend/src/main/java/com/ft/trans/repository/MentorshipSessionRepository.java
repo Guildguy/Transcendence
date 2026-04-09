@@ -23,6 +23,8 @@ public interface MentorshipSessionRepository extends JpaRepository<MentorshipSes
 
 	List<MentorshipSession> findByConnectionIdAndScheduledDateAfter(Long connectionId, LocalDateTime after);
 
+	long countByConnectionIdAndStatus(Long connectionId, SessionStatus status);
+
 	@Query("SELECT s FROM MentorshipSession s JOIN MentorshipConnection c ON s.connectionId = c.id WHERE c.mentor.id = :mentorId")
 	List<MentorshipSession> findByMentorProfileId(@Param("mentorId") Long mentorId);
 

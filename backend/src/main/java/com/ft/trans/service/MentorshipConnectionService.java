@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ft.trans.controller.dto.GamificationEventRequest;
 import com.ft.trans.dto.ConnectionResponseDTO;
 import com.ft.trans.dto.LimitMenteeDTO;
 import com.ft.trans.dto.MentorCapacityDTO;
@@ -15,12 +16,14 @@ import com.ft.trans.entity.LimitMentee;
 import com.ft.trans.entity.MentorshipConnection;
 import com.ft.trans.entity.MentorshipConnection.ConnectionStatus;
 import com.ft.trans.entity.MentorshipCount;
+import com.ft.trans.entity.MentorshipSession.SessionStatus;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.entity.Profile.ProfileType;
 import com.ft.trans.entity.User;
 import com.ft.trans.repository.LimitMenteeRepository;
 import com.ft.trans.repository.MentorshipConnectionRepository;
 import com.ft.trans.repository.MentorshipCountRepository;
+import com.ft.trans.repository.MentorshipSessionRepository;
 import com.ft.trans.repository.ProfileRepository;
 import com.ft.trans.repository.UserRepository;
 import com.ft.trans.validation.Result;
@@ -30,19 +33,24 @@ import com.ft.trans.validation.ValidationResult;
 public class MentorshipConnectionService
 {
 	private static final int DEFAULT_MENTEE_LIMIT = 10;
+	private static final int MIN_COMPLETED_SESSIONS_FOR_CYCLE_COMPLETION = 1;
 
 	private final MentorshipConnectionRepository connectionRepository;
 	private final MentorshipCountRepository       countRepository;
 	private final LimitMenteeRepository           limitMenteeRepository;
 	private final UserRepository                  userRepository;
 	private final ProfileRepository               profileRepository;
+	private final MentorshipSessionRepository     sessionRepository;
+	private final GamificationService             gamificationService;
 
 	public MentorshipConnectionService(
 		MentorshipConnectionRepository connectionRepository,
 		MentorshipCountRepository countRepository,
 		LimitMenteeRepository limitMenteeRepository,
 		UserRepository userRepository,
-		ProfileRepository profileRepository
+		ProfileRepository profileRepository,
+		MentorshipSessionRepository sessionRepository,
+		GamificationService gamificationService
 	)
 	{
 		this.connectionRepository  = connectionRepository;
@@ -50,6 +58,8 @@ public class MentorshipConnectionService
 		this.limitMenteeRepository = limitMenteeRepository;
 		this.userRepository        = userRepository;
 		this.profileRepository     = profileRepository;
+		this.sessionRepository     = sessionRepository;
+		this.gamificationService   = gamificationService;
 	}
 
 	// ── RN01: Mentorado solicita mentoria (usando Profile IDs) ────────────────────────
@@ -196,6 +206,8 @@ public class MentorshipConnectionService
 			return new Result(null, result);
 		}
 
+		_triggerMatchAcceptedGamification(connection);
+
 		return saveResult;
 	}
 
@@ -264,6 +276,8 @@ public class MentorshipConnectionService
 		connection.lastUpdateBy = userId;
 
 		Result saveResult = _persistConnection(connection);
+		if (saveResult.validationResult().hasErrors())
+			return saveResult;
 
 		// Remover/inativar registro do mentorship_count
 		Optional<MentorshipCount> countOpt = countRepository.findByConnection_Id(connectionId);
@@ -273,6 +287,8 @@ public class MentorshipConnectionService
 			count.lastUpdateBy = userId;
 			countRepository.save(count);
 		});
+
+		_triggerCycleCompletedGamificationIfEligible(connection);
 
 		return saveResult;
 	}
@@ -414,5 +430,42 @@ public class MentorshipConnectionService
 		}
 
 		return new Result(saved, result);
+	}
+
+	private void _triggerMatchAcceptedGamification(MentorshipConnection connection)
+	{
+		try
+		{
+			if (connection.mentor != null && connection.mentor.user != null && connection.mentor.user.id != null)
+				gamificationService.processEvent(new GamificationEventRequest(connection.mentor.user.id, "MATCH_ACCEPTED"));
+
+			if (connection.mentee != null && connection.mentee.user != null && connection.mentee.user.id != null)
+				gamificationService.processEvent(new GamificationEventRequest(connection.mentee.user.id, "MATCH_ACCEPTED"));
+		}
+		catch (Exception ignored)
+		{
+		}
+	}
+
+	private void _triggerCycleCompletedGamificationIfEligible(MentorshipConnection connection)
+	{
+		try
+		{
+			if (connection == null || connection.id == null)
+				return;
+
+			long completedSessions = sessionRepository.countByConnectionIdAndStatus(connection.id, SessionStatus.COMPLETED);
+			if (completedSessions < MIN_COMPLETED_SESSIONS_FOR_CYCLE_COMPLETION)
+				return;
+
+			if (connection.mentor != null && connection.mentor.user != null && connection.mentor.user.id != null)
+				gamificationService.processEvent(new GamificationEventRequest(connection.mentor.user.id, "CYCLE_COMPLETED"));
+
+			if (connection.mentee != null && connection.mentee.user != null && connection.mentee.user.id != null)
+				gamificationService.processEvent(new GamificationEventRequest(connection.mentee.user.id, "CYCLE_COMPLETED"));
+		}
+		catch (Exception ignored)
+		{
+		}
 	}
 }
