@@ -24,7 +24,7 @@ public class WebConfig {
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://0.0.0.0:5173", "http://127.0.0.1:5173"));
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://0.0.0.0:5173", "http://127.0.0.1:5173", "https://ft-trans.42.fr", "https://localhost"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization", "Content-Type"));
