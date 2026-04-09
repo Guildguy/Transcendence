@@ -1,4 +1,20 @@
 services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_started
+      python-service:
+        condition: service_started
+      frontend:
+        condition: service_completed_successfully
+    volumes:
+    - frontend_static:/var/www/frontend:ro
+    networks:
+      - app-network
   api:
     container_name: springboot-api
     build: ./backend
@@ -56,8 +72,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "5173:5173"
     environment:
       USER_API: http://api:8080/users
     env_file:
@@ -69,6 +83,9 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - frontend_static:/app/dist
+    command: >
+      sh -c "npm run build"
     deploy:
       resources:
         limits:
@@ -265,6 +282,7 @@ volumes:
       type: none
       device: ${PWD}/data/postgres_data
       o: bind
+  frontend_static:
 
 networks:
   app-network:
