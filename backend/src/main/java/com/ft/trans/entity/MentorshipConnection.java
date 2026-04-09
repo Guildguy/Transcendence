@@ -25,7 +25,9 @@ public class MentorshipConnection implements IEntity
 	{
 		PENDING,
 		REJECTED,
-		APPROVED
+		APPROVED,
+		CANCELLED,
+		ENDED
 	}
 
 	@Id
