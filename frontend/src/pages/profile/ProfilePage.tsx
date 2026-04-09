@@ -9,7 +9,7 @@ import { apiFetch } from "../../services/api";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
 
-const PYTHON_API_URL = "http://localhost:8000";
+const PYTHON_API_URL = "https://ft-trans.42.fr/api/python";
 
 interface UserData {
   id?: number;
@@ -212,6 +212,18 @@ export const ProfilePage = () => {
   console.log("Enviando skills para Python API:", pythonPayload);
 
   try {
+    const userPayload = {
+      id: userData.id,
+      name: userData.nome,
+      email: userData.email,
+      phoneNumber: userData.telefone
+    };
+    // Requisição 0: Salvar dados do user no Backend principal
+    const userRes = await apiFetch(`/users`, {
+      method: 'PUT',
+      body: JSON.stringify(userPayload)
+    });
+
     // Requisição 1: Salvar dados do perfil no Backend principal
     const res = await apiFetch('/profiles', {
       method: 'PUT',
@@ -225,14 +237,10 @@ export const ProfilePage = () => {
       body: JSON.stringify(pythonPayload)
     });
 
-    if (res.ok && resPython.ok) {
+    if (res.ok && resPython.ok && userRes.ok) {
       alert("Perfil e habilidades atualizados com sucesso!");
 
-      // 1. Sai do modo de edição (volta a mostrar o ícone de lápis)
       setIsEditing(false);
-
-      // 2. Atualiza o backup com os dados atuais que acabaram de ser salvos
-      // Isso evita que o botão 'Cancelar' reverta para dados antigos depois de um save
       setBackupData(userData);
       setBackupSkills(userSkills);
 
@@ -455,6 +463,12 @@ useEffect(() => {
           onImageChange={(file) => handleImageUpload(file)}
         />
         <div className="perfil-badges">
+          <ProgressBar
+            currentXp={userData.xp || 0}
+            nextLevelXp={userData.nextLevelXp}
+            currentLevel={userData.level || 0}
+            size="medium"
+          />
           <div className="perfil-badge">Level: {userData.level || 0}</div>
           <div className="perfil-badge">XP: {userData.xp || 0}</div>
         </div>
@@ -511,7 +525,7 @@ useEffect(() => {
                 <InputGroup
                   placeholder="Nome Completo"
                   value={userData.nome}
-                  isEditing={false}
+                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, nome: val })}
                 />
                 <DropdownList
@@ -567,14 +581,14 @@ useEffect(() => {
                 <InputGroup
                   placeholder="E-mail"
                   value={userData.email}
-                  isEditing={false}
+                  isEditing={isEditing}
                   onChange={(val) => setUserData({ ...userData, email: val })}
                 />
                 <InputGroup
                   placeholder="Telefone"
                   value={userData.telefone}
                   isNumeric={true}
-                  isEditing={false}
+                  isEditing={isEditing}
                   onChange={(val) =>
                     setUserData({ ...userData, telefone: val })
                   }
