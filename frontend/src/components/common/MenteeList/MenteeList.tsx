@@ -5,9 +5,10 @@ import Button from '../Button/Button';
 import './MenteeList.css';
 import { apiFetch } from '../../../services/api';
 import { saveMentorCapacity } from '../../../services/mentorAvailabilityService';
+import menteeService from '../../../services/menteeService';
 import { toast } from '../../../hooks/use-toast';
 import IconButton from '../IconButton/IconButton';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, MoveRight } from 'lucide-react';
 
 interface Mentee {
   id: number;
@@ -116,8 +117,7 @@ export function CapacityCard({ mentorId }: CapacityCardProps) {
     }
   };
 
-  const percentageUsed = error ? 0 : (capacity.currentMentees / capacity.maxMentees) * 100;
-  const hasChanges = editingMaxMentees !== capacity.maxMentees;
+  const percentageUsed = error ? 0 : (capacity.currentMentees / editingMaxMentees) * 100;
 
   return (
     <>
@@ -128,7 +128,7 @@ export function CapacityCard({ mentorId }: CapacityCardProps) {
               <h3>Capacidade da Carteira</h3>
             </div>
             <p className="capacity-text">
-              {capacity.currentMentees} de {capacity.maxMentees} mentorados
+              {capacity.currentMentees} de {editingMaxMentees} mentorados
             </p>
           </div>
           <div className="capacity-info">
@@ -186,16 +186,28 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
         }
         
         const connections: ConnectionResponseDTO[] = await response.json();
+        console.log('[MenteeList] Raw connections from backend:', connections);
         
-        // Filter only APPROVED connections and map to Mentee format
-        const activeMentees: Mentee[] = connections
-          .filter(conn => conn.status === 'APPROVED')
-          .map(conn => ({
-            id: conn.menteeProfileId,
-            name: conn.menteeName,
-            avatarUrl: undefined // Backend doesn't provide avatar in this response
-          }));
+        // Filter only APPROVED connections
+        const approvedConnections = connections.filter(conn => conn.status === 'APPROVED');
+        console.log('[MenteeList] Approved connections:', approvedConnections);
         
+        // Fetch avatars for each mentee in parallel using just the profileId
+        const activeMentees: Mentee[] = await Promise.all(
+          approvedConnections.map(async (conn) => {
+            // Use menteeService to fetch just the avatar image
+            const avatarUrl = await menteeService.fetchProfileImage(conn.menteeProfileId);
+            
+            return {
+              id: conn.menteeProfileId,
+              name: conn.menteeName || 'Mentorado(a)',
+              avatarUrl: avatarUrl || undefined
+            };
+          })
+        );
+        
+        
+        console.log('[MenteeList] Processed mentees with avatars:', activeMentees);
         setMentees(activeMentees);
         setError(null);
       } catch (err) {
@@ -251,7 +263,7 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
             />
             <p className="mentee-name">{mentee.name}</p>
           </div>
-          <span className="mentee-arrow">→</span>
+          <MoveRight size={16} className="mentee-arrow" />
         </div>
       ))}
     </div>

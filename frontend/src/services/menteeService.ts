@@ -26,7 +26,7 @@ class MenteeService {
   /**
    * Busca a imagem de perfil no backend Java (8080)
    */
-  private async fetchProfileImage(profileId: number): Promise<string> {
+  async fetchProfileImage(profileId: number): Promise<string> {
     try {
       const response = await apiFetch(`/profiles/image/${profileId}`);
       if (!response.ok) return '';
