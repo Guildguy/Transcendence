@@ -2,6 +2,7 @@
 package com.ft.trans.service;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -20,11 +21,13 @@ import com.ft.trans.entity.Achievement;
 import com.ft.trans.entity.Level;
 import com.ft.trans.entity.User;
 import com.ft.trans.entity.UserAchievement;
+import com.ft.trans.entity.UserStreak;
 import com.ft.trans.entity.XpHistory;
 import com.ft.trans.repository.AchievementRepository;
 import com.ft.trans.repository.LevelRepository;
 import com.ft.trans.repository.UserAchievementRepository;
 import com.ft.trans.repository.UserRepository;
+import com.ft.trans.repository.UserStreakRepository;
 import com.ft.trans.repository.XpHistoryRepository;
 
 @Service
@@ -34,19 +37,22 @@ public class GamificationService {
     private final UserAchievementRepository userAchievementRepository;
     private final XpHistoryRepository xpHistoryRepository;
     private final LevelRepository levelRepository;
+    private final UserStreakRepository userStreakRepository;
 
     public GamificationService(
             UserRepository userRepository,
             AchievementRepository achievementRepository,
             UserAchievementRepository userAchievementRepository,
             XpHistoryRepository xpHistoryRepository,
-            LevelRepository levelRepository
+            LevelRepository levelRepository,
+            UserStreakRepository userStreakRepository
     ) {
         this.userRepository = userRepository;
         this.achievementRepository = achievementRepository;
         this.userAchievementRepository = userAchievementRepository;
         this.xpHistoryRepository = xpHistoryRepository;
         this.levelRepository = levelRepository;
+        this.userStreakRepository = userStreakRepository;
     }
 
     public record EventResult(boolean success, String message, GamificationEventResponse response) {}
@@ -70,7 +76,11 @@ public class GamificationService {
 
         switch (eventType) {
             case "PROFILE_COMPLETED" -> {
-                awardedXp = registerXp(user.id, 50, "PROFILE_COMPLETED");
+                if (isFirstEventOccurrence(user.id, "PROFILE_COMPLETED")) {
+                    awardedXp = registerXp(user.id, 50, "PROFILE_COMPLETED");
+                } else {
+                    notes.add("Evento PROFILE_COMPLETED ja registrado anteriormente para este usuario.");
+                }
                 unlockByName(user.id, "Identidade Transcendental", unlocked);
             }
             case "STREAK_7" -> {
@@ -78,6 +88,7 @@ public class GamificationService {
                 unlockByName(user.id, "Chama Acesa", unlocked);
             }
             case "STREAK_30" -> unlockByTypeAndTarget(user.id, "STREAK", 30, unlocked);
+            case "STREAK_CHECKIN" -> awardedXp = processDailyStreakCheckin(user.id, unlocked, notes);
             case "MATCH_ACCEPTED" -> {
                 awardedXp = registerXp(user.id, 150, "MATCH_ACCEPTED");
                 unlockByTarget(user.id, "MATCH", "MATCH_ACCEPTED", unlocked);
@@ -103,7 +114,11 @@ public class GamificationService {
                 awardedXp = registerXp(user.id, 20, "NO_SHOW_WAITING_BONUS");
                 notes.add("Bonus de compensacao aplicado para o usuario presente.");
             }
-            case "NO_SHOW_ABSENT" -> notes.add("Evento registrado sem XP. Integrar com modulo de streak para zerar ofensiva.");
+            case "NO_SHOW_ABSENT" -> {
+                registerAuditEvent(user.id, "NO_SHOW_ABSENT");
+                resetUserStreak(user.id, notes);
+                notes.add("No-show registrado. A ofensiva deve ser reiniciada pelo modulo de streak.");
+            }
             default -> {
                 return new EventResult(false, "Evento nao suportado: " + eventType, null);
             }
@@ -159,12 +174,18 @@ public class GamificationService {
                 .map(h -> new GamificationSummaryResponse.HistoryItem(h.reason, h.xp))
                 .toList();
 
+        UserStreak streak = userStreakRepository.findByUserId(userId).orElse(null);
+        int currentStreak = streak != null ? safeStreakValue(streak.currentStreak) : 0;
+        int bestStreak = streak != null ? safeStreakValue(streak.bestStreak) : 0;
+
         GamificationSummaryResponse response = new GamificationSummaryResponse(
                 userId,
                 totalXp,
                 currentLevel != null ? currentLevel.level : 1,
                 currentLevel != null ? currentLevel.iconUrl : "/levels/level1.png",
                 nextLevel != null ? nextLevel.xpRequired : null,
+            currentStreak,
+            bestStreak,
                 unlocked,
                 recent
         );
@@ -175,6 +196,10 @@ public class GamificationService {
     private Long safeTotalXp(Long userId) {
         Long total = xpHistoryRepository.sumXpByUserId(userId);
         return total != null ? total : 0;
+    }
+
+    private boolean isFirstEventOccurrence(Long userId, String reason) {
+        return xpHistoryRepository.countByUserIdAndReason(userId, reason) == 0;
     }
 
     private int registerXp(Long userId, int xp, String reason) {
@@ -191,6 +216,81 @@ public class GamificationService {
 
         xpHistoryRepository.save(history);
         return xp;
+    }
+
+    private void registerAuditEvent(Long userId, String reason) {
+        XpHistory history = new XpHistory();
+        history.userId = userId;
+        history.xp = 0;
+        history.reason = reason;
+        history.createdAt = new Date(System.currentTimeMillis());
+        history.created_by = "gamification_event";
+
+        xpHistoryRepository.save(history);
+    }
+
+    private int processDailyStreakCheckin(Long userId, List<String> unlocked, List<String> notes) {
+        UserStreak streak = userStreakRepository.findByUserId(userId).orElseGet(() -> {
+            UserStreak s = new UserStreak();
+            s.userId = userId;
+            s.currentStreak = 0;
+            s.bestStreak = 0;
+            s.created_by = "gamification_event";
+            s.last_update_by = "gamification_event";
+            return s;
+        });
+
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        if (today.equals(streak.lastCheckinDate)) {
+            notes.add("Check-in de ofensiva ja registrado hoje.");
+            notes.add("Ofensiva atual: " + safeStreakValue(streak.currentStreak) + " dia(s).");
+            return 0;
+        }
+
+        if (streak.lastCheckinDate != null && yesterday.equals(streak.lastCheckinDate))
+            streak.currentStreak = safeStreakValue(streak.currentStreak) + 1;
+        else
+            streak.currentStreak = 1;
+
+        streak.bestStreak = Math.max(safeStreakValue(streak.bestStreak), safeStreakValue(streak.currentStreak));
+        streak.lastCheckinDate = today;
+        streak.last_update_by = "gamification_event";
+
+        userStreakRepository.save(streak);
+
+        int awardedXp = 0;
+
+        if (safeStreakValue(streak.currentStreak) >= 7) {
+            if (isFirstEventOccurrence(userId, "STREAK_7"))
+                awardedXp += registerXp(userId, 100, "STREAK_7");
+            unlockByName(userId, "Chama Acesa", unlocked);
+        }
+
+        if (safeStreakValue(streak.currentStreak) >= 30)
+            unlockByTypeAndTarget(userId, "STREAK", 30, unlocked);
+
+        notes.add("Ofensiva atual: " + safeStreakValue(streak.currentStreak) + " dia(s). Melhor ofensiva: " + safeStreakValue(streak.bestStreak) + " dia(s).");
+        return awardedXp;
+    }
+
+    private void resetUserStreak(Long userId, List<String> notes) {
+        UserStreak streak = userStreakRepository.findByUserId(userId).orElse(null);
+        if (streak == null)
+            return;
+
+        int previousStreak = safeStreakValue(streak.currentStreak);
+        streak.currentStreak = 0;
+        streak.last_update_by = "gamification_event";
+        userStreakRepository.save(streak);
+
+        if (previousStreak > 0)
+            notes.add("Ofensiva reiniciada apos no-show. Valor anterior: " + previousStreak + " dia(s).");
+    }
+
+    private int safeStreakValue(Integer value) {
+        return value != null ? Math.max(0, value) : 0;
     }
 
     private void unlockByName(Long userId, String achievementName, List<String> unlocked) {

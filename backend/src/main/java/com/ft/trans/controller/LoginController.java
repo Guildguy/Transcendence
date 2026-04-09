@@ -12,6 +12,8 @@ import com.ft.trans.entity.User;
 import com.ft.trans.entity.LoginRequest;
 import com.ft.trans.entity.GoogleLoginRequest;
 import com.ft.trans.entity.LoginResponse;
+import com.ft.trans.controller.dto.GamificationEventRequest;
+import com.ft.trans.service.GamificationService;
 import com.ft.trans.service.UserService;
 import com.ft.trans.service.GoogleTokenValidationService;
 import com.ft.trans.service.PasswordRecoveryService;
@@ -23,14 +25,16 @@ public class LoginController
 {
     private UserService userService;
     private PasswordRecoveryService passwordRecoveryService;
+    private GamificationService gamificationService;
     
     @Autowired
     private GoogleTokenValidationService googleTokenValidationService;
 
-    LoginController(UserService us, PasswordRecoveryService prs)
+    LoginController(UserService us, PasswordRecoveryService prs, GamificationService gs)
     {
         this.userService = us;
         this.passwordRecoveryService = prs;
+        this.gamificationService = gs;
     }
 
     @PostMapping("/login")
@@ -39,7 +43,10 @@ public class LoginController
         User    user = userService.findLogin(login);
 		String	token = login.getToken(user);
         if (token != null)
+        {
+            triggerDailyStreakCheckin(user);
 			return ResponseEntity.ok(new LoginResponse(token, "Bearer", 86400000L, user.id));
+        }
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
@@ -66,6 +73,8 @@ public class LoginController
                         }});
             }
             String token = userService.generateTokenForUser(user);
+
+            triggerDailyStreakCheckin(user);
             
             return ResponseEntity.ok(new LoginResponse(token, "Bearer", 86400000L, user.id));
             
@@ -87,6 +96,18 @@ public class LoginController
                     .body(new java.util.HashMap<String, String>() {{
                         put("message", "Erro ao processar recuperação de senha: " + e.getMessage());
                     }});
+        }
+    }
+
+    private void triggerDailyStreakCheckin(User user)
+    {
+        try
+        {
+            if (user != null && user.id != null)
+                gamificationService.processEvent(new GamificationEventRequest(user.id, "STREAK_CHECKIN"));
+        }
+        catch (Exception ignored)
+        {
         }
     }
 }
