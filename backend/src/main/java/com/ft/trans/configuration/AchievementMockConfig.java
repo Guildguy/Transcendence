@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.util.Objects;
+
 import com.ft.trans.entity.Achievement;
 import com.ft.trans.repository.AchievementRepository;
 
@@ -21,8 +23,8 @@ public class AchievementMockConfig
         {
             ensure(repo, "Identidade Transcendental", "Perfil completo",              "PROFILE",        1,  50,  "/achievements/identidade_transcendental.png");
             ensure(repo, "Chama Acesa",               "7 dias de streak",             "STREAK",         7,  100, "/achievements/chama_acessa.png");
-            ensure(repo, "Imparável",                 "30 dias de streak",            "STREAK",         30, 200, "/achievements/comeco_da_jornada.png");
-            ensure(repo, "Primeiro Match",            "Primeira mentoria aceita",     "MATCH",          1,  0,   "/achievements/primeiro_aperto_de_mao.png");
+            ensure(repo, "Imparável",                 "30 dias de streak",            "STREAK",         30, 0,   "/achievements/comeco_da_jornada.png");
+            ensure(repo, "O Primeiro Aperto de Mão",  "Primeira mentoria aceita",     "MATCH",          1,  0,   "/achievements/primeiro_aperto_de_mao.png");
             ensure(repo, "Hub de Conexões",           "10 matches",                   "MATCH",          10, 0,   "/achievements/hub_de_conexoes.png");
             ensure(repo, "Quebrando o Gelo",          "Primeira sessão",              "SESSION",        1,  0,   "/achievements/quebrando_o-gelo.png");
             ensure(repo, "Mente Brilhante",           "50 sessões",                   "SESSION",        50, 0,   "/achievements/mente_brilhante.png");
@@ -43,28 +45,31 @@ public class AchievementMockConfig
     }
 
     private void ensure(AchievementRepository repo, String name, String description, String type, int target, int xp, String iconUrl) {
-        if (repo.findByName(name) != null) {
-            return;
-        }
+        Achievement achievement = repo.findByName(name);
+        if (achievement == null)
+            achievement = repo.findByType(type)
+                .stream()
+                .filter(a -> Objects.equals(a.target, target))
+                .findFirst()
+                .orElse(null);
+
+        if (achievement == null)
+            achievement = new Achievement();
+
+        achievement.name = name;
+        achievement.description = description;
+        achievement.type = type;
+        achievement.target = target;
+        achievement.xp_reward = xp;
+        achievement.iconUrl = iconUrl;
 
         try {
-            repo.saveAndFlush(create(name, description, type, target, xp, iconUrl));
+            repo.saveAndFlush(achievement);
         } catch (DataIntegrityViolationException ex) {
             if (repo.findByName(name) != null) {
                 return;
             }
             throw ex;
         }
-    }
-
-    private Achievement create(String name, String description, String type, int target, int xp, String iconUrl) {
-        Achievement a = new Achievement();
-        a.name        = name;
-        a.description = description;
-        a.type        = type;
-        a.target      = target;
-        a.xp_reward   = xp;
-        a.iconUrl     = iconUrl;
-        return a;
     }
 }
