@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.ft.trans.controller.dto.GamificationEventRequest;
 import com.ft.trans.dto.CreateSessionDTO;
 import com.ft.trans.dto.MentorNotesDTO;
 import com.ft.trans.dto.UpdateSessionDTO;
@@ -33,18 +34,21 @@ public class MentorshipSessionService
 	private final MentorAvailabilityRepository mentorAvailabilityRepository;
 	private final MentorshipConnectionRepository connectionRepository;
 	private final MeetService meetService;
+	private final GamificationService gamificationService;
 
 	public MentorshipSessionService(
 		MentorshipSessionRepository sessionRepository,
 		MentorAvailabilityRepository mentorAvailabilityRepository,
 		MentorshipConnectionRepository connectionRepository,
-		MeetService meetService
+		MeetService meetService,
+		GamificationService gamificationService
 	)
 	{
 		this.sessionRepository = sessionRepository;
 		this.mentorAvailabilityRepository = mentorAvailabilityRepository;
 		this.connectionRepository = connectionRepository;
 		this.meetService = meetService;
+		this.gamificationService = gamificationService;
 	}
 
 	public Result createSession(CreateSessionDTO dto)
@@ -221,6 +225,9 @@ public class MentorshipSessionService
 			return new Result(null, result);
 		}
 
+		SessionStatus previousStatus = session.status;
+		Boolean previousMenteeMissed = session.menteeMissed;
+
 		if (dto.scheduledDate != null)
 		{
 			if (sessionRepository.existsByConnectionIdAndScheduledDate(session.connectionId, dto.scheduledDate)
@@ -283,7 +290,11 @@ public class MentorshipSessionService
 		session.lastUpdateAt = LocalDateTime.now();
 		session.lastUpdateBy = dto.lastUpdateBy;
 
-		return _persistSession(session);
+		Result persistResult = _persistSession(session);
+		if (!persistResult.validationResult().hasErrors() && persistResult.entity() instanceof MentorshipSession persistedSession)
+			_triggerGamificationOnStatusTransition(persistedSession, previousStatus, previousMenteeMissed);
+
+		return persistResult;
 	}
 
 	public Result cancel(Long sessionId)
@@ -422,5 +433,52 @@ public class MentorshipSessionService
 		}
 
 		return new Result(saved, result);
+	}
+
+	private void _triggerGamificationOnStatusTransition(
+		MentorshipSession session,
+		SessionStatus previousStatus,
+		Boolean previousMenteeMissed
+	)
+	{
+		try
+		{
+			if (session == null || session.connectionId == null || session.status == null)
+				return;
+
+			if (session.status == previousStatus && java.util.Objects.equals(session.menteeMissed, previousMenteeMissed))
+				return;
+
+			MentorshipConnection connection = connectionRepository.findByIdFull(session.connectionId).orElse(null);
+			if (connection == null || connection.mentor == null || connection.mentee == null)
+				return;
+
+			Long mentorUserId = connection.mentor.user != null ? connection.mentor.user.id : null;
+			Long menteeUserId = connection.mentee.user != null ? connection.mentee.user.id : null;
+
+			if (session.status == SessionStatus.COMPLETED && previousStatus != SessionStatus.COMPLETED)
+			{
+				if (mentorUserId != null)
+					gamificationService.processEvent(new GamificationEventRequest(mentorUserId, "SESSION_COMPLETED"));
+				if (menteeUserId != null)
+					gamificationService.processEvent(new GamificationEventRequest(menteeUserId, "SESSION_COMPLETED"));
+				return;
+			}
+
+			if (session.status == SessionStatus.NO_SHOW && previousStatus != SessionStatus.NO_SHOW)
+			{
+				boolean menteeWasAbsent = Boolean.TRUE.equals(session.menteeMissed);
+				Long absentUserId = menteeWasAbsent ? menteeUserId : mentorUserId;
+				Long presentUserId = menteeWasAbsent ? mentorUserId : menteeUserId;
+
+				if (presentUserId != null)
+					gamificationService.processEvent(new GamificationEventRequest(presentUserId, "NO_SHOW_WAITING_BONUS"));
+				if (absentUserId != null)
+					gamificationService.processEvent(new GamificationEventRequest(absentUserId, "NO_SHOW_ABSENT"));
+			}
+		}
+		catch (Exception ignored)
+		{
+		}
 	}
 }
