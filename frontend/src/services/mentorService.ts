@@ -296,7 +296,10 @@ class MentorService {
         }
       }
 
-      const mentorRating = await this.fetchMentorRating(profileData.id);
+      const [mentorRating, profileImage] = await Promise.all([
+        this.fetchMentorRating(profileData.id),
+        this.fetchProfileImage(profileData.id)
+      ]);
 
       const result: MentorDetailData = {
         id: profileData.id,
@@ -314,7 +317,7 @@ class MentorService {
         bio: profileData.bio || 'Especialista em desenvolvimento e mentoria',
         rating: mentorRating,
         menteeCount: menteeCount,
-        avatarUrl: profileData.avatarUrl
+        avatarUrl: profileImage || profileData.avatarUrl
       };
 
       console.log(`[getMentorDetails] Returning mentor data:`, result);

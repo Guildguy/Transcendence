@@ -70,7 +70,10 @@ function BookSessionContent() {
         // Always prefer backend data to keep rating and mentee count persistent.
         const mentorFromApi = await mentorService.getMentorDetails(targetProfileId);
         if (mentorFromApi) {
-          setSelectedMentor(mentorFromApi);
+          setSelectedMentor({
+            ...mentorFromApi,
+            avatarUrl: mentorFromApi.avatarUrl || mentorState?.mentorAvatar
+          });
           return;
         }
 
