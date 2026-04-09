@@ -208,7 +208,7 @@ class MentorService {
   async getMyMentors(menteeId: number): Promise<any[]> {
     try {
       // Chama o endpoint de conexões aprovadas para o mentorado
-      const response = await apiFetch(`/connections/mentee/${menteeId}`);
+      const response = await apiFetch(`/mentorship-connections/mentee/${menteeId}`);
       if (!response.ok) return [];
       return await response.json(); 
     } catch (error) {
