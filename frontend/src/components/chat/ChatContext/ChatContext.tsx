@@ -64,7 +64,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.debug('[Chat] Connecting to WebSocket...', { token: !!token, myId });
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS('/api/java/ws'),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       debug: (str) => console.debug('[STOMP]', str),
