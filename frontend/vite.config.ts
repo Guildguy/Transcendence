@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://ft_trans.42.fr',
+        target: 'https://ft-trans.42.fr',
         changeOrigin: true,
         secure: false,
       },
