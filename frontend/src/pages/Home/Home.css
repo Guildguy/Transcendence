@@ -250,7 +250,7 @@
 .card {
   padding: 2.5rem;
   border-radius: 1.5rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--gray-light);
   background: #ffffff;
   display: flex;
   flex-direction: column;

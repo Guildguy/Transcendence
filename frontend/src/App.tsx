@@ -20,6 +20,7 @@ const RegisterLayout = lazy(() => import('./pages/register/RegisterLayout'))
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
 const HomeLogged = lazy(() => import('./pages/logged/HomeLogged'))
 const BookSessionWithMentor = lazy(() => import('./pages/book-session/BookSessionWithMentor'))
+const BookSessionWithMentee = lazy(() => import('./pages/manage-session/ManageSessionWithMentee'))
 const MentoriasPage = lazy(() => import('./pages/mentoria/MentoriasPage'))
 const MentorDashboard = lazy(() => import('./pages/mentor-dashboard/MentorDashboard'))
 
@@ -64,6 +65,7 @@ function App() {
             <Route path="/mentorias" element={<MentoriasPage />} />
             <Route path="/book-session" element={<BookSessionWithMentor />} />
             <Route path="/book-session/:mentorId" element={<BookSessionWithMentor />} />
+            <Route path="/manage-session/:menteeId" element={<BookSessionWithMentee />} />
             <Route path="/mentor-dashboard" element={<MentorDashboard />} />
             <Route path="/manage-mentee/:menteeId" element={<BookSessionWithMentor />} />
           </Route>

@@ -1,4 +1,4 @@
-.book-session-with-mentor {
+.manage-session-with-mentee {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,7 +27,7 @@
 }
 
 /* Loading State Styles */
-.book-session-loading {
+.manage-session-loading {
   min-height: 100vh;
   background-color: var(--purple-bg);
   padding: 2rem;
@@ -65,7 +65,7 @@
 }
 
 /* Error State Styles */
-.book-session-error {
+.manage-session-error {
   min-height: 100vh;
   background-color: var(--purple-bg);
   padding: 2rem;
