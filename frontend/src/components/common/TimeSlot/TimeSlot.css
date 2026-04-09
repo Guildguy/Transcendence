@@ -1,22 +1,23 @@
 .save-button {
-    background-color: #8a2be2;
+    background-color: var(--purple-primary);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.875rem;
 }
 
 .availability-grid {
     display: grid;
+    width: auto;
     grid-template-columns: repeat(7, 1fr);
     gap: 1rem;
     margin-bottom: 1rem;
 }
 
 .day-column {
-    background-color: #f9f9f9;
+    background-color: var(--purple-bg);
     border-radius: 8px;
     padding: 1rem;
     text-align: center;
@@ -35,7 +36,7 @@
 }
 
 .time-slot {
-    background-color: #e6d8ff;
+    background-color: var(--purple-light);
     border-radius: 4px;
     padding: 0.5rem;
     font-size: 0.9rem;
@@ -186,4 +187,12 @@
 
 .modal-footer .confirm-btn:hover {
     background-color: #7a1bd2;
+}
+
+@media (max-width: 1200px) {
+    .availability-grid {
+        display: grid;
+        grid: column;
+        grid-template-columns: repeat(1, 1fr);
+    }
 }

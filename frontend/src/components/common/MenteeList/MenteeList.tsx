@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../Avatar/Avatar';
+import Button from '../Button/Button';
 import './MenteeList.css';
 import { apiFetch } from '../../../services/api';
+import { saveMentorCapacity } from '../../../services/mentorAvailabilityService';
+import { toast } from '../../../hooks/use-toast';
+import IconButton from '../IconButton/IconButton';
+import { Minus, Plus } from 'lucide-react';
 
 interface Mentee {
   id: number;
@@ -40,7 +45,9 @@ interface CapacityData {
 // CapacityCard Component
 export function CapacityCard({ mentorId }: CapacityCardProps) {
   const [capacity, setCapacity] = useState<CapacityData>({ currentMentees: 0, maxMentees: 10 });
+  const [editingMaxMentees, setEditingMaxMentees] = useState<number>(10);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadCapacity = async () => {
@@ -57,6 +64,7 @@ export function CapacityCard({ mentorId }: CapacityCardProps) {
           currentMentees: data.currentMentees || 0,
           maxMentees: data.maxMentees || 10
         });
+        setEditingMaxMentees(data.maxMentees || 10);
         setError(null);
       } catch (err) {
         console.error('Erro ao carregar capacidade:', err);
@@ -69,14 +77,86 @@ export function CapacityCard({ mentorId }: CapacityCardProps) {
     }
   }, [mentorId]);
 
+  // Increase capacity
+  const handleIncreaseCapacity = () => {
+    setEditingMaxMentees(prev => prev + 1);
+  };
+
+  // Decrease capacity (minimum of 1)
+  const handleDecreaseCapacity = () => {
+    if (editingMaxMentees > 1) {
+      setEditingMaxMentees(prev => prev - 1);
+    }
+  };
+
+  // Save capacity changes
+  const handleSaveCapacity = async () => {
+    try {
+      setLoading(true);
+      await saveMentorCapacity(mentorId, editingMaxMentees);
+      
+      // Update the displayed capacity
+      setCapacity(prev => ({
+        ...prev,
+        maxMentees: editingMaxMentees
+      }));
+      
+      toast({ 
+        title: 'Capacidade salva com sucesso',
+        description: 'Sua capacidade máxima foi atualizada.'
+      });
+    } catch (err) {
+      console.error('Erro ao salvar capacidade:', err);
+      toast({ 
+        title: 'Erro: a capacidade não pôde ser salva',
+        description: 'Por favor, tente novamente.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const percentageUsed = error ? 0 : (capacity.currentMentees / capacity.maxMentees) * 100;
+  const hasChanges = editingMaxMentees !== capacity.maxMentees;
 
   return (
     <>
       {!error && (
-        <p className="capacity-text">
-          {capacity.currentMentees} de {capacity.maxMentees} mentorados
-        </p>
+        <div className="capacity-container">
+          <div className="capacity-info">
+            <div className="card-header">
+              <h3>Capacidade da Carteira</h3>
+            </div>
+            <p className="capacity-text">
+              {capacity.currentMentees} de {capacity.maxMentees} mentorados
+            </p>
+          </div>
+          <div className="capacity-info">
+              <Button 
+                className="save-capacity-button" 
+                onClick={handleSaveCapacity} 
+                disabled={loading}
+              >
+                {loading ? 'Salvando...' : 'Salvar'}
+              </Button>
+            <div className="capacity-controls">
+              <IconButton
+                variant="capacity"
+                onClick={handleDecreaseCapacity}
+                disabled={loading}
+              >
+                <Minus size={12} />
+              </IconButton>
+              <IconButton
+                variant="capacity"
+                onClick={handleIncreaseCapacity}
+                disabled={loading}
+              >
+                <Plus size={12} />
+              </IconButton>
+            </div>
+          </div>
+        </div>
       )}
       <div className="progress-bar">
         <div 

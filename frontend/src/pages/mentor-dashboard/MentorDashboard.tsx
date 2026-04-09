@@ -178,9 +178,6 @@ const MentorDashboard: React.FC = () => {
         <div className="dashboard-container">
           <main className="dashboard-content">
             <div className="card capacity-card">
-              <div className="card-header">
-                <h3>Capacidade da Carteira</h3>
-              </div>
               {mentorId && (
                 <CapacityCard mentorId={mentorId} />
               )}
