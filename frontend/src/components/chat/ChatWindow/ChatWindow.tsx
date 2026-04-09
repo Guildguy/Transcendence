@@ -1,19 +1,59 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, MoreHorizontal, User, Send, Loader2 } from 'lucide-react';
 import { useChat } from '../ChatContext/ChatContext'
-import { getAuthToken } from '../../../services/api';
+import { getAuthToken, apiFetch } from '../../../services/api';
 import './Chat.css';
 
 export const ChatWindow = () => {
   const { activeChatId, setActiveChatId, messages, setMessages, sendMessage } = useChat();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [contactName, setContactName] = useState<string>('');
+  const [contactAvatar, setContactAvatar] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const myId = Number(localStorage.getItem('userId'));
   const token = getAuthToken();
 
-  // BUSCAR HISTÓRICO VIA REST
+  // BUSCAR DADOS DO CONTATO
+  useEffect(() => {
+    if (!activeChatId) {
+      setContactName('');
+      setContactAvatar('');
+      return;
+    }
+
+    const fetchContactData = async () => {
+      try {
+        const response = await apiFetch(`/users/${activeChatId}`);
+        if (response.ok) {
+          const data = await response.json();
+          const user = data.user;
+          setContactName(user.name || 'Usuário');
+          
+          // Busca também o avatar do perfil
+          if (data.profiles && data.profiles.length > 0) {
+            const profile = data.profiles[0];
+            if (profile.avatarUrl) {
+              try {
+                const parsed = JSON.parse(profile.avatarUrl);
+                setContactAvatar(parsed.image_base64 || profile.avatarUrl);
+              } catch {
+                setContactAvatar(profile.avatarUrl.startsWith('data:') 
+                  ? profile.avatarUrl 
+                  : `data:image/png;base64,${profile.avatarUrl}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados do contato:', error);
+        setContactName('Usuário');
+      }
+    };
+
+    fetchContactData();
+  }, [activeChatId]);
   useEffect(() => {
     if (!activeChatId) return;
 
@@ -25,8 +65,17 @@ export const ChatWindow = () => {
         });
         if (response.ok) {
           const history = await response.json();
-          // Substitui as mensagens atuais pelo histórico oficial do banco
-          setMessages(history);
+          
+          // Garante que todas as mensagens recebidas deste contato sejam marcadas como lidas localmente
+          const markedAsRead = history.map((msg: any) => 
+            msg.receiverId === myId && msg.senderId === activeChatId
+              ? { ...msg, isRead: true }
+              : msg
+          );
+          
+          // Atualiza o estado com mensagens marcadas como lidas
+          setMessages(markedAsRead);
+          console.log('[ChatWindow] History loaded and messages marked as read');
         }
       } catch (error) {
         console.error("Erro ao carregar histórico:", error);
@@ -51,8 +100,14 @@ export const ChatWindow = () => {
     <div className="chat-window">
       <div className="chat-header">
         <div className="user-info">
-          <div className="avatar"><User size={20} /></div>
-          <span className="username">Conversa #{activeChatId}</span>
+          <div className="avatar">
+            {contactAvatar ? (
+              <img src={contactAvatar} alt={contactName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <User size={20} />
+            )}
+          </div>
+          <span className="username">{contactName}</span>
         </div>
         <div className="header-actions">
           <button className="icon-btn" onClick={() => setActiveChatId(null)}><X size={20} /></button>
