@@ -148,7 +148,7 @@ const AddTimeSlotModal: React.FC<AddTimeSlotModalProps> = ({ day, onClose, onCon
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>Adicionar Horário - {day}</h3>
-          <X size={24} onClick={onClose} cursor="pointer" />
+          <X size={24} onClick={onClose} cursor="pointer" color="var(--purple-primary)" />
         </div>
         <div className="modal-body">
           {error && (
