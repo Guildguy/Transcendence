@@ -8,6 +8,7 @@ import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
+import { apiFetch } from "../../services/api";
 
 // 1. Interface atualizada para incluir XP e Level que vêm no novo JSON
 interface UserData {
@@ -67,7 +68,7 @@ export const ProfilePage = () => {
       // REMOVIDO: A trava de redirecionamento if (!loggedUserId) navigate('/auth')
 
       try {
-        const response = await fetch(`http://localhost:8080/users/${loggedUserId}`);
+        const response = await apiFetch(`/users/${loggedUserId}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -166,14 +167,14 @@ const handleSaveAll = async () => {
 
   try {
     // Requisição 1: Dados do Perfil
-    const resProfile = await fetch(`http://localhost:8080/profiles`, {
+    const resProfile = await apiFetch(`/profiles`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(profilePayload)
     });
 
     // Requisição 2: Skills no Python/MongoDB
-    const resStacks = await fetch(`https://ft-trans.42.fr/api/python`, { // Verifique se a porta do Python é 8000
+    const resStacks = await fetch(`/api/python`, { // Verifique se a porta do Python é 8000
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pythonStacksPayload)
@@ -237,7 +238,7 @@ const handleSaveAll = async () => {
     try {
       const imageBase64 = await fileToBase64(file);
       
-      const response = await fetch('http://localhost:8080/profiles/image', {
+      const response = await apiFetch('/profiles/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -267,7 +268,7 @@ const handleSaveAll = async () => {
    */
   const loadProfileImage = async (profileId: number) => {
   try {
-    const response = await fetch(`http://localhost:8080/profiles/image/${profileId}`);
+    const response = await apiFetch(`/profiles/image/${profileId}`);
     
     if (response.ok) {
       const data = await response.json();
@@ -307,7 +308,7 @@ useEffect(() => {
     console.log("Buscando skills para o ID consolidado:", idParaBusca);
 
     try {
-      const response = await fetch(`https://ft-trans.42.fr/api/python/profile/${idParaBusca}`);
+      const response = await fetch(`/api/python/profile/${idParaBusca}`);
       if (response.ok) {
         const data = await response.json();
         const formatted = data.stacks.map((s: string, i: number) => ({

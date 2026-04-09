@@ -181,10 +181,16 @@ function BookSessionContent() {
         if (!res.ok) { setConnectionStatus('none'); return; }
         const connections = await res.json();
         
-        const conn = connections.find(
+        // Filter connections for this mentor, then pick the most relevant one
+        // (APPROVED > PENDING), ignoring CANCELLED/ENDED/REJECTED
+        const mentorConns = connections.filter(
           (c: { mentorProfileId: number; status: string; id: number }) =>
             Number(c.mentorProfileId) === Number(selectedMentor.profileId)
         );
+        const conn =
+          mentorConns.find((c: { status: string }) => c.status === 'APPROVED') ||
+          mentorConns.find((c: { status: string }) => c.status === 'PENDING') ||
+          null;
         if (!conn) {
           setConnectionStatus('none');
         } else if (conn.status === 'APPROVED') {
@@ -193,8 +199,6 @@ function BookSessionContent() {
         } else if (conn.status === 'PENDING') {
           setConnectionStatus('pending');
           setConnectionId(conn.id);
-        } else {
-          setConnectionStatus('none');
         }
       } catch {
         clearTimeout(timer);

@@ -35,7 +35,7 @@ public class ProfileService {
 
 	public List<Profile>	list()
     {
-        return (this.profileRepository.findAll());
+        return (this.profileRepository.findAllWithUser());
     }
 
     public Profile findById(Long id) {
