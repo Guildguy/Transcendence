@@ -60,9 +60,7 @@ export const ChatWindow = () => {
     const fetchHistory = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`http://localhost:8080/chat/${myId}/${activeChatId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const response = await apiFetch(`/chat/${myId}/${activeChatId}`);
         if (response.ok) {
           const history = await response.json();
           

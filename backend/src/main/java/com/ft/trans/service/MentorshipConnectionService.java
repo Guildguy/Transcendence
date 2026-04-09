@@ -257,9 +257,9 @@ public class MentorshipConnectionService
 			return new Result(null, result);
 		}
 
-		if (connection.status != ConnectionStatus.APPROVED)
+		if (connection.status != ConnectionStatus.APPROVED && connection.status != ConnectionStatus.PENDING)
 		{
-			result.addError("status", "Só é possível encerrar mentorias ativas (APPROVED).");
+			result.addError("status", "Só é possível encerrar mentorias ativas (APPROVED) ou pendentes (PENDING).");
 			return new Result(null, result);
 		}
 
@@ -271,7 +271,12 @@ public class MentorshipConnectionService
 			return new Result(null, result);
 		}
 
-		connection.status       = ConnectionStatus.REJECTED;
+		// PENDING → CANCELLED, APPROVED → ENDED
+		if (connection.status == ConnectionStatus.PENDING)
+			connection.status = ConnectionStatus.CANCELLED;
+		else
+			connection.status = ConnectionStatus.ENDED;
+
 		connection.lastUpdateAt = LocalDateTime.now();
 		connection.lastUpdateBy = userId;
 
@@ -288,7 +293,8 @@ public class MentorshipConnectionService
 			countRepository.save(count);
 		});
 
-		_triggerCycleCompletedGamificationIfEligible(connection);
+		if (connection.status == ConnectionStatus.ENDED)
+			_triggerCycleCompletedGamificationIfEligible(connection);
 
 		return saveResult;
 	}
