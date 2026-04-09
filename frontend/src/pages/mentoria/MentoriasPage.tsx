@@ -1,30 +1,27 @@
 import { useState, useEffect, useMemo } from 'react';
 import { User, Circle } from 'lucide-react';
-
-// Tipagens e Serviços
 import type { MentorCardData } from '../../services/mentorService';
 import mentorService from '../../services/mentorService';
-
-// Componentes
 import MentorCard from '../../components/common/MentorCard/Mentorcard';
 import DropdownList from '../../components/common/Dropdown/Dropdown';
-
-// Estilização
 import './MentoriasPage.css';
 
-// Constantes de Filtro Fixo
-const OPCOES_EXPERIENCIA = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "+10"];
+const OPCOES_EXPERIENCIA = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "+10"];
 const OPCOES_STATUS = ["Ativo", "Inativo"];
 const OPCOES_DISPONIBILIDADE = ["Com Vagas", "Lista de Espera"];
 
 // Componente Interno para a seção "Meus Mentores"
 // Adaptado para os dados que vêm da ConnectionResponseDTO do Java
-const MiniMentorCard = ({ name, startDate, status }: { name: string, startDate: string, status: string }) => {
+const MiniMentorCard = ({ name, avatarUrl, startDate, status }: { name: string, avatarUrl?: string, startDate: string, status: string }) => {
   const isActive = status === 'APPROVED';
   return (
     <div className="mini-mentor-card">
       <div className="mini-avatar-container">
-        <User size={32} color="#1f2937" />
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+        ) : (
+          <User size={32} color="#1f2937" />
+        )}
       </div>
       <div className="mini-info">
         <h4>{name}</h4>
@@ -68,11 +65,16 @@ const MentoriasPage = () => {
         setMentoresDisponiveis(todos);
 
         // 2. Busca conexões do usuário logado (Meus Mentores)
-        // OBS: Aqui você deve passar o ID do usuário logado (vindo do seu Contexto ou JWT)
-        // Exemplo fixo com ID 1 apenas para ilustração
-        const logadoId = 1;
-        const conexoes = await mentorService.getMyMentors(logadoId);
-        setMeusMentores(conexoes);
+        // Obtém o ID do usuário logado do localStorage
+        const logadoId = localStorage.getItem('userId');
+        if (logadoId) {
+          const conexoes = await mentorService.getMyMentors(parseInt(logadoId));
+          console.log("Conexões carregadas:", conexoes);
+          setMeusMentores(conexoes);
+        } else {
+          console.warn("ID do usuário logado não encontrado no localStorage");
+          setMeusMentores([]);
+        }
 
       } catch (error) {
         console.error('Erro ao carregar dados da página de mentorias:', error);
@@ -92,11 +94,32 @@ const MentoriasPage = () => {
     Array.from(new Set(mentoresDisponiveis.flatMap(m => m.skills.map(s => s.name)))).sort(),
   [mentoresDisponiveis]);
 
+  // Filtra apenas as conexões aprovadas
+  const mentoresAtivos = useMemo(() => 
+    meusMentores.filter(conn => conn.status === 'APPROVED'),
+  [meusMentores]);
+
+  // Enriquece os dados das conexões com informações dos mentores disponíveis (foto, cargo, etc)
+  const mentoresAtivosComDetalhes = useMemo(() => {
+    return mentoresAtivos.map(conn => {
+      // Busca os detalhes do mentor nos mentoresDisponiveis usando mentorProfileId
+      const mentorDetalhes = mentoresDisponiveis.find(m => m.id === conn.mentorProfileId);
+      return {
+        ...conn,
+        mentorName: mentorDetalhes?.name || conn.mentorName,
+        avatarUrl: mentorDetalhes?.avatarUrl,
+        position: mentorDetalhes?.position,
+        skills: mentorDetalhes?.skills,
+        anosExperiencia: mentorDetalhes?.anosExperiencia
+      };
+    });
+  }, [mentoresAtivos, mentoresDisponiveis]);
+
   // --- LÓGICA DE FILTRAGEM ---
   const mentoresFiltrados = useMemo(() => {
     return mentoresDisponiveis.filter(mentor => {
       const matchExp = filtroExp === "" || 
-        (filtroExp === "+10" ? mentor.anosExperiencia >= 10 : mentor.anosExperiencia === parseInt(filtroExp));
+        (filtroExp === "+10" ? mentor.anosExperiencia >= 10 : mentor.anosExperiencia >= parseInt(filtroExp));
       
       const matchStatus = filtroStatus === "" || 
         (filtroStatus === "Ativo" ? mentor.isActive : !mentor.isActive);
@@ -136,11 +159,12 @@ const MentoriasPage = () => {
         <section className="mentorias-section">
           <h2 className="section-title title-meus-mentores">Meus Mentores</h2>
           <div className="meus-mentores-grid">
-            {meusMentores.length > 0 ? (
-              meusMentores.map(conn => (
+            {mentoresAtivosComDetalhes.length > 0 ? (
+              mentoresAtivosComDetalhes.map(conn => (
                 <MiniMentorCard 
                   key={conn.id} 
                   name={conn.mentorName} 
+                  avatarUrl={conn.avatarUrl}
                   startDate={conn.acceptedAt ? new Date(conn.acceptedAt).toLocaleDateString() : 'Pendente'} 
                   status={conn.status} 
                 />

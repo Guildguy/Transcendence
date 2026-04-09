@@ -122,11 +122,6 @@ function LoginForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)} // Atualiza o estado
       />
-
-      <Link to="/Forgot" className="auth-link">
-        Esqueceu a sua senha?
-      </Link>
-
       <div className="social-buttons">
         <button type="button" className="social-btn" onClick={() => handleGoogleLogin()}>
           <img src={logo_google} alt="Google" />
