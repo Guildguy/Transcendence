@@ -98,7 +98,6 @@ function RegisterPage() {
     };
 
     try {
-      // 1. Cria o usuário + profile
       const response = await loginFetch('/users', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -125,7 +124,6 @@ function RegisterPage() {
         throw new Error('Falha ao cadastrar usuário');
       }
 
-      // 2. Login automático
       const loginResponse = await loginFetch('/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
@@ -143,15 +141,12 @@ function RegisterPage() {
       if (token)
         saveAuthToken(token);
 
-      // userId do login é a fonte de verdade
       if (userId)
         localStorage.setItem('userId', userId.toString());
 
-      // Armazena o tipo de perfil como userRole para usar no Header
       if (profileType)
         localStorage.setItem('userRole', profileType === 'MENTOR' ? 'MENTOR' : 'MENTEE');
 
-      // 3. Dispara PROFILE_COMPLETED — token já salvo, apiFetch já pega automaticamente
       if (token && userId) {
         try {
           await apiFetch('/gamification/events', {
@@ -162,7 +157,7 @@ function RegisterPage() {
             })
           })
         } catch {
-          // não bloqueia o fluxo se gamificação falhar
+         
         }
       }
 
@@ -188,14 +183,13 @@ function RegisterPage() {
       }
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
-      // Se não conseguir buscar o role, deixa sem armazenar
     }
   };
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
       try {
-        const response = await loginFetch('/login/google', {
+        const response = await loginFetch(`/login/google?profileType=${profileType}`, {
           method: 'POST',
           body: JSON.stringify({
             token: codeResponse.access_token,

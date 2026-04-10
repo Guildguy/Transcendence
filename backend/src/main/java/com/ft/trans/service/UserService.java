@@ -133,11 +133,7 @@ public class UserService {
 		return dto;
 	}
 
-	/**
-	 * Busca um usuário por email ou cria um novo se não existir
-	 * Usado para autenticação com Google
-	 */
-	public User findOrCreateByEmail(String email)
+	public User findOrCreateByEmail(String email, String profileType)
 	{
 		Optional<User> existingUser = userRepository.findByEmail(email);
 		
@@ -145,23 +141,25 @@ public class UserService {
 			return existingUser.get();
 		}
 
-		// Criar novo usuário
 		User newUser = new User();
 		newUser.email = email;
-		newUser.name = email.split("@")[0]; // Usar parte do email como nome inicial
-		newUser.phoneNumber = ""; // Será preenchido depois
+		newUser.name = email.split("@")[0];
+		newUser.phoneNumber = "";
 		newUser.status = true;
-		newUser.password = generateRandomPassword(); // Senha aleatória
+		newUser.password = generateRandomPassword();
 		newUser.encodePassword();
 
 		User savedUser = userRepository.save(newUser);
 		savedUser = ensureAuditActors(savedUser, false);
 
-		// Criar um perfil padrão para o novo usuário
+		if (profileType == null || profileType.isEmpty()) {
+			profileType = "MENTORADO";
+		}
+
 		if (savedUser != null) {
 			Profile profile = new Profile();
 			profile.user = savedUser;
-			profile.setRole("MENTORADO"); // Role padrão
+			profile.setRole(profileType.toUpperCase());
 			profileService._persistProfile(profile);
 		}
 
@@ -200,9 +198,6 @@ public class UserService {
 		return savedUser;
 	}
 
-	/**
-	 * Gera um token JWT para um usuário
-	 */
 	public String generateTokenForUser(User user)
 	{
 		if (jwtService != null && user != null) {
@@ -211,9 +206,6 @@ public class UserService {
 		return null;
 	}
 
-	/**
-	 * Gera uma senha aleatória para usuários criados via OAuth
-	 */
 	private String generateRandomPassword()
 	{
 		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
@@ -252,11 +244,10 @@ public class UserService {
 			ValidationResult result = new ValidationResult();
 			result.addError("token", "Token de recuperação inválido ou expirado");
 			if (token != null)
-				passwordRecoveryService.delete(token); // Remove token expirado
+				passwordRecoveryService.delete(token);
 			return new Result(null, result);
 		}
 
-		// Extrair o email do token (mais seguro)
 		String email = token.getUser().email;
 		User user = userRepository.findByEmail(email).orElse(null);
 		
@@ -269,7 +260,7 @@ public class UserService {
 		user.password = resetPasswordDTO.newPassword;
 		user.encodePassword();
 
-		passwordRecoveryService.delete(token); // Remove token após uso
+		passwordRecoveryService.delete(token);
 		
 		return _persistUser(user, true);
 	}
