@@ -178,9 +178,6 @@ const MentorDashboard: React.FC = () => {
         <div className="dashboard-container">
           <main className="dashboard-content">
             <div className="card capacity-card">
-              <div className="card-header">
-                <h3>Capacidade da Carteira</h3>
-              </div>
               {mentorId && (
                 <CapacityCard mentorId={mentorId} />
               )}
@@ -189,7 +186,7 @@ const MentorDashboard: React.FC = () => {
             <div className="card availability-card">
               <div className="card-header">
                 <h2>Minha Disponibilidade</h2>
-                <Button className="save-button" onClick={handleSave} disabled={loading}>
+                <Button className="save-capacity-button" onClick={handleSave} disabled={loading}>
                   {loading ? 'Salvando...' : 'Salvar'}
                 </Button>
               </div>
@@ -218,7 +215,9 @@ const MentorDashboard: React.FC = () => {
             </div>
 
             <div className="card mentees-card">
+            <div className="card-header">
               <h3>Meus Mentorados</h3>
+            </div>
               {mentorId && (
                 <MenteeList 
                   mentorId={mentorId}
