@@ -26,7 +26,7 @@ class MenteeService {
   /**
    * Busca a imagem de perfil no backend Java (8080)
    */
-  private async fetchProfileImage(profileId: number): Promise<string> {
+  async fetchProfileImage(profileId: number): Promise<string> {
     try {
       const response = await apiFetch(`/profiles/image/${profileId}`);
       if (!response.ok) return '';
@@ -73,62 +73,47 @@ class MenteeService {
     try {
       console.log(`[getMenteeDetails] Starting fetch for profileId: ${profileId}`);
 
-      // Since there's no GET /profiles/{id} endpoint, fetch all profiles and find by ID
-      const response = await apiFetch(`/profiles`);
-      if (!response.ok) {
-        console.warn(`[getMenteeDetails] Profile with ID ${profileId} not found: HTTP ${response.status}`);
+      // Fetch user data - profile might be associated with a user
+      const usersResponse = await apiFetch(`/users`);
+      if (!usersResponse.ok) {
+        console.warn(`[getMenteeDetails] Could not fetch users: HTTP ${usersResponse.status}`);
         return null;
       }
 
-      const allProfiles = await response.json();
-      console.log(`[getMenteeDetails] All profiles:`, allProfiles);
+      const allUsers = await usersResponse.json();
+      console.log(`[getMenteeDetails] All users:`, allUsers);
 
-      // Find the profile by ID
-      const profileData = Array.isArray(allProfiles)
-        ? allProfiles.find((p: any) => p.id === profileId)
-        : null;
+      // Find the user that has a MENTORADO profile with the given profileId
+      let profileData: any = null;
+      let userId: number | null = null;
+      let userName = 'Mentorado';
 
-      if (!profileData) {
-        console.warn(`[getMenteeDetails] Profile with ID ${profileId} not found in list`);
-        return null;
-      }
+      for (const user of allUsers) {
+        const userDetail = await apiFetch(`/users/${user.id}`);
+        if (userDetail.ok) {
+          const fullUserData = await userDetail.json();
+          const menteeProfile = (fullUserData.profiles || []).find(
+            (p: any) => p.id === profileId && p.role?.toUpperCase() === 'MENTORADO'
+          );
 
-      // Validar que o perfil tem role MENTORADO
-      if (profileData.role?.toUpperCase() !== 'MENTORADO') {
-        console.warn(`[getMenteeDetails] Profile ${profileId} has role '${profileData.role}', not MENTORADO - skipping`);
-        return null;
-      }
-
-      console.log(`[getMenteeDetails] Profile data received (role: ${profileData.role}):`, profileData);
-
-      // Extract userId - could be in nested user object or direct field
-      const userId = profileData.user?.id || profileData.userId;
-
-      if (!userId) {
-        console.error(`[getMenteeDetails] No userId found for mentee ${profileId}`);
-      }
-
-      // Extract user data - could be nested or flat
-      let userData = profileData.user || null;
-
-      // If user is nested, use it; otherwise fetch separately
-      let userName = userData?.name || profileData.name || 'Mentorado';
-      let userActive = userData?.status !== false;
-
-      if (!userData && userId) {
-        try {
-          const userResponse = await apiFetch(`/users/${userId}`);
-          if (userResponse.ok) {
-            const fullUserData = await userResponse.json();
-            userData = fullUserData.user || fullUserData;
-            userName = userData?.name || userName;
-            userActive = userData?.status !== false;
-            console.log(`[getMenteeDetails] User data received:`, userData);
+          if (menteeProfile) {
+            profileData = menteeProfile;
+            userId = fullUserData.user?.id || user.id;
+            userName = fullUserData.user?.name || 'Mentorado';
+            console.log(`[getMenteeDetails] Found mentee profile for user ${userId}: ${userName}`);
+            break;
           }
-        } catch (userError) {
-          console.warn(`[getMenteeDetails] Error fetching user data:`, userError);
         }
       }
+
+      if (!profileData) {
+        console.warn(`[getMenteeDetails] Profile with ID ${profileId} not found or is not a MENTORADO profile`);
+        return null;
+      }
+
+      console.log(`[getMenteeDetails] Profile data received:`, profileData);
+
+      const userActive = true;
 
       // Busca contagem de mentores (conexões ativas)
       let mentorCount = 0;
@@ -153,7 +138,7 @@ class MenteeService {
 
       const result: MenteeDetailData = {
         id: profileData.id,
-        userId: userId,
+        userId: userId || undefined,
         profileId: profileData.id,
         name: userName,
         position: profileData.position || 'Mentorado(a)',

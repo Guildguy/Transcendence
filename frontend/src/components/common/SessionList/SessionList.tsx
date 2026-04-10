@@ -1,9 +1,10 @@
 import React, { useMemo, useEffect, useState } from "react";
-import { Clock, Video, RefreshCw, ExternalLink } from "lucide-react";
+import { Clock, Video, RefreshCw, ExternalLink, X } from "lucide-react";
 import "./SessionList.css";
 import { format, parseISO, isPast, isWithinInterval, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { apiFetch } from '../../../services/api';
+import Button from '../Button/Button';
 
 interface Session {
   id: number;
@@ -48,6 +49,32 @@ const SessionItem: React.FC<{ session: Session }> = ({ session }) => {
     'HH:mm'
   );
 
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleCancelConfirm = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await apiFetch(`/mentorship-sessions/${session.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setShowCancelDialog(false);
+        // Optionally: reload the session list or handle UI update
+        window.location.reload();
+      } else {
+        console.error('Failed to cancel session:', response.status);
+        alert('Erro ao cancelar a sessão. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Error canceling session:', error);
+      alert('Erro ao cancelar a sessão. Tente novamente.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="session-item">
       <div className="session-date">
@@ -75,10 +102,47 @@ const SessionItem: React.FC<{ session: Session }> = ({ session }) => {
             <span>Meet</span>
             <ExternalLink className="reschedule-button-icon" />
           </a>
-          <button className="session-action-button">
+          <button 
+            className="session-action-button"
+            onClick={() => setShowCancelDialog(true)}
+          >
             <RefreshCw className="reschedule-button-icon" />
-            <span>Reagendar</span>
+            <span>Cancelar</span>
           </button>
+        </div>
+      )}
+
+      {showCancelDialog && (
+        <div className="modal-overlay" onClick={() => !isDeleting && setShowCancelDialog(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ justifyContent: 'space-between' }}>
+              <div />
+              <X size={24} onClick={() => !isDeleting && setShowCancelDialog(false)} cursor="pointer" color="var(--purple-primary)" />
+            </div>
+            <div className="modal-body">
+              <h3>Atenção! Esta ação irá cancelar sua sessão</h3>
+              <h4>Tem certeza de que quer continuar?</h4>
+              <div className="attention-box">
+                <p>Não se esqueça de entrar em contato com seu mentor/mentorado para remarcar essa sessão.</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button 
+                onClick={() => setShowCancelDialog(false)}
+                disabled={isDeleting}
+                className="cancel-button"
+              >
+                Não
+              </Button>
+              <Button 
+                onClick={handleCancelConfirm}
+                disabled={isDeleting}
+                className="confirm-button"
+              >
+                {isDeleting ? 'Cancelando...' : 'Sim, cancelar'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

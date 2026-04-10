@@ -128,3 +128,27 @@ export async function saveMentorAvailability(
 
   return response.json();
 }
+
+export async function saveMentorCapacity(
+  mentorProfileId: string | number,
+  limitOfMentee: number
+): Promise<{ currentMentees: number; maxMentees: number }> {
+  const normalizedMentorProfileId = normalizeMentorId(mentorProfileId);
+
+  const payload = {
+    mentorProfileId: normalizedMentorProfileId,
+    limitOfMentee: limitOfMentee,
+  };
+
+  const response = await apiFetch(`/mentorship-connections/limit`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    throw new Error(`Failed to save mentor capacity: ${response.status} ${JSON.stringify(errorBody)}`);
+  }
+
+  return response.json();
+}
