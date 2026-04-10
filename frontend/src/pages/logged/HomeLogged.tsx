@@ -61,13 +61,91 @@ function HomeLogged() {
           const incomingRes = await apiFetch(`/mentorship-connections/mentor/${resolvedProfileId}/pending`)
           if (incomingRes.ok) {
             const data: any[] = await incomingRes.json()
-            console.log('[HomeLogged] Pending requests received:', data);
+            console.log('[HomeLogged] Raw pending requests data:', data);
+            
             if (Array.isArray(data) && data.length > 0) {
-              setRequests(data.map(m => ({
-                id: m.id,
-                name: m.menteeName || `Mentorado #${m.menteeId}`,
-                avatar: undefined,
-              })))
+              // Fetch details and avatars for each mentee
+              const requestsWithDetails = await Promise.all(
+                data.map(async (m) => {
+                  console.log(`[HomeLogged] Processing request ID: ${m.id}, menteeProfileId: ${m.menteeProfileId}`);
+                  
+                  let menteeName = `Mentorado #${m.menteeProfileId}`;
+                  let menteeAvatar: string | undefined = undefined;
+
+                  if (!m.menteeProfileId) {
+                    console.warn(`[HomeLogged] No menteeProfileId found in request object`, m);
+                    return {
+                      id: m.id,
+                      name: menteeName,
+                      avatar: menteeAvatar,
+                    };
+                  }
+
+                  // Fetch mentee profile details using menteeProfileId
+                  try {
+                    const profileRes = await apiFetch(`/profiles/${m.menteeProfileId}`);
+                    console.log(`[HomeLogged] Profile response status: ${profileRes.status}`);
+                    
+                    if (profileRes.ok) {
+                      const profileData = await profileRes.json();
+                      console.log(`[HomeLogged] Mentee profile data:`, profileData);
+                      
+                      // Try to get name from profile or user
+                      if (profileData.user?.name) {
+                        menteeName = profileData.user.name;
+                        console.log(`[HomeLogged] Got mentee name from profile user: ${menteeName}`);
+                      } else if (profileData.name) {
+                        menteeName = profileData.name;
+                        console.log(`[HomeLogged] Got mentee name from profile: ${menteeName}`);
+                      }
+                      
+                      // Fetch avatar image using the menteeProfileId directly
+                      try {
+                        const imageRes = await apiFetch(`/profiles/image/${m.menteeProfileId}`);
+                        console.log(`[HomeLogged] Image response status: ${imageRes.status}`);
+                        
+                        if (imageRes.ok) {
+                          const imageData = await imageRes.json();
+                          console.log(`[HomeLogged] Image data:`, imageData);
+                          
+                          if (imageData?.avatarUrl) {
+                            try {
+                              const parsed = JSON.parse(imageData.avatarUrl);
+                              const avatarUrl = parsed.image_base64 || imageData.avatarUrl;
+                              menteeAvatar = avatarUrl.startsWith('data:') 
+                                ? avatarUrl 
+                                : `data:image/png;base64,${avatarUrl}`;
+                              console.log(`[HomeLogged] Avatar set for mentee profile ${m.menteeProfileId}`);
+                            } catch {
+                              const avatarUrl = String(imageData.avatarUrl);
+                              menteeAvatar = avatarUrl.startsWith('data:') 
+                                ? avatarUrl 
+                                : `data:image/png;base64,${avatarUrl}`;
+                              console.log(`[HomeLogged] Avatar set (non-JSON) for mentee profile ${m.menteeProfileId}`);
+                            }
+                          }
+                        }
+                      } catch (imgErr) {
+                        console.error(`[HomeLogged] Error fetching avatar for mentee profile ${m.menteeProfileId}:`, imgErr);
+                      }
+                    } else {
+                      console.error(`[HomeLogged] Failed to fetch mentee profile, status: ${profileRes.status}`);
+                    }
+                  } catch (err) {
+                    console.error(`[HomeLogged] Error fetching mentee profile for ID ${m.menteeProfileId}:`, err);
+                  }
+
+                  const finalRequest = {
+                    id: m.id,
+                    name: menteeName,
+                    avatar: menteeAvatar,
+                  };
+                  console.log(`[HomeLogged] Final request object:`, finalRequest);
+                  return finalRequest;
+                })
+              );
+              console.log('[HomeLogged] All requests with details:', requestsWithDetails);
+              setRequests(requestsWithDetails);
             } else {
               console.log('[HomeLogged] No pending requests found');
               setRequests([])

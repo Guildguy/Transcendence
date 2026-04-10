@@ -4,6 +4,29 @@ import { useChat } from '../ChatContext/ChatContext'
 import { getAuthToken, apiFetch } from '../../../services/api';
 import './Chat.css';
 
+// Utility function to generate avatar color from name
+const getAvatarColor = (name: string): string => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+    '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#ABEBC6'
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+// Utility function to get initials from name
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
 export const ChatWindow = () => {
   const { activeChatId, setActiveChatId, messages, setMessages, sendMessage } = useChat();
   const [input, setInput] = useState('');
@@ -34,21 +57,45 @@ export const ChatWindow = () => {
           // Busca também o avatar do perfil
           if (data.profiles && data.profiles.length > 0) {
             const profile = data.profiles[0];
-            if (profile.avatarUrl) {
-              try {
-                const parsed = JSON.parse(profile.avatarUrl);
-                setContactAvatar(parsed.image_base64 || profile.avatarUrl);
-              } catch {
-                setContactAvatar(profile.avatarUrl.startsWith('data:') 
-                  ? profile.avatarUrl 
-                  : `data:image/png;base64,${profile.avatarUrl}`);
+            console.log('[ChatWindow] Profile found:', profile.id);
+            
+            // Fetch the avatar image from the specific endpoint (same as Chatbar)
+            try {
+              const imageResponse = await apiFetch(`/profiles/image/${profile.id}`);
+              if (imageResponse.ok) {
+                const imageData = await imageResponse.json();
+                console.log('[ChatWindow] Image data received');
+                
+                if (imageData && imageData.avatarUrl) {
+                  try {
+                    const parsed = JSON.parse(imageData.avatarUrl);
+                    const avatarUrl = parsed.image_base64 || imageData.avatarUrl;
+                    setContactAvatar(avatarUrl.startsWith('data:') ? avatarUrl : `data:image/png;base64,${avatarUrl}`);
+                  } catch {
+                    const avatarUrl = String(imageData.avatarUrl);
+                    setContactAvatar(avatarUrl.startsWith('data:') ? avatarUrl : `data:image/png;base64,${avatarUrl}`);
+                  }
+                } else {
+                  console.log('[ChatWindow] No avatarUrl in imageData');
+                  setContactAvatar('');
+                }
+              } else {
+                console.log('[ChatWindow] Image endpoint returned status:', imageResponse.status);
+                setContactAvatar('');
               }
+            } catch (imageError) {
+              console.error('[ChatWindow] Error fetching profile image:', imageError);
+              setContactAvatar('');
             }
+          } else {
+            console.log('[ChatWindow] No profiles found in response');
+            setContactAvatar('');
           }
         }
       } catch (error) {
         console.error('Erro ao buscar dados do contato:', error);
         setContactName('Usuário');
+        setContactAvatar('');
       }
     };
 
@@ -100,9 +147,33 @@ export const ChatWindow = () => {
         <div className="user-info">
           <div className="avatar">
             {contactAvatar ? (
-              <img src={contactAvatar} alt={contactName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              <img 
+                src={contactAvatar} 
+                alt={contactName} 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                onError={(e) => {
+                  console.error('[ChatWindow] Image failed to load:', contactAvatar?.substring(0, 50));
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
             ) : (
-              <User size={20} />
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: getAvatarColor(contactName),
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  border: '2px solid #e5e7eb'
+                }}
+              >
+                {contactName ? getInitials(contactName) : <User size={20} />}
+              </div>
             )}
           </div>
           <span className="username">{contactName}</span>
