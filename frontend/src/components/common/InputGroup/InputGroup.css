@@ -1,6 +1,9 @@
 .input-group-container {
   margin-bottom: 15px;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .input-label {
@@ -13,6 +16,7 @@
 .custom-input,
 .view-box {
   width: 100%;
+  max-width: 100%;
   background-color: var(--input-group-bg);
   border: none;
   border-radius: 20px;
@@ -20,6 +24,8 @@
   font-size: 14px;
   min-height: 45px;
   box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .custom-textarea,
@@ -27,6 +33,11 @@
   border-radius: 25px;
   min-height: 120px;
   resize: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  overflow: auto;
 }
 
 .view-box {
@@ -48,7 +59,14 @@
     color: #374151;
     min-height: 38px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* --- ESTILO DE EDIÇÃO --- */
@@ -58,11 +76,13 @@
     background-color: #ffffff !important; /* Fundo branco */
     border: 1px solid #d1d5db; /* Borda cinza suave */
     border-radius: 6px;
-    padding: px;
+    padding: 12px 16px;
     width: 100%;
+    max-width: 100%;
     color: #111827;
     transition: all 0.2s ease;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05); /* Sombra interna leve */
+    box-sizing: border-box;
 }
 
 /* Efeito de foco para destacar ainda mais qual campo está sendo editado */
@@ -75,5 +95,12 @@
 /* Ajuste específico para a altura do textarea no modo edição */
 .editing-mode .custom-textarea {
     min-height: 100px;
-    resize: vertical;
+    resize: none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
