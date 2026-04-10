@@ -77,7 +77,7 @@ const SessionItem: React.FC<{ session: Session }> = ({ session }) => {
           </a>
           <button className="session-action-button">
             <RefreshCw className="reschedule-button-icon" />
-            <span>Reagendar</span>
+            <span>Cancelar</span>
           </button>
         </div>
       )}
