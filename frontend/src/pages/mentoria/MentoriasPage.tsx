@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Circle } from 'lucide-react';
 import type { MentorCardData } from '../../services/mentorService';
 import mentorService from '../../services/mentorService';
@@ -12,10 +13,16 @@ const OPCOES_DISPONIBILIDADE = ["Com Vagas", "Lista de Espera"];
 
 // Componente Interno para a seção "Meus Mentores"
 // Adaptado para os dados que vêm da ConnectionResponseDTO do Java
-const MiniMentorCard = ({ name, avatarUrl, startDate, status }: { name: string, avatarUrl?: string, startDate: string, status: string }) => {
+const MiniMentorCard = ({ name, avatarUrl, startDate, status, mentorProfileId }: { name: string, avatarUrl?: string, startDate: string, status: string, mentorProfileId: number }) => {
+  const navigate = useNavigate();
   const isActive = status === 'APPROVED';
+
+  const handleCardClick = () => {
+    navigate(`/book-session/${mentorProfileId}`);
+  };
+
   return (
-    <div className="mini-mentor-card">
+    <div className="mini-mentor-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       <div className="mini-avatar-container">
         {avatarUrl ? (
           <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
@@ -166,7 +173,8 @@ const MentoriasPage = () => {
                   name={conn.mentorName} 
                   avatarUrl={conn.avatarUrl}
                   startDate={conn.acceptedAt ? new Date(conn.acceptedAt).toLocaleDateString() : 'Pendente'} 
-                  status={conn.status} 
+                  status={conn.status}
+                  mentorProfileId={conn.mentorProfileId}
                 />
               ))
             ) : (
