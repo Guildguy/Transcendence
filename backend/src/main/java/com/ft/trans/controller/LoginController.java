@@ -12,6 +12,7 @@ import com.ft.trans.entity.User;
 import com.ft.trans.entity.LoginRequest;
 import com.ft.trans.entity.GoogleLoginRequest;
 import com.ft.trans.entity.LoginResponse;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.ft.trans.controller.dto.GamificationEventRequest;
 import com.ft.trans.service.GamificationService;
 import com.ft.trans.service.UserService;
@@ -51,7 +52,7 @@ public class LoginController
     }
 
     @PostMapping("/login/google")
-    public ResponseEntity<?> loginGoogle(@RequestBody GoogleLoginRequest googleLoginRequest)
+    public ResponseEntity<?> loginGoogle(@RequestBody GoogleLoginRequest googleLoginRequest, @RequestParam(name = "profileType", required = false) String profileType)
     {
         GoogleTokenValidationService.GoogleUserInfo userInfo = 
             googleTokenValidationService.validateAndGetUserInfo(googleLoginRequest.token);
@@ -64,7 +65,7 @@ public class LoginController
         }
 
         try {
-            User user = userService.findOrCreateByEmail(userInfo.email);
+            User user = userService.findOrCreateByEmail(userInfo.email, profileType);
             
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
