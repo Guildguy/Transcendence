@@ -186,7 +186,7 @@
     display: flex;
     align-items: center;
   }
-  
+
   .availability-grid {
       display: grid;
       grid: column;

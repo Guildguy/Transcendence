@@ -215,7 +215,9 @@ const MentorDashboard: React.FC = () => {
             </div>
 
             <div className="card mentees-card">
+            <div className="card-header">
               <h3>Meus Mentorados</h3>
+            </div>
               {mentorId && (
                 <MenteeList 
                   mentorId={mentorId}
