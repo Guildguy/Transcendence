@@ -5,6 +5,7 @@ import InputGroup from '../../common/InputGroup/InputGroup'
 import { ProgressBar } from '../../common/ProgressBar/ProgressBar'
 import Achievements from '../../common/Achievements/Achievements'
 import { apiFetch } from '../../../services/api'
+import { normalizeGamificationState } from '../../../utils/gamificationLevels'
 import './UserHeader.css'
 
 type HistoryItem = {
@@ -154,10 +155,16 @@ export const UserHeader = () => {
           }
         }
 
-        setUserData({
-          level,
-          xp,
+        const normalized = normalizeGamificationState({
+          totalXp: xp,
+          currentLevel: level,
           nextLevelXp,
+        })
+
+        setUserData({
+          level: normalized.currentLevel,
+          xp: normalized.totalXp,
+          nextLevelXp: normalized.nextLevelXp,
           unlockedAchievements,
           recentHistory,
           currentStreak,
