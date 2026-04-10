@@ -87,11 +87,16 @@
 
 .mentee-card {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background-color: var(--gray-light);
+  min-width: 420px;
+  gap: 1rem;
   padding: 1rem;
-  border-radius: 8px;
+  border: 1px solid var(--gray-light);
+  border-radius: 0.5rem;
+  background-color: var(--purple-bg-light);
+  margin-bottom: 1rem;
+  justify-content: space-between;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
