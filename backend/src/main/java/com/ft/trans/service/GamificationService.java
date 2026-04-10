@@ -76,21 +76,17 @@ public class GamificationService {
 
         switch (eventType) {
             case "PROFILE_COMPLETED" -> {
-                if (isFirstEventOccurrence(user.id, "PROFILE_COMPLETED")) {
-                    awardedXp = registerXp(user.id, 50, "PROFILE_COMPLETED");
-                } else {
-                    notes.add("Evento PROFILE_COMPLETED ja registrado anteriormente para este usuario.");
-                }
+                awardedXp = registerXpOnce(user.id, 50, "PROFILE_COMPLETED", notes);
                 unlockByName(user.id, "Identidade Transcendental", unlocked);
             }
             case "STREAK_7" -> {
-                awardedXp = registerXp(user.id, 100, "STREAK_7");
+                awardedXp = registerXpOnce(user.id, 100, "STREAK_7", notes);
                 unlockByName(user.id, "Chama Acesa", unlocked);
             }
             case "STREAK_30" -> unlockByTypeAndTarget(user.id, "STREAK", 30, unlocked);
             case "STREAK_CHECKIN" -> awardedXp = processDailyStreakCheckin(user.id, unlocked, notes);
             case "MATCH_ACCEPTED" -> {
-                awardedXp = registerXp(user.id, 150, "MATCH_ACCEPTED");
+                awardedXp = registerXpOnce(user.id, 150, "MATCH_ACCEPTED", notes);
                 unlockByTarget(user.id, "MATCH", "MATCH_ACCEPTED", unlocked);
             }
             case "SESSION_COMPLETED" -> {
@@ -98,7 +94,7 @@ public class GamificationService {
                 unlockByTarget(user.id, "SESSION", "SESSION_COMPLETED", unlocked);
             }
             case "CYCLE_COMPLETED" -> {
-                awardedXp = registerXp(user.id, 200, "CYCLE_COMPLETED");
+                awardedXp = registerXpOnce(user.id, 200, "CYCLE_COMPLETED", notes);
                 unlockByName(user.id, "Ciclo Fechado", unlocked);
             }
             case "REVIEW_SENT" -> {
@@ -106,7 +102,7 @@ public class GamificationService {
                 unlockByTarget(user.id, "REVIEW_SEND", "REVIEW_SENT", unlocked);
             }
             case "REVIEW_RECEIVED_5" -> {
-                awardedXp = registerXp(user.id, 50, "REVIEW_RECEIVED_5");
+                awardedXp = registerXpOnce(user.id, 50, "REVIEW_RECEIVED_5", notes);
                 unlockByTarget(user.id, "REVIEW_RECEIVE", "REVIEW_RECEIVED_5", unlocked);
             }
             case "REVIEW_RECEIVED_4" -> awardedXp = registerXp(user.id, 20, "REVIEW_RECEIVED_4");
@@ -216,6 +212,17 @@ public class GamificationService {
 
         xpHistoryRepository.save(history);
         return xp;
+    }
+
+    private int registerXpOnce(Long userId, int xp, String reason, List<String> notes) {
+        if (!isFirstEventOccurrence(userId, reason)) {
+            if (notes != null) {
+                notes.add("Evento " + reason + " ja registrado anteriormente para este usuario.");
+            }
+            return 0;
+        }
+
+        return registerXp(userId, xp, reason);
     }
 
     private void registerAuditEvent(Long userId, String reason) {
