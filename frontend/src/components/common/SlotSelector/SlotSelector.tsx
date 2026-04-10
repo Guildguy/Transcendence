@@ -18,6 +18,7 @@ import './SlotSelector.css';
 
 
 interface SlotSelectorProps {
+  connected: boolean;
   mentorId: string;
   menteeId: string;
   connectionId: number | null;
@@ -39,7 +40,7 @@ interface BackendSession {
   endTime: string;
 }
 
-export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, context }: SlotSelectorProps) {
+export function SlotSelector({ connected, mentorId, menteeId, connectionId, onBooked, context }: SlotSelectorProps) {
   const { bookCustomSlot, getBackendAvailability, getAvailableBlocksForDate } = useMentoring();
 
   const [availabilityBlocks, setAvailabilityBlocks] = useState<TimeBlock[]>([]);
@@ -87,11 +88,13 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
   useEffect(() => {
     const fetchAvailability = async () => {
       try {
+        console.log(`[SlotSelector] Fetching availability for mentorId: ${mentorId}`);
         setLoadingAvailability(true);
         setAvailabilityError(null);
-        const { blocks } = await getBackendAvailability(mentorId);
+        const result = await getBackendAvailability(mentorId);
+        const blocks = result?.blocks || [];
         setAvailabilityBlocks(blocks);
-        console.log(`[SlotSelector] Loaded ${blocks.length} availability block(s) for mentor ${mentorId}`);
+        console.log(`[SlotSelector] Loaded ${blocks.length} availability block(s) for mentor ${mentorId}`, blocks);
       } catch (error) {
         console.error('[SlotSelector] Error loading availability:', error);
         setAvailabilityError('Não conseguimos carregar a disponibilidade do mentor. Tente novamente mais tarde.');
@@ -101,8 +104,12 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
       }
     };
 
-    if (mentorId) {
+    if (mentorId && mentorId !== '0') {
       fetchAvailability();
+    } else {
+      console.warn(`[SlotSelector] Invalid mentorId: ${mentorId}`);
+      setLoadingAvailability(false);
+      setAvailabilityError('ID do mentor inválido.');
     }
   }, [mentorId, getBackendAvailability]);
 
@@ -187,7 +194,7 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
   }, [availabilityBlocks]);
 
   const isDayAvailable = (date: Date) => availableDates.has(format(date, 'yyyy-MM-dd'));
-
+  
   const resetSelection = () => {
     setSelectedBlockIdx(null);
     setSelectedStartTime(null);
@@ -286,7 +293,8 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
             </div>
           )}
 
-          {!loadingAvailability && availabilityBlocks.length === 0 && !availabilityError && (
+          {!loadingAvailability && availabilityBlocks.length === 0 && 
+            !availabilityError && (
             <div style={{
               display: 'flex',
               gap: '0.75rem',
@@ -299,37 +307,42 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
             }}>
               <AlertCircle size={20} style={{ flexShrink: 0 }} />
               <div>
-                <strong>{context === 'mentee' 
-                    ? 'Nenhuma sessão agendada.' 
-                    : 'Nenhuma disponibilidade.'}</strong>
+                <strong>Sem disponibilidade configurada</strong>
                 <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                  {context === 'mentee' 
-                    ? 'O mentorado ainda não tem nenhuma sessão de mentoria agendada' 
-                    : 'O mentor ainda não configurou sua disponibilidade.'}
+                  O mentor ainda não configurou sua disponibilidade.
                 </p>
               </div>
             </div>
           )}
 
-          {!loadingAvailability && (
+          {/* Calendar - ALWAYS visible (regardless of loading state, errors, or availability blocks) */}
           <div className="slot-selector-calendar-container">
+            {!loadingAvailability && !availabilityError && (
+              <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '1rem' }}>
+                Datas destacadas têm disponibilidade
+              </p>
+            )}
             <BookingCalendar
               mentorId={mentorId}
               mode="single"
               selected={selectedDate}
-              onSelect={(d: Date | undefined) => { setSelectedDate(d); resetSelection(); }}
+              onSelect={(d: Date | undefined) => { 
+                console.log('[SlotSelector] Selected date:', d);
+                setSelectedDate(d); 
+                resetSelection(); 
+              }}
               modifiers={{ available: isDayAvailable }}
               modifiersClassNames={{ available: 'bg-primary/15 font-semibold text-primary' }}
             />
           </div>
-          )}
 
-          {/* Block & Time Selection */}
-          <div className="slot-selector-selection-container">
-            {selectedDate ? (
-              <div className="slot-selector-selection-header">
-                <h4 className="slot-selector-selection-title">Horários Disponíveis</h4>
-                <p className="slot-selector-selection-subtitle">
+          {/* Block & Time Selection - ONLY visible when connected */}
+          {connected && (
+            <div className="slot-selector-selection-container">
+              {selectedDate ? (
+                <div className="slot-selector-selection-header">
+                  <h4 className="slot-selector-selection-title">Horários Disponíveis</h4>
+                  <p className="slot-selector-selection-subtitle">
                   {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
                 </p>
               </div>
