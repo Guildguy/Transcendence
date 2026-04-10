@@ -350,17 +350,15 @@ function BookSessionContent() {
         />
 
       {/* Calendar always visible; booking controls only when connected */}
-      {currentUserId && (
-        <div className="calendar-container">
-          <SlotSelector
-            connected={connectionStatus === 'active'} 
-            mentorId={schedulerMentorId || '0'}
-            menteeId={schedulerMenteeId || '0'}
-            connectionId={connectionId}
-            onBooked={() => setSessionRefreshKey(k => k + 1)}
-          />
-        </div>
-      )}
+      <div className="calendar-container">
+        <SlotSelector
+          connected={connectionStatus === 'active'} 
+          mentorId={schedulerMentorId || '0'}
+          menteeId={schedulerMenteeId || '0'}
+          connectionId={connectionId}
+          onBooked={() => setSessionRefreshKey(k => k + 1)}
+        />
+      </div>
 
       <div className="calendar-container">
         <SessionList 

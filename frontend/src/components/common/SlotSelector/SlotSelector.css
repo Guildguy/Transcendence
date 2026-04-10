@@ -42,6 +42,18 @@
   min-width: 280px;
 }
 
+@media (max-width: 768px) {
+  .slot-selector-card-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .slot-selector-calendar-container,
+  .slot-selector-selection-container {
+    grid-column: 1 / -1;
+    min-width: auto;
+  }
+}
+
 .slot-selector-selection-header {
   margin-bottom: 1rem;
 }
