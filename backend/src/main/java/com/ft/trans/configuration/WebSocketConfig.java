@@ -41,8 +41,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:5173", "http://127.0.0.1:5173", "http://0.0.0.0:5173", "https://ft-trans.42.fr")
-                .withSockJS();
+            .setAllowedOrigins(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://0.0.0.0:5173",
+                "https://ft-trans.42.fr",
+                "https://ft-trans.42.fr."
+            )
+            .withSockJS();
     }
 
     @Override
