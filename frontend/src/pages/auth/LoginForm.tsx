@@ -11,7 +11,6 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Helper function to fetch and store user role
   const fetchAndStoreUserRole = async (userId: string) => {
     try {
       const userRes = await apiFetch(`/users/${userId}`);
@@ -24,7 +23,6 @@ function LoginForm() {
       }
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
-      // Se não conseguir buscar o role, deixa sem armazenar
     }
   };
 
@@ -67,8 +65,8 @@ function LoginForm() {
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
       try {
-        // Enviar o token do Google para o backend
-        const response = await loginFetch('/login/google', {
+        const profileType = "MENTORADO";
+        const response = await loginFetch(`/login/google?profileType=${profileType}`, {
           method: 'POST',
           body: JSON.stringify({
             token: codeResponse.access_token,
@@ -108,11 +106,11 @@ function LoginForm() {
       </p>
 
       <input
-        type="email" // Alterado para email para validação nativa do browser
+        type="email" 
         placeholder="e-mail"
         required
         value={email}
-        onChange={(e) => setEmail(e.target.value)} // Atualiza o estado
+        onChange={(e) => setEmail(e.target.value)}
       />
 
       <input
@@ -120,7 +118,7 @@ function LoginForm() {
         placeholder="Insira a sua senha"
         required
         value={password}
-        onChange={(e) => setPassword(e.target.value)} // Atualiza o estado
+        onChange={(e) => setPassword(e.target.value)}
       />
       <div className="social-buttons">
         <button type="button" className="social-btn" onClick={() => handleGoogleLogin()}>
