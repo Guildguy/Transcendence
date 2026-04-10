@@ -22,7 +22,7 @@ DOCKER_COMPOSE		:= $(shell \
 VOLUMES				:= postgres_data \
 						mongo_data \
 						grafana_data
-
+						
 VOLUMES_DIRECTORY   := $(VOLUMES:%=./data/%)
 
 SERVICES			:= api \
@@ -35,15 +35,22 @@ SERVICES			:= api \
 					   node-exporter \
 					   cadvisor \
 					   postgres-exporter \
-					   mongodb-exporter
+					   mongodb-exporter \
+					   nginx
 
 ifdef SERVICE
 	SERVICES 		:= $(SERVICE)
 endif
 
+DOMAIN				:= ft-trans.42.fr
+
 all:
 	@mkdir -p $(VOLUMES_DIRECTORY)
 # 	@chmod -R 777 ./data
+	@if ! grep -q "$(DOMAIN)" /etc/hosts 2>/dev/null; then \
+		echo "127.0.0.1 $(DOMAIN)" | sudo tee -a /etc/hosts > /dev/null; \
+		echo "$(DOMAIN) added to /etc/hosts"; \
+	fi
 	@make up SERVICES="$(SERVICES)" --no-print-directory
 
 up:

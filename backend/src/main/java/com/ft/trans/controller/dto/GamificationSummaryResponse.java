@@ -8,6 +8,8 @@ public record GamificationSummaryResponse(
     Integer currentLevel,
     String  currentLevelIconUrl,
     Integer nextLevelXp,
+    Integer currentStreak,
+    Integer bestStreak,
     List<AchievementItem> unlockedAchievements,
     List<HistoryItem> recentHistory
 )

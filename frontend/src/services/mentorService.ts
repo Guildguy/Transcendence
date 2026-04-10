@@ -1,6 +1,6 @@
 import { apiFetch } from './api'; // Seu wrapper customizado
 
-const PYTHON_API_URL = 'http://localhost:8000';
+const PYTHON_API_URL = "/api/python";
 
 export interface MentorCardData {
   id: number;
@@ -23,6 +23,21 @@ export interface MentorDetailData extends MentorCardData {
 }
 
 class MentorService {
+
+  private async fetchMentorRating(profileId: number): Promise<number> {
+    try {
+      const response = await apiFetch(`/mentors/${profileId}/rating`);
+      if (!response.ok) return 5;
+
+      const data = await response.json();
+      const parsed = Number(data?.averageRating);
+      if (!Number.isFinite(parsed)) return 5;
+
+      return Math.max(1, Math.min(5, Math.ceil(parsed)));
+    } catch {
+      return 5;
+    }
+  }
   
   /**
    * Busca a imagem de perfil no backend Java (8080)
@@ -193,7 +208,7 @@ class MentorService {
   async getMyMentors(menteeId: number): Promise<any[]> {
     try {
       // Chama o endpoint de conexões aprovadas para o mentorado
-      const response = await apiFetch(`/connections/mentee/${menteeId}`);
+      const response = await apiFetch(`/mentorship-connections/mentee/${menteeId}`);
       if (!response.ok) return [];
       return await response.json(); 
     } catch (error) {
@@ -281,6 +296,11 @@ class MentorService {
         }
       }
 
+      const [mentorRating, profileImage] = await Promise.all([
+        this.fetchMentorRating(profileData.id),
+        this.fetchProfileImage(profileData.id)
+      ]);
+
       const result: MentorDetailData = {
         id: profileData.id,
         userId: userId,
@@ -295,9 +315,9 @@ class MentorService {
         isActive: userActive,
         isAvailable: true,
         bio: profileData.bio || 'Especialista em desenvolvimento e mentoria',
-        rating: profileData.rating || 4.8,
+        rating: mentorRating,
         menteeCount: menteeCount,
-        avatarUrl: profileData.avatarUrl
+        avatarUrl: profileImage || profileData.avatarUrl
       };
 
       console.log(`[getMentorDetails] Returning mentor data:`, result);

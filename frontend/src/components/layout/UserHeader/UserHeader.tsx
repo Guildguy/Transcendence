@@ -26,6 +26,8 @@ type UserHeaderData = {
   xp: number
   nextLevelXp: number | null
   role: 'MENTOR' | 'MENTORADO'
+  currentStreak: number
+  bestStreak: number
   unlockedAchievements: AchievementItem[]
   recentHistory: HistoryItem[]
 }
@@ -39,6 +41,8 @@ const DEFAULT_USER_DATA: UserHeaderData = {
   xp: 0,
   nextLevelXp: null,
   role: 'MENTOR',
+  currentStreak: 0,
+  bestStreak: 0,
   unlockedAchievements: [],
   recentHistory: [],
 }
@@ -52,10 +56,12 @@ const FALLBACK_USER_DATA: UserHeaderData = {
   xp: 250,
   nextLevelXp: 500,
   role: 'MENTOR',
+  currentStreak: 3,
+  bestStreak: 7,
   unlockedAchievements: [
   { name: 'Identidade Transcendental', iconUrl: '/achievements/identidade_transcendental.png' },
   { name: 'Chama Acesa',               iconUrl: '/achievements/chama_acessa.png' },
-  { name: 'Primeiro Match',            iconUrl: '/achievements/primeiro_aperto_de_mao.png' },
+  { name: 'O Primeiro Aperto de Mão',  iconUrl: '/achievements/primeiro_aperto_de_mao.png' },
   ],
   recentHistory: [
   { reason: 'PROFILE_COMPLETED', xp: 50 },
@@ -99,6 +105,8 @@ export const UserHeader = () => {
         let level: number = mentorProfile?.level ?? 0
         let xp: number = mentorProfile?.xp ?? 0
         let nextLevelXp: number | null = null
+        let currentStreak = 0
+        let bestStreak = 0
         let unlockedAchievements: AchievementItem[] = []
         let recentHistory: HistoryItem[] = []
         let avatarUrl = ''
@@ -111,6 +119,8 @@ export const UserHeader = () => {
             level = summary?.currentLevel ?? level
             xp = summary?.totalXp ?? xp
             nextLevelXp = summary?.nextLevelXp ?? null
+            currentStreak = summary?.currentStreak ?? 0
+            bestStreak = summary?.bestStreak ?? 0
             unlockedAchievements = Array.isArray(summary?.unlockedAchievements)
               ? summary.unlockedAchievements
               : []
@@ -150,6 +160,8 @@ export const UserHeader = () => {
           nextLevelXp,
           unlockedAchievements,
           recentHistory,
+          currentStreak,
+          bestStreak,
           cargo: mentorProfile?.position || 'Cargo',
           nome: user?.name || 'Nome do usuario',
           username: user?.email ? String(user.email).split('@')[0] : 'username',
@@ -201,7 +213,7 @@ export const UserHeader = () => {
             onChange={() => {}}
           />
           <InputGroup
-            value={userData.role === 'MENTOR' ? 'Ensinando 🔥' : 'Aprendendo 🚀'}
+            value={`Ofensiva: ${userData.currentStreak} | Recorde: ${userData.bestStreak}`}
             isEditing={false}
             onChange={() => {}}
           />
