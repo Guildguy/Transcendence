@@ -6,6 +6,7 @@ import Habilities from "../../components/common/Habilities/Habilities";
 import Avatar from "../../components/common/Avatar/Avatar";
 import ProgressBar from "../../components/common/ProgressBar/ProgressBar";
 import { apiFetch } from "../../services/api";
+import { normalizeGamificationState } from "../../utils/gamificationLevels";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
 
@@ -97,6 +98,12 @@ export const ProfilePage = () => {
             console.warn("Failed to load gamification data, using profile values:", err);
           }
 
+          const normalizedInitial = normalizeGamificationState({
+            totalXp: xp,
+            currentLevel: level,
+            nextLevelXp,
+          });
+
           const unifiedData: UserData = {
             id: user.id,
             profile_id: profile.id,
@@ -110,9 +117,9 @@ export const ProfilePage = () => {
             linkedin: profile.linkedin || "",
             instagram: profile.instagram || "",
             anosExperiencia: profile.anosExperiencia?.toString() || "0",
-            level,
-            xp,
-            nextLevelXp,
+            level: normalizedInitial.currentLevel,
+            xp: normalizedInitial.totalXp,
+            nextLevelXp: normalizedInitial.nextLevelXp,
             role: (profile.role || "MENTOR").toString()
           };
 
@@ -125,11 +132,24 @@ export const ProfilePage = () => {
                 ...unifiedData,
                 level: summary?.currentLevel ?? unifiedData.level ?? 0,
                 xp: summary?.totalXp ?? unifiedData.xp ?? 0,
+                nextLevelXp: summary?.nextLevelXp ?? unifiedData.nextLevelXp ?? null,
               };
             }
           } catch (summaryError) {
             console.warn("Falha ao carregar summary de gamificação no Profile:", summaryError);
           }
+
+          const normalizedFinal = normalizeGamificationState({
+            totalXp: finalData.xp,
+            currentLevel: finalData.level,
+            nextLevelXp: finalData.nextLevelXp,
+          });
+          finalData = {
+            ...finalData,
+            level: normalizedFinal.currentLevel,
+            xp: normalizedFinal.totalXp,
+            nextLevelXp: normalizedFinal.nextLevelXp,
+          };
 
           const loadedSkills: Skill[] = profile.stacks || [];
 
@@ -425,9 +445,15 @@ useEffect(() => {
       const gamificationRes = await apiFetch(`/gamification/users/${loggedUserId}/summary`);
       if (gamificationRes.ok) {
         const gamificationData = await gamificationRes.json();
-        const newLevel = gamificationData?.currentLevel ?? userData.level;
-        const newXp = gamificationData?.totalXp ?? userData.xp;
-        const newNextLevelXp = gamificationData?.nextLevelXp ?? userData.nextLevelXp;
+        const normalized = normalizeGamificationState({
+          totalXp: gamificationData?.totalXp ?? userData.xp,
+          currentLevel: gamificationData?.currentLevel ?? userData.level,
+          nextLevelXp: gamificationData?.nextLevelXp ?? userData.nextLevelXp,
+        });
+
+        const newLevel = normalized.currentLevel;
+        const newXp = normalized.totalXp;
+        const newNextLevelXp = normalized.nextLevelXp;
 
         if (newLevel !== userData.level || newXp !== userData.xp || newNextLevelXp !== userData.nextLevelXp) {
           console.log("Atualizando badges de gamification:", { newLevel, newXp, newNextLevelXp });

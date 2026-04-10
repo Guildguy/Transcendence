@@ -1,19 +1,11 @@
 import './ProgressBar.css'
+import { normalizeGamificationState } from '../../../utils/gamificationLevels'
 
 interface ProgressBarProps {
   currentXp: number
   nextLevelXp: number | null
   currentLevel: number
   size?: 'small' | 'medium' | 'large'
-}
-
-// Level progression thresholds based on backend LevelMockConfig
-const LEVEL_XP_THRESHOLDS: Record<number, number> = {
-  1: 0,
-  2: 500,
-  3: 1500,
-  4: 3000,
-  5: 5000,
 }
 
 /**
@@ -33,28 +25,29 @@ export const ProgressBar = ({
   currentLevel,
   size = 'medium',
 }: ProgressBarProps) => {
-  // Get the XP threshold for the current level
-  const currentLevelXpThreshold = LEVEL_XP_THRESHOLDS[currentLevel] || 0
+  const normalized = normalizeGamificationState({
+    totalXp: currentXp,
+    currentLevel,
+    nextLevelXp,
+  })
 
-  // Calculate XP progress within the current level
-  const xpInCurrentLevel = currentXp - currentLevelXpThreshold
-  const totalXpForCurrentLevel = (nextLevelXp || currentXp) - currentLevelXpThreshold
-
-  // Calculate fill percentage
-  const fillPercentage = Math.min(
-    (xpInCurrentLevel / totalXpForCurrentLevel) * 100,
-    100
-  )
+  const displayXp = normalized.totalXp
+  const displayNextLevelXp = normalized.nextLevelXp
+  const fillPercentage = displayNextLevelXp
+    ? Math.min((displayXp / displayNextLevelXp) * 100, 100)
+    : 100
 
   return (
     // <div className={`progress-bar progress-bar--${size}`}>
-      <div className="progress-bar__track">
+      <div className="progress-bar__track" data-size={size}>
         <div
           className="progress-bar__fill"
           style={{ width: `${fillPercentage}%` }}
         />
         <div className="progress-bar__label">
-          {`XP: ${Math.floor(xpInCurrentLevel)} / ${Math.floor(totalXpForCurrentLevel)}`}
+          {displayNextLevelXp
+            ? `XP: ${Math.floor(displayXp)} / ${Math.floor(displayNextLevelXp)}`
+            : `XP: ${Math.floor(displayXp)} / MAX`}
         </div>
       </div>
     // </div>
