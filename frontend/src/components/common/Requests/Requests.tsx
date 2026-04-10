@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Check, X } from 'lucide-react'
-import Avatar from '../Avatar/Avatar'
+import { Check, X, User } from 'lucide-react'
 import Button from '../Button/Button'
 import './Requests.css'
 
@@ -136,7 +135,18 @@ export const RequestCard = ({
   return (
     <div className="request-card">
       <div className="request-avatar">
-        <Avatar size={80} avatarUrl={request.avatar} />
+        {request.avatar ? (
+          <img 
+            src={request.avatar} 
+            alt={request.name}
+            style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        ) : (
+          <User size={20} color="#9ca3af" />
+        )}
       </div>
       <p className="request-text">{getMessage()}</p>
       {showActions && (
