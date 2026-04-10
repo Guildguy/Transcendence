@@ -32,10 +32,29 @@ export const ProgressBar = ({
   })
 
   const displayXp = normalized.totalXp
+  const displayLevel = normalized.currentLevel
   const displayNextLevelXp = normalized.nextLevelXp
-  const fillPercentage = displayNextLevelXp
-    ? Math.min((displayXp / displayNextLevelXp) * 100, 100)
-    : 100
+  const currentLevelXpThreshold =
+    displayLevel === 5 ? 5000 :
+    displayLevel === 4 ? 3000 :
+    displayLevel === 3 ? 1500 :
+    displayLevel === 2 ? 500 :
+    0
+
+  const fillPercentage = (() => {
+    if (!displayNextLevelXp) {
+      return 100
+    }
+
+    const xpInCurrentLevel = displayXp - currentLevelXpThreshold
+    const xpRequiredInCurrentLevel = displayNextLevelXp - currentLevelXpThreshold
+
+    if (xpRequiredInCurrentLevel <= 0) {
+      return 100
+    }
+
+    return Math.min(Math.max((xpInCurrentLevel / xpRequiredInCurrentLevel) * 100, 0), 100)
+  })()
 
   return (
     // <div className={`progress-bar progress-bar--${size}`}>
