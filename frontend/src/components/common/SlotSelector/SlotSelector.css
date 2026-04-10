@@ -16,16 +16,23 @@
   display: flex;
   gap: 1.5rem;
   padding: 1rem;
+  width: 100%;
+  min-height: 400px;
 }
 
 .slot-selector-calendar-container {
-  border-right: 1px solid #e5e7eb;
-  padding-right: 1.5rem;
+  flex-shrink: 0;
+  min-width: fit-content;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .slot-selector-selection-container {
   flex: 1;
   min-width: 280px;
+  width: 0;
 }
 
 .slot-selector-selection-header {
