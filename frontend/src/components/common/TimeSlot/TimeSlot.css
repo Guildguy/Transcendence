@@ -1,22 +1,28 @@
 .save-button {
-    background-color: #8a2be2;
-    color: white;
+    background-color: var(--purple-primary);
+    color: var(--white);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.875rem;
+}
+
+.save-button:hover {
+    color: var(--white);
+    background-color: var(--purple-dark);
 }
 
 .availability-grid {
     display: grid;
+    width: auto;
     grid-template-columns: repeat(7, 1fr);
     gap: 1rem;
     margin-bottom: 1rem;
 }
 
 .day-column {
-    background-color: #f9f9f9;
+    background-color: var(--purple-bg);
     border-radius: 8px;
     padding: 1rem;
     text-align: center;
@@ -24,7 +30,7 @@
 
 .day-column h4 {
     margin: 0 0 1rem;
-    color: #333;
+    color: var(--text-dark);
 }
 
 .time-slots {
@@ -35,7 +41,7 @@
 }
 
 .time-slot {
-    background-color: #e6d8ff;
+    background-color: var(--purple-light);
     border-radius: 4px;
     padding: 0.5rem;
     font-size: 0.9rem;
@@ -48,19 +54,19 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #8a2be2;
+    color: var(--purple-primary);
 }
 
 .add-time-slot {
     background: none;
     border: none;
-    color: #8a2be2;
+    color: var(--purple-primary);
     cursor: pointer;
     margin-top: 1rem;
 }
 
 .availability-footer {
-    background-color: #e0e0e0;
+    background-color: var(--purple-bg-light);
     border-radius: 8px;
     padding: 0.5rem 1rem;
     display: inline-block;
@@ -82,7 +88,7 @@
 }
 
 .modal-content {
-    background-color: white;
+    background-color: var(--white);
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     width: 90%;
@@ -91,8 +97,7 @@
 }
 
 .modal-header {
-    background-color: #8a2be2;
-    color: white;
+    color: var(--text-dark);
     padding: 1.5rem;
     display: flex;
     justify-content: space-between;
@@ -124,7 +129,7 @@
 .time-input-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #333;
+    color: var(--gray-dark);
     font-weight: 500;
     font-size: 0.95rem;
 }
@@ -132,7 +137,7 @@
 .time-input-group input {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--input-group-bg);
     border-radius: 4px;
     font-size: 1rem;
     transition: border-color 0.2s;
@@ -140,22 +145,22 @@
 
 .time-input-group input:focus {
     outline: none;
-    border-color: #8a2be2;
+    border-color: var(--purple-primary);
 }
 
 .time-preview {
-    background-color: #f0f0f0;
+    background-color: var(--white);
     padding: 1rem;
     border-radius: 4px;
     text-align: center;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #8a2be2;
+    color: var(--purple-primary);
 }
 
 .modal-footer {
     padding: 1.5rem;
-    background-color: #f9f9f9;
+    background-color: var(--white);
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
@@ -171,19 +176,42 @@
 }
 
 .modal-footer .cancel-btn {
-    background-color: #e0e0e0;
-    color: #333;
+    padding: 8px 16px;
+    text-align: center;
+    align-items: center;
+    max-width: 120px;
+    max-height: 42px;
+    border-radius: 8px;
+    background-color: var(--gray-light);
+    color: var(--text-dark);
+    border: none;
 }
 
 .modal-footer .cancel-btn:hover {
-    background-color: #d0d0d0;
+    background-color: var(--gray-medium);
 }
 
 .modal-footer .confirm-btn {
-    background-color: #8a2be2;
-    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    align-items: center;
+    max-width: 120px;
+    max-height: 42px;
+    border-radius: 8px;
+    background-color: var(--purple-light);
+    color: var(--text-dark);
+    border:1px solid var(--purple-primary);
 }
 
 .modal-footer .confirm-btn:hover {
-    background-color: #7a1bd2;
+    color: var(--white);
+    background-color: var(--purple-primary);
+}
+
+@media (max-width: 1200px) {
+    .availability-grid {
+        display: grid;
+        grid: column;
+        grid-template-columns: repeat(1, 1fr);
+    }
 }

@@ -2,14 +2,14 @@
   border: none;
   border-radius: 40px;
   padding: 12px 24px;
+  min-width: 32px;
+  min-height: 32px;
   font-size: 0.875rem;
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   width: fit-content;
-  min-width: 32px;
-  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -87,15 +87,16 @@
 
 .icon-button:disabled,
 .icon-button.disabled {
-  background-color: #e5e7eb;
-  color: #9ca3af;
-  border-color: #e5e7eb;
+  background-color: var(--gray-light);
+  color:var(--gray-medium);
+  border-color: var(--gray-light);
   cursor: not-allowed;
   opacity: 0.7;
   pointer-events: none;
   transform: none;
   box-shadow: none;
 }
+
 .icon-button--rating {
   border-radius: 12px;
   background-color: transparent;
@@ -112,4 +113,24 @@
 .icon-button--rating:active {
   transform: scale(0.98);
   background-color: var(--rating-yellow);
+}
+
+.icon-button--capacity {
+  padding: 4px;
+  max-width: 8px;
+  max-height: 8px;
+  border-radius: 40px;
+  background-color: transparent;
+  color: var(--text-dark);
+  border: 2px solid var(--gray-light);
+}
+
+.icon-button--capacity:hover {
+  border-color: var(--purple-primary);
+  color: var(--text-dark);
+  background-color: var(--purple-light);
+}
+
+.icon-button--capacity:active {
+  transform: scale(0.98);
 }

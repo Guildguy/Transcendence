@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../Avatar/Avatar';
+import Button from '../Button/Button';
 import './MenteeList.css';
 import { apiFetch } from '../../../services/api';
+import { saveMentorCapacity } from '../../../services/mentorAvailabilityService';
+import menteeService from '../../../services/menteeService';
+import { toast } from '../../../hooks/use-toast';
+import IconButton from '../IconButton/IconButton';
+import { Minus, Plus, MoveRight } from 'lucide-react';
 
 interface Mentee {
   id: number;
@@ -40,7 +46,9 @@ interface CapacityData {
 // CapacityCard Component
 export function CapacityCard({ mentorId }: CapacityCardProps) {
   const [capacity, setCapacity] = useState<CapacityData>({ currentMentees: 0, maxMentees: 10 });
+  const [editingMaxMentees, setEditingMaxMentees] = useState<number>(10);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadCapacity = async () => {
@@ -57,6 +65,7 @@ export function CapacityCard({ mentorId }: CapacityCardProps) {
           currentMentees: data.currentMentees || 0,
           maxMentees: data.maxMentees || 10
         });
+        setEditingMaxMentees(data.maxMentees || 10);
         setError(null);
       } catch (err) {
         console.error('Erro ao carregar capacidade:', err);
@@ -69,14 +78,85 @@ export function CapacityCard({ mentorId }: CapacityCardProps) {
     }
   }, [mentorId]);
 
-  const percentageUsed = error ? 0 : (capacity.currentMentees / capacity.maxMentees) * 100;
+  // Increase capacity
+  const handleIncreaseCapacity = () => {
+    setEditingMaxMentees(prev => prev + 1);
+  };
+
+  // Decrease capacity (minimum of 1)
+  const handleDecreaseCapacity = () => {
+    if (editingMaxMentees > 1) {
+      setEditingMaxMentees(prev => prev - 1);
+    }
+  };
+
+  // Save capacity changes
+  const handleSaveCapacity = async () => {
+    try {
+      setLoading(true);
+      await saveMentorCapacity(mentorId, editingMaxMentees);
+      
+      // Update the displayed capacity
+      setCapacity(prev => ({
+        ...prev,
+        maxMentees: editingMaxMentees
+      }));
+      
+      toast({ 
+        title: 'Capacidade salva com sucesso',
+        description: 'Sua capacidade máxima foi atualizada.'
+      });
+    } catch (err) {
+      console.error('Erro ao salvar capacidade:', err);
+      toast({ 
+        title: 'Erro: a capacidade não pôde ser salva',
+        description: 'Por favor, tente novamente.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const percentageUsed = error ? 0 : (capacity.currentMentees / editingMaxMentees) * 100;
 
   return (
     <>
       {!error && (
-        <p className="capacity-text">
-          {capacity.currentMentees} de {capacity.maxMentees} mentorados
-        </p>
+        <div className="capacity-container">
+          <div className="capacity-info">
+            <div className="card-header">
+              <h3>Capacidade da Carteira</h3>
+            </div>
+            <p className="capacity-text">
+              {capacity.currentMentees} de {editingMaxMentees} mentorados
+            </p>
+          </div>
+          <div className="capacity-info">
+              <Button 
+                className="save-capacity-button" 
+                onClick={handleSaveCapacity} 
+                disabled={loading}
+              >
+                {loading ? 'Salvando...' : 'Salvar'}
+              </Button>
+            <div className="capacity-controls">
+              <IconButton
+                variant="capacity"
+                onClick={handleDecreaseCapacity}
+                disabled={loading}
+              >
+                <Minus size={12} />
+              </IconButton>
+              <IconButton
+                variant="capacity"
+                onClick={handleIncreaseCapacity}
+                disabled={loading}
+              >
+                <Plus size={12} />
+              </IconButton>
+            </div>
+          </div>
+        </div>
       )}
       <div className="progress-bar">
         <div 
@@ -106,16 +186,28 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
         }
         
         const connections: ConnectionResponseDTO[] = await response.json();
+        console.log('[MenteeList] Raw connections from backend:', connections);
         
-        // Filter only APPROVED connections and map to Mentee format
-        const activeMentees: Mentee[] = connections
-          .filter(conn => conn.status === 'APPROVED')
-          .map(conn => ({
-            id: conn.menteeProfileId,
-            name: conn.menteeName,
-            avatarUrl: undefined // Backend doesn't provide avatar in this response
-          }));
+        // Filter only APPROVED connections
+        const approvedConnections = connections.filter(conn => conn.status === 'APPROVED');
+        console.log('[MenteeList] Approved connections:', approvedConnections);
         
+        // Fetch avatars for each mentee in parallel using just the profileId
+        const activeMentees: Mentee[] = await Promise.all(
+          approvedConnections.map(async (conn) => {
+            // Use menteeService to get full mentee details including correct name
+            const menteeDetails = await menteeService.getMenteeDetails(conn.menteeProfileId);
+            
+            return {
+              id: conn.menteeProfileId,
+              name: menteeDetails?.name || conn.menteeName || 'Mentorado(a)',
+              avatarUrl: menteeDetails?.avatarUrl
+            };
+          })
+        );
+        
+        
+        console.log('[MenteeList] Processed mentees with avatars:', activeMentees);
         setMentees(activeMentees);
         setError(null);
       } catch (err) {
@@ -171,7 +263,7 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
             />
             <p className="mentee-name">{mentee.name}</p>
           </div>
-          <span className="mentee-arrow">→</span>
+          <MoveRight size={16} className="mentee-arrow" />
         </div>
       ))}
     </div>
