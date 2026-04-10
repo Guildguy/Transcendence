@@ -50,7 +50,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             (requestPath.equals("/auth/forgot-password") && "POST".equals(method)) ||
             (requestPath.equals("/change-password/validate-token") && "POST".equals(method)) ||
             (requestPath.equals("/change-password/reset-password") && "PUT".equals(method)) ||
-            (requestPath.startsWith("/ws"))) {   // WebSocket — auth happens inside STOMP
+            (requestPath.startsWith("/ws")) ||
+            (requestPath.startsWith("/actuator"))) {   // Actuator — Prometheus metrics
             filterChain.doFilter(request, response);
             return;
         }

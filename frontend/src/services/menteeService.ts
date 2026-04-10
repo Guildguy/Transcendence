@@ -1,6 +1,6 @@
 import { apiFetch } from './api';
 
-const PYTHON_API_URL = 'http://localhost:8000';
+const PYTHON_API_URL = "/api/python";
 
 export interface MenteeCardData {
   id: number;
