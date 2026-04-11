@@ -2,6 +2,7 @@ package com.ft.trans.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,7 +20,9 @@ public interface MentorshipSessionRepository extends JpaRepository<MentorshipSes
 
 	long countByRecurrenceGroupIdAndStatusNot(UUID recurrenceGroupId, SessionStatus status);
 
-	boolean existsByConnectionIdAndScheduledDate(Long connectionId, LocalDateTime scheduledDate);
+	boolean existsByConnectionIdAndScheduledDateAndStatus(Long connectionId, LocalDateTime scheduledDate, SessionStatus status);
+
+	Optional<MentorshipSession> findByConnectionIdAndScheduledDate(Long connectionId, LocalDateTime scheduledDate);
 
 	List<MentorshipSession> findByConnectionIdAndScheduledDateAfter(Long connectionId, LocalDateTime after);
 
