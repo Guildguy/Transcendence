@@ -59,37 +59,60 @@ const MentoriasPage = () => {
   const itemsPerPage = 12;
 
   // Busca inicial de dados (Mentores da Rede + Minhas Conexões)
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // 1. Busca todos os mentores para a vitrine
+      // O serviço garante que apenas usuários/perfis com role MENTOR são retornados
+      const todos = await mentorService.getAllMentorsForCards();
+      console.log("Mentors loaded from service (filtered for MENTOR role):", todos);
+      console.log(`Total mentores com role MENTOR: ${todos.length}`);
+      console.log("Sample mentor data:", todos[0]);
+      console.log('[MentoriasPage] Mentor data with isAvailable:', todos.map(m => ({
+        id: m.id,
+        name: m.name,
+        isActive: m.isActive,
+        isAvailable: m.isAvailable
+      })));
+      setMentoresDisponiveis(todos);
+
+      // 2. Busca conexões do usuário logado (Meus Mentores)
+      // Obtém o ID do usuário logado do localStorage
+      const logadoId = localStorage.getItem('userId');
+      if (logadoId) {
+        const conexoes = await mentorService.getMyMentors(parseInt(logadoId));
+        console.log("Conexões carregadas:", conexoes);
+        setMeusMentores(conexoes);
+      } else {
+        console.warn("ID do usuário logado não encontrado no localStorage");
+        setMeusMentores([]);
+      }
+
+    } catch (error) {
+      console.error('Erro ao carregar dados da página de mentorias:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch na montagem inicial
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // 1. Busca todos os mentores para a vitrine
-        // O serviço garante que apenas usuários/perfis com role MENTOR são retornados
-        const todos = await mentorService.getAllMentorsForCards();
-        console.log("Mentors loaded from service (filtered for MENTOR role):", todos);
-        console.log(`Total mentores com role MENTOR: ${todos.length}`);
-        console.log("Sample mentor data:", todos[0]);
-        setMentoresDisponiveis(todos);
+    fetchData();
+  }, []);
 
-        // 2. Busca conexões do usuário logado (Meus Mentores)
-        // Obtém o ID do usuário logado do localStorage
-        const logadoId = localStorage.getItem('userId');
-        if (logadoId) {
-          const conexoes = await mentorService.getMyMentors(parseInt(logadoId));
-          console.log("Conexões carregadas:", conexoes);
-          setMeusMentores(conexoes);
-        } else {
-          console.warn("ID do usuário logado não encontrado no localStorage");
-          setMeusMentores([]);
-        }
-
-      } catch (error) {
-        console.error('Erro ao carregar dados da página de mentorias:', error);
-      } finally {
-        setLoading(false);
+  // Refetch quando a página fica visível (o usuário volta para ela)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[MentoriasPage] Page became visible, refreshing mentor data...');
+        fetchData();
       }
     };
-    fetchData();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // --- GERAÇÃO DINÂMICA DE OPÇÕES ---
@@ -146,10 +169,19 @@ const MentoriasPage = () => {
 
   // --- CONTROLE DE PAGINAÇÃO ---
   const totalPages = Math.ceil(mentoresFiltrados.length / itemsPerPage);
-  const currentMentors = mentoresFiltrados.slice(
-    (currentPage - 1) * itemsPerPage, 
-    currentPage * itemsPerPage
-  );
+  const currentMentors = useMemo(() => {
+    const mentors = mentoresFiltrados.slice(
+      (currentPage - 1) * itemsPerPage, 
+      currentPage * itemsPerPage
+    );
+    console.log('[MentoriasPage] Current mentors to render:', mentors.map(m => ({
+      id: m.id,
+      name: m.name,
+      isActive: m.isActive,
+      isAvailable: m.isAvailable
+    })));
+    return mentors;
+  }, [mentoresFiltrados, currentPage, itemsPerPage]);
 
   const resetarFiltros = () => {
     setFiltroExp("");
