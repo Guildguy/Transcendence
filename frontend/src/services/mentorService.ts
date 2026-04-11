@@ -45,18 +45,18 @@ class MentorService {
     return normalized;
   }
 
-  private async fetchMentorRating(profileId: number): Promise<number> {
+  private async fetchMentorRating(profileId: number): Promise<number | undefined> {
     try {
       const response = await apiFetch(`/mentors/${profileId}/rating`);
-      if (!response.ok) return 5;
+      if (!response.ok) return undefined;
 
       const data = await response.json();
       const parsed = Number(data?.averageRating);
-      if (!Number.isFinite(parsed)) return 5;
+      if (!Number.isFinite(parsed)) return undefined;
 
-      return Math.max(1, Math.min(5, Math.ceil(parsed)));
+      return Math.max(1, Math.min(5, parsed));
     } catch {
-      return 5;
+      return undefined;
     }
   }
   
@@ -337,7 +337,7 @@ class MentorService {
         isActive: userActive,
         isAvailable: true,
         bio: profileData.bio || 'Especialista em desenvolvimento e mentoria',
-        rating: profileData.rating || 4.8,
+        rating: mentorRating ?? profileData.rating,
         menteeCount: menteeCount,
         avatarUrl: profileData.avatarUrl
       };

@@ -56,29 +56,58 @@ export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
           return
         }
 
-        const endpoint = userRole === 'MENTOR'
-          ? `/mentorships/today/mentor/${profileId}`
-          : `/mentorships/today/mentee/${profileId}`
+        const sessionsEndpoint = userRole === 'MENTOR'
+          ? `/mentorship-sessions/mentor/${profileId}`
+          : `/mentorship-sessions/mentee/${profileId}`
+        const connectionsEndpoint = userRole === 'MENTOR'
+          ? `/mentorship-connections/mentor/${profileId}`
+          : `/mentorship-connections/mentee/${profileId}`
 
-        const response = await apiFetch(endpoint)
+        const [sessionsRes, connectionsRes] = await Promise.all([
+          apiFetch(sessionsEndpoint),
+          apiFetch(connectionsEndpoint),
+        ])
 
-        if (response.ok) {
-          const data: any[] = await response.json()
-          if (Array.isArray(data) && data.length > 0) {
-            setDailySchedule(data.map((session: any) => ({
-              id: session.id || session.connectionId,
-              time: session.time || session.scheduledTime || '00:00h',
-              date: '',
-              mentee: session.menteeName || session.mentorName || 'Mentoria',
-              mentor: session.mentorName,
-              connectionId: session.connectionId || session.id,
-            })))
-          } else {
-            setDailySchedule([])
+        const sessions: any[] = sessionsRes.ok ? await sessionsRes.json() : []
+        const connections: any[] = connectionsRes.ok ? await connectionsRes.json() : []
+
+        const nameMap = new Map<number, string>()
+        connections.forEach((c: any) => {
+          if (c.id != null) {
+            const partnerName = userRole === 'MENTOR'
+              ? (c.menteeName || 'Mentorado')
+              : (c.mentorName || 'Mentor')
+            nameMap.set(c.id, partnerName)
           }
-        } else {
-          setDailySchedule([])
-        }
+        })
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        const todayItems = sessions
+          .filter((s: any) => {
+            if (s.status === 'CANCELLED') return false
+            const raw = s.scheduledDate || s.scheduledTime
+            if (!raw) return false
+            const date = new Date(raw)
+            date.setHours(0, 0, 0, 0)
+            return date.getTime() === today.getTime()
+          })
+          .map((s: any) => {
+            const scheduled = new Date(s.scheduledDate || s.scheduledTime)
+            const timeStr = scheduled.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h'
+            return {
+              id: s.id,
+              time: timeStr,
+              date: scheduled.toISOString().split('T')[0],
+              mentee: nameMap.get(s.connectionId) || 'Mentoria',
+              mentor: undefined,
+              connectionId: s.connectionId,
+            }
+          })
+          .sort((a: ScheduleItem, b: ScheduleItem) => a.time.localeCompare(b.time))
+
+        setDailySchedule(todayItems)
       } catch (error) {
         console.warn('Error loading daily schedule:', error)
         setDailySchedule([])

@@ -89,7 +89,7 @@ function BookSessionContent() {
             isAvailable: true,
             avatarUrl: mentorState.mentorAvatar,
             bio: mentorState.mentorBio || undefined,
-            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5,
+            rating: mentorState.mentorRating,
             menteeCount: mentorState.menteeCount || 0
           };
           setSelectedMentor(mentorFallback);
@@ -113,7 +113,7 @@ function BookSessionContent() {
             isAvailable: true,
             avatarUrl: mentorState.mentorAvatar,
             bio: mentorState.mentorBio || undefined,
-            rating: mentorState.mentorRating !== undefined ? mentorState.mentorRating : 5,
+            rating: mentorState.mentorRating,
             menteeCount: mentorState.menteeCount || 0
           };
           setSelectedMentor(mentorFallback);
