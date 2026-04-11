@@ -36,7 +36,8 @@ const MentorCard: React.FC<MentorCardProps> = ({
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
 
-  console.log(`[MentorCard Render] ${name} (ID: ${id}) - Available: ${isAvailable}`);
+  console.log(`[MentorCard Render] ${name} (ID: ${id}) - isActive: ${isActive}, isAvailable: ${isAvailable}`);
+  console.log(`[MentorCard Status] ${name} - Will show: ${isActive && isAvailable ? 'Ativo' : 'Inativo'} (isActive=${isActive} && isAvailable=${isAvailable})`);
 
   const handleCardClick = () => {
     console.log(`[MentorCard Click] ${name} (ID: ${id}) - Available: ${isAvailable}`);
@@ -114,10 +115,10 @@ const MentorCard: React.FC<MentorCardProps> = ({
         </div>
         
         <div className="mentor-status">
-          <strong>Perfil:</strong> {isActive ? 'Ativo' : 'Inativo'}
+          <strong>Perfil:</strong> {isActive && isAvailable ? 'Ativo' : 'Inativo'}
           <Circle 
             size={12} 
-            fill={isActive ? "#4ade80" : "#fb7185"} 
+            fill={isActive && isAvailable ? "#4ade80" : "#fb7185"} 
             color="transparent" 
             className="status-dot"
           />
