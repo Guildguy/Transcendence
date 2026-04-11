@@ -24,6 +24,7 @@ function HomeLogged() {
   const [requests, setRequests] = useState<PendingRequest[]>([])
   const [achievements, setAchievements] = useState<AchievementsData[]>([])
   const [mentorProfileId, setMentorProfileId] = useState<number | null>(null)
+  const [activeProfileId, setActiveProfileId] = useState<number | null>(null)
   const [userRole, setUserRole] = useState<'MENTOR' | 'MENTEE'>('MENTEE')
   const [loading, setLoading] = useState(true)
 
@@ -46,9 +47,12 @@ function HomeLogged() {
           const data = await userRes.json()
           const profiles: any[] = Array.isArray(data.profiles) ? data.profiles : []
           const mentorProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTOR')
+          const menteeProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTEE')
           resolvedProfileId = mentorProfile?.id ?? null
           setMentorProfileId(resolvedProfileId)
-          setUserRole(resolvedProfileId !== null ? 'MENTOR' : 'MENTEE')
+          const isMentor = resolvedProfileId !== null
+          setUserRole(isMentor ? 'MENTOR' : 'MENTEE')
+          setActiveProfileId(isMentor ? resolvedProfileId : (menteeProfile?.id ?? null))
         }
       } catch {
         // segue para fallback
@@ -239,7 +243,7 @@ function HomeLogged() {
 
           <DailySchedule
             userRole={userRole}
-            profileId={mentorProfileId}
+            profileId={activeProfileId}
           />
 
         </section>
