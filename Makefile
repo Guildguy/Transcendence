@@ -1,8 +1,11 @@
 DOCKER_SHELL		:= /bin/ash
 
-PROJECT_DIRECTORY	:= ./
-PROJECT_ENV_BRANCH	:= 171-feat-mock-and-env
-PROJECT_ENV_BASE_URL	:= https://raw.githubusercontent.com/RS3A/Transcendence/refs/heads/$(PROJECT_ENV_BRANCH)
+PROJECT_DIRECTORY	:= .
+PROJECT_ENV_REPO	:= RS3A/Transcendence-env
+PROJECT_ENV_BRANCH	:= main
+PROJECT_ENV_BASE_URL	:= https://raw.githubusercontent.com/$(PROJECT_ENV_REPO)/refs/heads/$(PROJECT_ENV_BRANCH)
+
+GITHUB_TOKEN		?= $(shell printenv GITHUB_TOKEN)
 
 ROOT_ENV_FILE		:= $(PROJECT_DIRECTORY)/.env
 PYTHON_ENV_FILE		:= $(PROJECT_DIRECTORY)/python-service/.env
@@ -56,15 +59,24 @@ all: prepare-files
 	@BUILDKIT=1 $(DOCKER_COMPOSE) up -d $(SERVICES)
 
 prepare-files:
+	@if [ -z "$(GITHUB_TOKEN)" ]; then \
+		echo "Error: GITHUB_TOKEN not set."; \
+		echo "Run: export GITHUB_TOKEN=your_token_here"; \
+		exit 1; \
+	fi
 	@if [ ! -f "$(ROOT_ENV_FILE)" ]; then \
-		echo "Downloading $(ROOT_ENV_FILE) from branch $(PROJECT_ENV_BRANCH)..."; \
-		curl -fsSL "$(PROJECT_ENV_BASE_URL)/.env" -o "$(ROOT_ENV_FILE)"; \
+		echo "Downloading $(ROOT_ENV_FILE) from $(PROJECT_ENV_REPO)..."; \
+		curl -fsSL \
+			-H "Authorization: token $(GITHUB_TOKEN)" \
+			"$(PROJECT_ENV_BASE_URL)/.env" -o "$(ROOT_ENV_FILE)"; \
 	fi
 	@if [ ! -f "$(PYTHON_ENV_FILE)" ]; then \
-		echo "Downloading $(PYTHON_ENV_FILE) from branch $(PROJECT_ENV_BRANCH)..."; \
-		curl -fsSL "$(PROJECT_ENV_BASE_URL)/python-service/.env" -o "$(PYTHON_ENV_FILE)"; \
+		echo "Downloading $(PYTHON_ENV_FILE) from $(PROJECT_ENV_REPO)..."; \
+		mkdir -p $(PROJECT_DIRECTORY)/python-service; \
+		curl -fsSL \
+			-H "Authorization: token $(GITHUB_TOKEN)" \
+			"$(PROJECT_ENV_BASE_URL)/python-service/.env" -o "$(PYTHON_ENV_FILE)"; \
 	fi
-
 	@if [ ! -f "$(ROOT_ENV_FILE)" ] || [ ! -f "$(PYTHON_ENV_FILE)" ]; then \
 		echo "Error: env files are missing after download attempt."; \
 		exit 1; \
