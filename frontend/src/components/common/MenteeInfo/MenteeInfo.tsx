@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { User, Circle, MessageCircle, LogOut } from 'lucide-react';
 import './MenteeInfo.css';
 import IconButton from '../IconButton/IconButton';
-import { apiFetch } from '../../../services/api';
+import menteeService from '../../../services/menteeService';
+
+import type { MenteeDetailData } from '../../../services/menteeService';
 
 interface Skill {
   id: string;
@@ -38,63 +40,28 @@ const MenteeCard: React.FC<MenteeCardProps> = ({
   onChat,
   onConnect,
 }) => {
-  const [name, setName] = useState(initialName || "");
-  const [position, setPosition] = useState(initialPosition || "");
-  const [skills, setSkills] = useState<Skill[]>(initialSkills || []);
-  const [experience, setExperience] = useState(initialExperience || 0);
-  const [isActive, setIsActive] = useState(initialIsActive ?? true);
-  const [bio, setBio] = useState(initialBio || "");
-  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl || "");
+  const [fetchedData, setFetchedData] = useState<MenteeDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(!initialName);
   const [error, setError] = useState<string | null>(null);
-  // Fetch mentee data if menteeId is provided
+
+  // Fetch mentee data if menteeId is provided and initialName is not
   useEffect(() => {
+    if (initialName) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchMenteeData = async () => {
-      if (!menteeId && !initialName) return;
+      if (!menteeId) return;
       
       setIsLoading(true);
       setError(null);
       try {
-        // Fetch user and profile data
-        const response = await apiFetch(`/users/${menteeId}`);
-        if (!response.ok) throw new Error('Erro ao buscar dados do mentorado');
-        
-        const data = await response.json();
-        const user = data.user || {};
-        const profiles = data.profiles || [];
-        
-        // Find mentee profile
-        const menteeProfile = profiles.find(
-          (p: any) => p.role?.toUpperCase() === 'MENTEE'
-        ) || profiles[0];
-        
-        if (menteeProfile) {
-          setName(user.name || "Mentorado");
-          setPosition(menteeProfile.position || "Aprendiz");
-          setExperience(menteeProfile.anosExperiencia || 0);
-          setBio(menteeProfile.bio || "Esse mentorado ainda não preencheu a bio.");
-          setIsActive(true);
-          
-          // Fetch avatar
-          try {
-            const imgResponse = await apiFetch(`/profiles/image/${menteeProfile.id}`);
-            if (imgResponse.ok) {
-              const imgData = await imgResponse.json();
-              if (imgData && imgData.avatarUrl) {
-                try {
-                  const parsed = JSON.parse(imgData.avatarUrl);
-                  setAvatarUrl(parsed.image_base64 || imgData.avatarUrl);
-                } catch {
-                  setAvatarUrl(imgData.avatarUrl);
-                }
-              }
-            }
-          } catch (err) {
-            console.error('Erro ao carregar imagem:', err);
-          }
-          
-          // TODO: Fetch skills from Python service if needed
-          setSkills([]);
+        const details = await menteeService.getMenteeDetails(Number(menteeId));
+        if (details) {
+          setFetchedData(details);
+        } else {
+          throw new Error('Perfil não encontrado');
         }
       } catch (err) {
         console.error('Erro ao buscar dados do mentorado:', err);
@@ -104,12 +71,16 @@ const MenteeCard: React.FC<MenteeCardProps> = ({
       }
     };
 
-    if (!initialName) {
-      fetchMenteeData();
-    } else {
-      setIsLoading(false);
-    }
+    fetchMenteeData();
   }, [menteeId, initialName]);
+
+  const name = initialName || fetchedData?.name || "Mentorado";
+  const position = initialPosition || fetchedData?.position || "Aprendiz";
+  const skills = initialSkills || fetchedData?.skills || [];
+  const experience = initialExperience || fetchedData?.anosExperiencia || 0;
+  const isActive = initialIsActive ?? fetchedData?.isActive ?? true;
+  const bio = initialBio || fetchedData?.bio || "Esse mentorado ainda não preencheu a bio.";
+  const avatarUrl = initialAvatarUrl || fetchedData?.avatarUrl || "";
 
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;

@@ -268,8 +268,6 @@ if (error || !selectedMentee) {
 // Define Profile IDs for scheduling components
 // If I am the mentor viewing a mentee: mentorId is my Mentor Profile, menteeId is the target profile
 // If I am the mentee viewing a mentor: mentorId is target profile, menteeId is my Mentee Profile
-// const schedulerMentorId = myMentorProfileId?.toString() : selectedMentor.profileId?.toString();
-// const schedulerMenteeId = isMentorView ? selectedMentor.profileId?.toString() : menteeProfileId?.toString();
 const schedulerMentorId = selectedMentee.profileId?.toString();
 const schedulerMenteeId = mentorProfileId?.toString();
 
@@ -296,7 +294,8 @@ const schedulerMenteeId = mentorProfileId?.toString();
 
       {selectedMentee.isAvailable && currentUserId && connectionStatus === 'active' && (
         <div className="calendar-container">
-          <SlotSelector 
+          <SlotSelector
+            connected={connectionStatus === 'active'} 
             mentorId={schedulerMentorId || '0'}
             menteeId={schedulerMenteeId || '0'}
             connectionId={connectionId}
