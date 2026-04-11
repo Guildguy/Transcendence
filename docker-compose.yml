@@ -115,8 +115,6 @@ services:
   python-service:
     container_name: python-profile-service
     build: ./python-service
-    ports:
-      - "8000:8000"
     env_file:
       - ./python-service/.env
     environment:

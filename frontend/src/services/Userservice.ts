@@ -160,9 +160,8 @@ const handleSaveAll = async () => {
 
   // 2. Payload para o Microserviço Python (Skills/Stacks)
   // Mapeamos o array de objetos [{id, name}] para ['name1', 'name2']
-  const pythonStacksPayload = {
-    profile_id: userData.profile_id?.toString() || userData.id.toString(),
-    stacks: userSkills.map(skill => skill.name) 
+  const stacksPayload = {
+    stacks: userSkills.map(skill => skill.name)
   };
 
   try {
@@ -173,11 +172,11 @@ const handleSaveAll = async () => {
       body: JSON.stringify(profilePayload)
     });
 
-    // Requisição 2: Skills no Python/MongoDB
-    const resStacks = await fetch(`/api/python`, { // Verifique se a porta do Python é 8000
+    // Requisição 2: Skills (Java -> proxy Python)
+    const profileIdForSkills = userData.profile_id ?? userData.id;
+    const resStacks = await apiFetch(`/profiles/${profileIdForSkills}/stacks`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pythonStacksPayload)
+      body: JSON.stringify(stacksPayload)
     });
 
     if (resProfile.ok && resStacks.ok) {
@@ -308,7 +307,7 @@ useEffect(() => {
     console.log("Buscando skills para o ID consolidado:", idParaBusca);
 
     try {
-      const response = await fetch(`/api/python/profile/${idParaBusca}`);
+      const response = await apiFetch(`/profiles/${idParaBusca}/stacks`);
       if (response.ok) {
         const data = await response.json();
         const formatted = data.stacks.map((s: string, i: number) => ({
