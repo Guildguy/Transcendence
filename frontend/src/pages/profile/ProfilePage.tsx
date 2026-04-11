@@ -58,19 +58,10 @@ export const ProfilePage = () => {
     const loadFullProfile = async () => {
       const loggedUserId = localStorage.getItem('userId');
 
-      console.log('=== ProfilePage useEffect ===');
-      console.log('ID do usuário sendo buscado:', loggedUserId);
-
       try {
         const response = await apiFetch(`/users/${loggedUserId}`);
-
         if (response.ok) {
           const data = await response.json();
-          console.log("=== DEBUG BACKEND ===");
-          console.log("Objeto User completo:", data.user);
-          console.log("Role que veio do banco:", data.user.role);
-          console.log("Tipo do Role:", typeof data.user.role);
-
           const user = data.user;
           const profiles = Array.isArray(data.profiles) ? data.profiles : [];
           const profile =
@@ -89,7 +80,6 @@ export const ProfilePage = () => {
               level = gamificationData?.currentLevel ?? level;
               xp = gamificationData?.totalXp ?? xp;
               nextLevelXp = gamificationData?.nextLevelXp ?? null;
-              console.log("Gamification data loaded:", { level, xp, nextLevelXp });
             }
           } catch (err) {
             console.warn("Failed to load gamification data, using profile values:", err);
@@ -197,7 +187,6 @@ export const ProfilePage = () => {
   }, []);
 
   const handleSaveAll = async () => {
-  console.log("INICIANDO SALVAMENTO...");
 
   if (!userData.id) {
     alert("Erro: ID do usuário não encontrado no estado.");
@@ -221,9 +210,6 @@ export const ProfilePage = () => {
   const stacksPayload = {
     stacks: userSkills.map(skill => skill.name)
   };
-
-  console.log("Enviando payload completo:", payload);
-  console.log("Enviando skills via Java API:", stacksPayload);
 
   try {
     const userPayload = {
@@ -272,7 +258,6 @@ export const ProfilePage = () => {
       }
     }
   } catch (err) {
-    console.error("Erro de conexão na chamada API:", err);
     alert("Não foi possível conectar ao servidor. Verifique sua internet.");
   }
 };
@@ -298,7 +283,6 @@ export const ProfilePage = () => {
       alert("Senha atualizada com sucesso!");
     } else {
       const errors = await response.json();
-      console.error('Erro ao atualizar senha:', errors);
       alert('Erro ao atualizar senha: ' + (errors.message || 'Verifique os dados e tente novamente.'));
     }
 
@@ -309,8 +293,8 @@ export const ProfilePage = () => {
   const handleCancel = () => {
     if (backupData) 
       setUserData(backupData);
-    setUserSkills(backupSkills);
-    setIsEditing(false);
+      setUserSkills(backupSkills);
+      setIsEditing(false);
   };
 
   const handleSkillsChange = (newSkills: Skill[]) => {
@@ -395,7 +379,6 @@ useEffect(() => {
     if (!profileIdForSkills) return;
 
     const idParaBusca = profileIdForSkills.toString();
-    console.log("Buscando skills para o ID consolidado:", idParaBusca);
 
     try {
       const response = await apiFetch(`/profiles/${idParaBusca}/stacks`);
@@ -406,12 +389,10 @@ useEffect(() => {
           id: `sk_py_${i}`,
           name: s
         }));
-        console.log("Skills carregadas com sucesso:", formatted);
         setUserSkills(formatted);
         setBackupSkills(formatted);
       } else if (response.status === 404) {
         // Se não houver skills salvos ainda, apenas use array vazio
-        console.log("Nenhuma skill salva ainda para este perfil");
         setUserSkills([]);
         setBackupSkills([]);
       } else {
@@ -445,7 +426,6 @@ useEffect(() => {
         const newNextLevelXp = normalized.nextLevelXp;
 
         if (newLevel !== userData.level || newXp !== userData.xp || newNextLevelXp !== userData.nextLevelXp) {
-          console.log("Atualizando badges de gamification:", { newLevel, newXp, newNextLevelXp });
           setUserData(prev => ({
             ...prev,
             level: newLevel,

@@ -61,9 +61,6 @@ export const ProfilePage = () => {
     const loadFullProfile = async () => {
       // 1. Pega o ID salvo ou força o ID "1" para visualização sem login
       const loggedUserId = localStorage.getItem('userId');
-      
-      console.log('=== ProfilePage useEffect ===');
-      console.log('ID do usuário sendo buscado:', loggedUserId);
 
       // REMOVIDO: A trava de redirecionamento if (!loggedUserId) navigate('/auth')
 
@@ -304,7 +301,6 @@ useEffect(() => {
     if (!userData.profile_id) return;
 
     const idParaBusca = userData.profile_id.toString();
-    console.log("Buscando skills para o ID consolidado:", idParaBusca);
 
     try {
       const response = await apiFetch(`/profiles/${idParaBusca}/stacks`);

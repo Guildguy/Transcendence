@@ -66,26 +66,22 @@ const MentoriasPage = () => {
       // 1. Busca todos os mentores para a vitrine
       // O serviço garante que apenas usuários/perfis com role MENTOR são retornados
       const todos = await mentorService.getAllMentorsForCards();
-      console.log("Mentors loaded from service (filtered for MENTOR role):", todos);
-      console.log(`Total mentores com role MENTOR: ${todos.length}`);
-      console.log("Sample mentor data:", todos[0]);
-      console.log('[MentoriasPage] Mentor data with isAvailable:', todos.map(m => ({
+        todos.map(m => ({
         id: m.id,
         name: m.name,
         isActive: m.isActive,
         isAvailable: m.isAvailable
-      })));
+      }));
       setMentoresDisponiveis(todos);
 
       // 2. Busca conexões do usuário logado (Meus Mentores)
       // Obtém o ID do usuário logado do localStorage
       const logadoId = localStorage.getItem('userId');
       if (logadoId) {
-        const conexoes = await mentorService.getMyMentors(parseInt(logadoId));
-        console.log("Conexões carregadas:", conexoes);
+        // Usa o menteeService em vez do mentorService para garantir o uso do userId
+        const conexoes = await menteeService.getMyMentorsByUserId(logadoId);
         setMeusMentores(conexoes);
       } else {
-        console.warn("ID do usuário logado não encontrado no localStorage");
         setMeusMentores([]);
       }
 
@@ -105,7 +101,6 @@ const MentoriasPage = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[MentoriasPage] Page became visible, refreshing mentor data...');
         fetchData();
       }
     };
@@ -175,12 +170,12 @@ const MentoriasPage = () => {
       (currentPage - 1) * itemsPerPage, 
       currentPage * itemsPerPage
     );
-    console.log('[MentoriasPage] Current mentors to render:', mentors.map(m => ({
+      mentors.map(m => ({
       id: m.id,
       name: m.name,
       isActive: m.isActive,
       isAvailable: m.isAvailable
-    })));
+    }));
     return mentors;
   }, [mentoresFiltrados, currentPage, itemsPerPage]);
 

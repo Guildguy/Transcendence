@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, MoreHorizontal, User, Send, Loader2 } from 'lucide-react';
+import { X, User, Send, Loader2 } from 'lucide-react';
 import { useChat } from '../ChatContext/ChatContext'
 import { getAuthToken, apiFetch } from '../../../services/api';
 import './Chat.css';
@@ -57,14 +57,12 @@ export const ChatWindow = () => {
           // Busca também o avatar do perfil
           if (data.profiles && data.profiles.length > 0) {
             const profile = data.profiles[0];
-            console.log('[ChatWindow] Profile found:', profile.id);
             
             // Fetch the avatar image from the specific endpoint (same as Chatbar)
             try {
               const imageResponse = await apiFetch(`/profiles/image/${profile.id}`);
               if (imageResponse.ok) {
                 const imageData = await imageResponse.json();
-                console.log('[ChatWindow] Image data received');
                 
                 if (imageData && imageData.avatarUrl) {
                   try {
@@ -76,19 +74,15 @@ export const ChatWindow = () => {
                     setContactAvatar(avatarUrl.startsWith('data:') ? avatarUrl : `data:image/png;base64,${avatarUrl}`);
                   }
                 } else {
-                  console.log('[ChatWindow] No avatarUrl in imageData');
                   setContactAvatar('');
                 }
               } else {
-                console.log('[ChatWindow] Image endpoint returned status:', imageResponse.status);
                 setContactAvatar('');
               }
             } catch (imageError) {
-              console.error('[ChatWindow] Error fetching profile image:', imageError);
               setContactAvatar('');
             }
           } else {
-            console.log('[ChatWindow] No profiles found in response');
             setContactAvatar('');
           }
         }
@@ -120,7 +114,6 @@ export const ChatWindow = () => {
           
           // Atualiza o estado com mensagens marcadas como lidas
           setMessages(markedAsRead);
-          console.log('[ChatWindow] History loaded and messages marked as read');
         }
       } catch (error) {
         console.error("Erro ao carregar histórico:", error);

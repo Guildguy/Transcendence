@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import Button from '../Button/Button'
+import { useNavigate } from 'react-router-dom'
 import { apiFetch } from '../../../services/api'
 import './DailySchedule.css'
+import IconButton from '../IconButton/IconButton'
 
 export interface ScheduleItem {
   id: number
@@ -10,6 +11,7 @@ export interface ScheduleItem {
   mentee?: string
   mentor?: string
   connectionId?: number
+  partnerProfileId?: number
 }
 
 interface DailyScheduleProps {
@@ -41,11 +43,25 @@ interface WeekGroup {
 }
 
 export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
+  const navigate = useNavigate()
   const [viewMode, setViewMode] = useState<ViewMode>('day')
   const [dailySchedule, setDailySchedule] = useState<ScheduleItem[]>([])
   const [weeklyGroups, setWeeklyGroups] = useState<WeekGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [weekLoading, setWeekLoading] = useState(false)
+
+  const handleRemarcar = (item: ScheduleItem) => {
+    const targetId = item.partnerProfileId;
+    if (!targetId) {
+      console.warn('ID do perfil do parceiro não encontrado para a conexão:', item.connectionId)
+      return;
+    }
+    if (userRole === 'MENTEE') {
+      navigate(`/book-session/${targetId}`);
+    } else {
+      navigate(`/manage-session/${targetId}`);
+    }
+  }
 
   // Daily schedule (existing behaviour)
   useEffect(() => {
@@ -63,51 +79,25 @@ export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
           ? `/mentorship-connections/mentor/${profileId}`
           : `/mentorship-connections/mentee/${profileId}`
 
-        const [sessionsRes, connectionsRes] = await Promise.all([
-          apiFetch(sessionsEndpoint),
-          apiFetch(connectionsEndpoint),
-        ])
+        const response = await apiFetch(endpoint)
 
-        const sessions: any[] = sessionsRes.ok ? await sessionsRes.json() : []
-        const connections: any[] = connectionsRes.ok ? await connectionsRes.json() : []
-
-        const nameMap = new Map<number, string>()
-        connections.forEach((c: any) => {
-          if (c.id != null) {
-            const partnerName = userRole === 'MENTOR'
-              ? (c.menteeName || 'Mentorado')
-              : (c.mentorName || 'Mentor')
-            nameMap.set(c.id, partnerName)
+        if (response.ok) {
+          const data: any[] = await response.json()
+          if (Array.isArray(data) && data.length > 0) {
+            setDailySchedule(data.map((session: any) => ({
+              id: session.id || session.connectionId,
+              time: session.time || session.scheduledTime || '00:00h',
+              date: '',
+              mentee: session.menteeName || session.mentorName || 'Mentoria',
+              mentor: session.mentorName,
+              connectionId: session.connectionId || session.id,
+            })))
+          } else {
+            setDailySchedule([])
           }
-        })
-
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-
-        const todayItems = sessions
-          .filter((s: any) => {
-            if (s.status === 'CANCELLED') return false
-            const raw = s.scheduledDate || s.scheduledTime
-            if (!raw) return false
-            const date = new Date(raw)
-            date.setHours(0, 0, 0, 0)
-            return date.getTime() === today.getTime()
-          })
-          .map((s: any) => {
-            const scheduled = new Date(s.scheduledDate || s.scheduledTime)
-            const timeStr = scheduled.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h'
-            return {
-              id: s.id,
-              time: timeStr,
-              date: scheduled.toISOString().split('T')[0],
-              mentee: nameMap.get(s.connectionId) || 'Mentoria',
-              mentor: undefined,
-              connectionId: s.connectionId,
-            }
-          })
-          .sort((a: ScheduleItem, b: ScheduleItem) => a.time.localeCompare(b.time))
-
-        setDailySchedule(todayItems)
+        } else {
+          setDailySchedule([])
+        }
       } catch (error) {
         console.warn('Error loading daily schedule:', error)
         setDailySchedule([])
@@ -143,12 +133,15 @@ export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
 
         // Map connectionId to partner name
         const nameMap = new Map<number, string>()
+        const profileIdMap = new Map<number, number>()
         connections.forEach((c: any) => {
           if (c.id != null) {
             const partnerName = userRole === 'MENTOR'
               ? (c.menteeName || 'Mentorado')
               : (c.mentorName || 'Mentor')
             nameMap.set(c.id, partnerName)
+            const partnerProfileId = userRole === 'MENTOR' ? c.menteeProfileId : c.mentorProfileId
+            profileIdMap.set(c.id, partnerProfileId)
           }
         })
 
@@ -182,6 +175,7 @@ export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
             date: key,
             mentee: nameMap.get(s.connectionId) || 'Mentoria',
             connectionId: s.connectionId,
+            partnerProfileId: profileIdMap.get(s.connectionId),
           })
         })
 
@@ -238,7 +232,7 @@ export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
                     <span className="schedule-time">
                       <strong>{item.time}</strong> - {item.mentee}
                     </span>
-                    <Button>Remarcar</Button>
+                    <IconButton onClick={() => handleRemarcar(item)}>Remarcar</IconButton>
                   </div>
                 ))}
               </div>
@@ -253,7 +247,7 @@ export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
                 <span className="schedule-time">
                   <strong>{item.time}</strong> - {item.mentee || item.mentor}
                 </span>
-                <Button>Remarcar</Button>
+                <IconButton onClick={() => handleRemarcar(item)}>Remarcar</IconButton>
               </div>
             ))
           ) : (

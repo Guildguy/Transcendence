@@ -36,13 +36,8 @@ const MentorCard: React.FC<MentorCardProps> = ({
   const displaySkills = skills.slice(0, 5);
   const hasMoreSkills = skills.length > 5;
 
-  console.log(`[MentorCard Render] ${name} (ID: ${id}) - isActive: ${isActive}, isAvailable: ${isAvailable}`);
-  console.log(`[MentorCard Status] ${name} - Will show: ${isActive && isAvailable ? 'Ativo' : 'Inativo'} (isActive=${isActive} && isAvailable=${isAvailable})`);
-
   const handleCardClick = () => {
-    console.log(`[MentorCard Click] ${name} (ID: ${id}) - Available: ${isAvailable}`);
     if (isAvailable) {
-      console.log(`Navigating to /book-session/${id}`);
       navigate(`/book-session/${id}`, {
         state: {
           mentorId: id,
@@ -55,15 +50,11 @@ const MentorCard: React.FC<MentorCardProps> = ({
           mentorBio: bio
         }
       });
-    } else {
-      console.log(`Card not clickable - mentor at full capacity`);
     }
   };
 
   const handleWaitlistClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Add mentor to waitlist:', id);
-    // TODO: Implement waitlist functionality
   };
 
   return (

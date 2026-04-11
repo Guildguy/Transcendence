@@ -85,6 +85,7 @@
 
 .schedule-time {
   font-size: 0.95rem;
+  gap: 4px;
   color: var(--text-dark);
   font-weight: 500;
 }

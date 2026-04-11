@@ -34,7 +34,6 @@ export function MentoringProvider({ children }: { children: React.ReactNode }) {
     `https://meet.google.com/${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}`;
 
   const bookCustomSlot = useCallback(async ({ mentorId, menteeId, connectionId, date, startTime, endTime, isRecurring }: BookCustomSlotParams) => {
-    console.log(`[MentoringContext] Booking session for connection ${connectionId}: ${date} at ${startTime}`);
     
     // Calculate duration in minutes for the backend
     const toMinutes = (t: string) => {

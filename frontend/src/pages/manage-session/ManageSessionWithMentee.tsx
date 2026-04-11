@@ -2,7 +2,6 @@ import './ManageSessionWithMentee.css'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { MentoringProvider } from '../../components/common/BookingCalendar/MentoringContext'
-import { SlotSelector } from '../../components/common/SlotSelector/SlotSelector'
 import { SessionList } from '../../components/common/SessionList/SessionList'
 import MenteeInfo from '../../components/common/MenteeInfo/MenteeInfo'
 import { apiFetch } from '../../services/api'
@@ -115,7 +114,6 @@ useEffect(() => {
         // Find MENTOR profile
         const mentorProfile = profiles.find(p => p.role?.toUpperCase() === 'MENTOR');
         if (mentorProfile) {
-          console.log('[ManageSessionWithMentee] Found Mentor Profile ID:', mentorProfile.id);
           setMentorProfileId(mentorProfile.id);
         }
       }
@@ -291,18 +289,6 @@ const schedulerMenteeId = mentorProfileId?.toString();
         onLeave={handleLeave}
         onChat={selectedMentee.userId ? () => setActiveChatId(selectedMentee.userId!) : undefined}
       />
-
-      {selectedMentee.isAvailable && currentUserId && connectionStatus === 'active' && (
-        <div className="calendar-container">
-          <SlotSelector
-            connected={connectionStatus === 'active'} 
-            mentorId={schedulerMentorId || '0'}
-            menteeId={schedulerMenteeId || '0'}
-            connectionId={connectionId}
-            onBooked={() => setSessionRefreshKey(k => k + 1)}
-          />
-        </div>
-      )}
 
       <div className="calendar-container">
         <SessionList 
