@@ -200,7 +200,42 @@ function HomeLogged() {
       const res = await apiFetch(`/mentorship-connections/${id}/accept?mentorUserId=${userId}`, {
         method: 'PATCH',
       })
-      if (!res.ok) console.error('[HomeLogged] Failed to accept connection:', res.status);
+      if (res.ok) {
+        console.log('[HomeLogged] Connection accepted successfully');
+        
+        // Verificar capacidade do mentor após aceitar
+        if (mentorProfileId) {
+          try {
+            const capacityRes = await apiFetch(`/mentorship-connections/mentor/${mentorProfileId}/capacity`)
+            if (capacityRes.ok) {
+              const capacity = await capacityRes.json()
+              console.log('[HomeLogged] Mentor capacity after accepting:', capacity);
+              
+              // Se menutor atingiu a capacidade máxima, desativar o mentor
+              if (capacity.currentMentees >= capacity.maxMentees) {
+                console.log('[HomeLogged] Mentor reached max capacity, deactivating...');
+                const deactivateRes = await apiFetch(`/profiles/${mentorProfileId}`, {
+                  method: 'PUT',
+                  body: JSON.stringify({
+                    isActive: false
+                  })
+                })
+                
+                if (deactivateRes.ok) {
+                  console.log('[HomeLogged] Mentor successfully deactivated');
+                  alert(`Parabéns! Você atingiu a capacidade máxima de ${capacity.maxMentees} mentorados. Seu perfil foi desativado automaticamente.`);
+                } else {
+                  console.error('[HomeLogged] Failed to deactivate mentor:', deactivateRes.status);
+                }
+              }
+            }
+          } catch (capacityErr) {
+            console.error('[HomeLogged] Error checking mentor capacity:', capacityErr);
+          }
+        }
+      } else {
+        console.error('[HomeLogged] Failed to accept connection:', res.status);
+      }
     } catch (err) {
       console.error('[HomeLogged] Error accepting connection:', err);
     }
