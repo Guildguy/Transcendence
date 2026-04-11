@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Circle } from 'lucide-react';
 import type { MentorCardData } from '../../services/mentorService';
 import mentorService from '../../services/mentorService';
+import menteeService from '../../services/menteeService';
 import MentorCard from '../../components/common/MentorCard/Mentorcard';
 import DropdownList from '../../components/common/Dropdown/Dropdown';
 import './MentoriasPage.css';
@@ -75,7 +76,7 @@ const MentoriasPage = () => {
         // Obtém o ID do usuário logado do localStorage
         const logadoId = localStorage.getItem('userId');
         if (logadoId) {
-          const conexoes = await mentorService.getMyMentors(parseInt(logadoId));
+          const conexoes = await menteeService.getMyMentorsByUserId(logadoId);
           console.log("Conexões carregadas:", conexoes);
           setMeusMentores(conexoes);
         } else {
