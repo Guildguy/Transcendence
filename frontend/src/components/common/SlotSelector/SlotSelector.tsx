@@ -98,13 +98,11 @@ export function SlotSelector({ connected, mentorId, menteeId, connectionId, onBo
   useEffect(() => {
     const fetchAvailability = async () => {
       try {
-        console.log(`[SlotSelector] Fetching availability for mentorId: ${mentorId}`);
         setLoadingAvailability(true);
         setAvailabilityError(null);
         const result = await getBackendAvailability(mentorId);
         const blocks = result?.blocks || [];
         setAvailabilityBlocks(blocks);
-        console.log(`[SlotSelector] Loaded ${blocks.length} availability block(s) for mentor ${mentorId}`, blocks);
       } catch (error) {
         console.error('[SlotSelector] Error loading availability:', error);
         setAvailabilityError('Não conseguimos carregar a disponibilidade do mentor. Tente novamente mais tarde.');
@@ -335,7 +333,6 @@ export function SlotSelector({ connected, mentorId, menteeId, connectionId, onBo
               mode="single"
               selected={selectedDate}
               onSelect={(d: Date | undefined) => { 
-                console.log('[SlotSelector] Selected date:', d);
                 setSelectedDate(d); 
                 resetSelection(); 
               }}

@@ -110,37 +110,30 @@ class MentorService {
     try {
       // Use the same endpoint as HomeLogged: /mentorship-connections/mentor/{profileId}/capacity
       const response = await apiFetch(`/mentorship-connections/mentor/${mentorProfileId}/capacity`);
-      console.log(`[fetchAvailability] Requesting /mentorship-connections/mentor/${mentorProfileId}/capacity, status: ${response.status}`);
       
       if (!response.ok) {
         console.warn(`Availability check failed for mentor profile ${mentorProfileId}: ${response.status}`, response.statusText);
         return true; // Default to true (has vagas) instead of false
       }
       const data = await response.json();
-      console.log(`[fetchAvailability] Response data for mentor profile ${mentorProfileId}:`, data);
       
       // Handle different possible response structures
       if (typeof data === 'boolean') {
-        console.log(`[fetchAvailability] Data is boolean: ${data}`);
         return data;
       }
       if (typeof data.isAvailable === 'boolean') {
-        console.log(`[fetchAvailability] Data.isAvailable: ${data.isAvailable}`);
         return data.isAvailable;
       }
       if (typeof data.available === 'boolean') {
-        console.log(`[fetchAvailability] Data.available: ${data.available}`);
         return data.available;
       }
       if (typeof data.hasCapacity === 'boolean') {
-        console.log(`[fetchAvailability] Data.hasCapacity: ${data.hasCapacity}`);
         return data.hasCapacity;
       }
       
       // Check if it's a capacity object with currentMentees and maxMentees
       if (typeof data.currentMentees === 'number' && typeof data.maxMentees === 'number') {
         const isAvail = data.currentMentees < data.maxMentees;
-        console.log(`[fetchAvailability] Capacity object: currentMentees=${data.currentMentees}, maxMentees=${data.maxMentees}, isAvailable=${isAvail}`);
         return isAvail;
       }
       
@@ -165,8 +158,6 @@ class MentorService {
         (p: any) => p.role?.toUpperCase() === 'MENTOR'
       );
 
-      console.log(`Processing user ${user.id} (${user.name}) with ${mentorProfiles.length} mentor profile(s)`);
-
       return await Promise.all(mentorProfiles.map(async (profile: any) => {
         // Executa as chamadas de imagem, skills e disponibilidade em paralelo
         // NOTE: fetchAvailability now receives profileId, not userId
@@ -190,8 +181,6 @@ class MentorService {
           avatarUrl: finalAvatar,
           bio: profile.bio
         };
-
-        console.log(`[MentorCard] ${mentorCard.name} (ID: ${profile.id}) - Available: ${mentorCard.isAvailable}`);
 
         return mentorCard;
       }));
@@ -236,9 +225,7 @@ class MentorService {
    * Busca detalhes completos de um mentor incluindo bio, rating e contagem de mentees
    */
   async getMentorDetails(profileId: number): Promise<MentorDetailData | null> {
-    try {
-      console.log(`[getMentorDetails] Starting fetch for profileId: ${profileId}`);
-      
+    try {    
       // Since there's no GET /profiles/{id} endpoint, fetch all profiles and find by ID
       const response = await apiFetch(`/profiles`);
       if (!response.ok) {
@@ -247,8 +234,7 @@ class MentorService {
       }
       
       const allProfiles = await response.json();
-      console.log(`[getMentorDetails] All profiles:`, allProfiles);
-      
+
       // Find the profile by ID
       const profileData = Array.isArray(allProfiles) 
         ? allProfiles.find((p: any) => p.id === profileId)
@@ -258,8 +244,6 @@ class MentorService {
         console.warn(`[getMentorDetails] Profile with ID ${profileId} not found in list`);
         return null;
       }
-      
-      console.log(`[getMentorDetails] Profile data received:`, profileData);
       
       // Extract userId - could be in nested user object or direct field
       const userId = profileData.user?.id || profileData.userId;
@@ -284,7 +268,6 @@ class MentorService {
             userData = fullUserData.user || fullUserData;
             userName = userData?.name || userName;
             userActive = userData?.status !== false;
-            console.log(`[getMentorDetails] User data received:`, userData);
           }
         } catch (userError) {
           console.warn(`[getMentorDetails] Error fetching user data:`, userError);
@@ -303,7 +286,6 @@ class MentorService {
               if (connectionsResponse.ok) {
                 const connections = await connectionsResponse.json();
                 menteeCount = Array.isArray(connections) ? connections.filter(c => c.status === 'APPROVED').length : 0;
-                console.log(`[getMentorDetails] Mentee count for ${userId}:`, menteeCount);
               }
             } catch (error) {
               console.warn(`[getMentorDetails] Error fetching mentee count:`, error);
@@ -341,8 +323,6 @@ class MentorService {
         menteeCount: menteeCount,
         avatarUrl: profileData.avatarUrl
       };
-      
-      console.log(`[getMentorDetails] Returning mentor data:`, result);
       return result;
     } catch (error) {
       console.error(`[getMentorDetails] Erro ao buscar detalhes do mentor ${profileId}:`, error);

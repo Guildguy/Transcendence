@@ -60,8 +60,6 @@ class MenteeService {
 
   async getMenteeDetails(profileId: number): Promise<MenteeDetailData | null> {
     try {
-      console.log(`[getMenteeDetails] Starting fetch for profileId: ${profileId}`);
-
       const usersResponse = await apiFetch(`/users`);
       if (!usersResponse.ok) {
         console.warn(`[getMenteeDetails] Could not fetch users: HTTP ${usersResponse.status}`);
@@ -69,8 +67,6 @@ class MenteeService {
       }
 
       const allUsers = await usersResponse.json();
-      console.log(`[getMenteeDetails] All users:`, allUsers);
-
       let profileData: any = null;
       let userId: number | null = null;
       let userName = 'Mentorado';
@@ -87,7 +83,6 @@ class MenteeService {
             profileData = menteeProfile;
             userId = fullUserData.user?.id || user.id;
             userName = fullUserData.user?.name || 'Mentorado';
-            console.log(`[getMenteeDetails] Found mentee profile for user ${userId}: ${userName}`);
             break;
           }
         }
@@ -98,8 +93,6 @@ class MenteeService {
         return null;
       }
 
-      console.log(`[getMenteeDetails] Profile data received:`, profileData);
-
       const userActive = true;
 
       let mentorCount = 0;
@@ -109,7 +102,6 @@ class MenteeService {
           if (connectionsResponse.ok) {
             const connections = await connectionsResponse.json();
             mentorCount = Array.isArray(connections) ? connections.filter(c => c.status === 'APPROVED').length : 0;
-            console.log(`[getMenteeDetails] Mentor count for ${userId}:`, mentorCount);
           }
         } catch (error) {
           console.warn(`[getMenteeDetails] Error fetching connections:`, error);
@@ -139,8 +131,6 @@ class MenteeService {
         mentorCount: mentorCount,
         avatarUrl: finalAvatar
       };
-
-      console.log(`[getMenteeDetails] Returning mentee data:`, result);
       return result;
     } catch (error) {
       console.error(`[getMenteeDetails] Erro ao buscar detalhes do mentorado ${profileId}:`, error);
@@ -155,9 +145,6 @@ class MenteeService {
     try {
       const response = await apiFetch(`/users`);
       const users = await response.json();
-
-      console.log(`[getAllMenteesForCards] Total users fetched: ${users.length}`);
-
       const allMentees: MenteeCardData[] = [];
 
       for (const user of users) {
@@ -199,8 +186,6 @@ class MenteeService {
           continue;
         }
       }
-
-      console.log(`[getAllMenteesForCards] Total MENTEE cards after filtering: ${allMentees.length}`);
       return allMentees;
     } catch (error) {
       console.error('Erro ao obter mentorados:', error);

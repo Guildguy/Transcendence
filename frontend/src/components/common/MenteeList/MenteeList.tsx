@@ -186,11 +186,9 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
         }
         
         const connections: ConnectionResponseDTO[] = await response.json();
-        console.log('[MenteeList] Raw connections from backend:', connections);
         
         // Filter only APPROVED connections
         const approvedConnections = connections.filter(conn => conn.status === 'APPROVED');
-        console.log('[MenteeList] Approved connections:', approvedConnections);
         
         // Fetch avatars for each mentee in parallel using just the profileId
         const activeMentees: Mentee[] = await Promise.all(
@@ -205,13 +203,10 @@ export function MenteeList({ mentorId, emptyStateMessage = 'Você não tem mento
             };
           })
         );
-        
-        
-        console.log('[MenteeList] Processed mentees with avatars:', activeMentees);
+
         setMentees(activeMentees);
         setError(null);
       } catch (err) {
-        console.error('Erro ao carregar mentorados:', err);
         setError(err instanceof Error ? err.message : 'Erro desconhecido');
         setMentees([]);
       } finally {

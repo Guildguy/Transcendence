@@ -154,7 +154,6 @@ export function SessionList({
           return;
         }
 
-        console.log(`[SessionList] Fetching sessions from: ${url}`);
         const response = await apiFetch(url);
         
         if (response.ok) {
