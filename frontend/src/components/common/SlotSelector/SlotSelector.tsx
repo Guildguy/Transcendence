@@ -328,9 +328,7 @@ export function SlotSelector({ connected, mentorId, menteeId, connectionId, onBo
           {/* Calendar - ALWAYS visible (regardless of loading state, errors, or availability blocks) */}
           <div className="slot-selector-calendar-container">
             {!loadingAvailability && !availabilityError && (
-              <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '1rem' }}>
-                Datas destacadas têm disponibilidade
-              </p>
+              <></>
             )}
             <BookingCalendar
               mentorId={mentorId}
