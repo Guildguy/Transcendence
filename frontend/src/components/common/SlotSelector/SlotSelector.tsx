@@ -448,6 +448,7 @@ export function SlotSelector({ connected, mentorId, menteeId, connectionId, onBo
               </div>
             )}
           </div>
+        )}
 
         {/* Confirmation Dialog */}
         <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
