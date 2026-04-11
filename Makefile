@@ -1,12 +1,14 @@
 DOCKER_SHELL		:= /bin/ash
 
 PROJECT_DIRECTORY	:= ./
+PROJECT_ENV_BRANCH	:= 171-feat-mock-and-env
+PROJECT_ENV_BASE_URL	:= https://raw.githubusercontent.com/RS3A/Transcendence/refs/heads/$(PROJECT_ENV_BRANCH)
 
-ifeq ($(shell find $(PROJECT_DIRECTORY) -name '.env' 2> /dev/null),)
-  $(error .env missing at $(PROJECT_DIRECTORY))
-else
-  include $(PROJECT_DIRECTORY)/.env
-endif
+ROOT_ENV_FILE		:= $(PROJECT_DIRECTORY)/.env
+PYTHON_ENV_FILE		:= $(PROJECT_DIRECTORY)/python-service/.env
+
+# Local env files can be absent in production and fetched by `prepare-files`.
+-include $(ROOT_ENV_FILE)
 
 QUIET				:= > /dev/null 2>&1
 
@@ -44,16 +46,48 @@ endif
 
 DOMAIN				:= ft-trans.42.fr
 
-all:
+all: prepare-files
 	@mkdir -p $(VOLUMES_DIRECTORY)
 # 	@chmod -R 777 ./data
 	@if ! grep -q "$(DOMAIN)" /etc/hosts 2>/dev/null; then \
 		echo "127.0.0.1 $(DOMAIN)" | sudo tee -a /etc/hosts > /dev/null; \
 		echo "$(DOMAIN) added to /etc/hosts"; \
 	fi
-	@make up SERVICES="$(SERVICES)" --no-print-directory
+	@BUILDKIT=1 $(DOCKER_COMPOSE) up -d $(SERVICES)
 
-up:
+prepare-files:
+	@if [ ! -f "$(ROOT_ENV_FILE)" ]; then \
+		echo "Downloading $(ROOT_ENV_FILE) from branch $(PROJECT_ENV_BRANCH)..."; \
+		curl -fsSL "$(PROJECT_ENV_BASE_URL)/.env" -o "$(ROOT_ENV_FILE)"; \
+	fi
+	@if [ ! -f "$(PYTHON_ENV_FILE)" ]; then \
+		echo "Downloading $(PYTHON_ENV_FILE) from branch $(PROJECT_ENV_BRANCH)..."; \
+		curl -fsSL "$(PROJECT_ENV_BASE_URL)/python-service/.env" -o "$(PYTHON_ENV_FILE)"; \
+	fi
+
+	@if [ ! -f "$(ROOT_ENV_FILE)" ] || [ ! -f "$(PYTHON_ENV_FILE)" ]; then \
+		echo "Error: env files are missing after download attempt."; \
+		exit 1; \
+	fi
+	@project_name=$$(grep -E '^COMPOSE_PROJECT_NAME=' "$(ROOT_ENV_FILE)" | head -n 1 | cut -d '=' -f2-); \
+	if [ -n "$$project_name" ]; then \
+		sanitized_name=$$(printf '%s' "$$project_name" | sed -E 's/^([a-z0-9][a-z0-9_-]*).*/\1/'); \
+		case "$$sanitized_name" in \
+			[a-z0-9][a-z0-9_-]*) ;; \
+			*) sanitized_name='transcendence' ;; \
+		esac; \
+		if [ "$$project_name" != "$$sanitized_name" ]; then \
+			echo "Fixing invalid COMPOSE_PROJECT_NAME ('$$project_name' -> '$$sanitized_name') in $(ROOT_ENV_FILE)"; \
+			sed -i "s/^COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=$$sanitized_name/" "$(ROOT_ENV_FILE)"; \
+		fi; \
+	fi
+
+up: prepare-files
+	@mkdir -p $(VOLUMES_DIRECTORY)
+	@if ! grep -q "$(DOMAIN)" /etc/hosts 2>/dev/null; then \
+		echo "127.0.0.1 $(DOMAIN)" | sudo tee -a /etc/hosts > /dev/null; \
+		echo "$(DOMAIN) added to /etc/hosts"; \
+	fi
 	@BUILDKIT=1 $(DOCKER_COMPOSE) up -d $(SERVICES)
 
 stop:
@@ -71,7 +105,7 @@ down:
 logs:
 	@$(DOCKER_COMPOSE) logs --follow $(SERVICES)
 
-build:
+build: prepare-files
 	@$(DOCKER_COMPOSE) build --no-cache $(SERVICES)
 
 ps:
@@ -97,4 +131,4 @@ re: fclean all
 prune:
 	@docker system prune
 
-.PHONY: all up stop start restart down logs build ps shell-% clean fclean re prune
+.PHONY: all prepare-files up stop start restart down logs build ps shell-% clean fclean re prune
