@@ -41,7 +41,6 @@ function BookSessionContent() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('none');
   const [connectionId, setConnectionId] = useState<number | null>(null);
   const [menteeProfileId, setMenteeProfileId] = useState<number | null>(null);
-  const [myMentorProfileId, setMyMentorProfileId] = useState<number | null>(null);
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
   const { setActiveChatId } = useChat();
   
@@ -150,16 +149,9 @@ function BookSessionContent() {
           // Find MENTORADO profile
           const mProfile = profiles.find(p => p.role?.toUpperCase() === 'MENTORADO');
           if (mProfile) {
-            console.log('[BookSessionWithMentor] Found Mentee Profile ID:', mProfile.id);
             setMenteeProfileId(mProfile.id);
           }
           
-          // Find MENTOR profile
-          const mentorP = profiles.find(p => p.role?.toUpperCase() === 'MENTOR');
-          if (mentorP) {
-            console.log('[BookSessionWithMentor] Found Mentor Profile ID:', mentorP.id);
-            setMyMentorProfileId(mentorP.id);
-          }
         }
       } catch (err) {
         console.error('[BookSessionWithMentor] Error loading user profiles:', err);
@@ -311,13 +303,23 @@ function BookSessionContent() {
     );
   }
 
+  console.log('[BookSessionContent] Rendering main content with selectedMentor:', selectedMentor);
+
   // Define Profile IDs for scheduling components
   // If I am the mentor viewing a mentee: mentorId is my Mentor Profile, menteeId is the target profile
   // If I am the mentee viewing a mentor: mentorId is target profile, menteeId is my Mentee Profile
-  // const schedulerMentorId = myMentorProfileId?.toString() : selectedMentor.profileId?.toString();
-  // const schedulerMenteeId = isMentorView ? selectedMentor.profileId?.toString() : menteeProfileId?.toString();
-  const schedulerMentorId = selectedMentor.profileId?.toString();
-  const schedulerMenteeId = menteeProfileId?.toString();
+  const schedulerMentorId = (selectedMentor.profileId || selectedMentor.id)?.toString();
+  const schedulerMenteeId = (menteeProfileId || myUserId)?.toString();
+  
+  console.log('[BookSessionContent] schedulerMentorId:', schedulerMentorId, 'schedulerMenteeId:', schedulerMenteeId, 'currentUserId:', currentUserId);
+
+  // Convert connection status to correct type if needed
+  const getConnectionStatusValue = (): 'none' | 'pending' | 'active' | 'loading' => {
+    if (typeof connectionStatus === 'boolean') {
+      return connectionStatus ? 'active' : 'none';
+    }
+    return connectionStatus;
+  };
 
   return (
     <div className="book-session-with-mentor">
@@ -333,22 +335,22 @@ function BookSessionContent() {
           bio={selectedMentor.bio}
           rating={selectedMentor.rating}
           menteeCount={selectedMentor.menteeCount}
-          connectionStatus={connectionStatus}
+          connectionStatus={getConnectionStatusValue()}
           onConnect={handleConnect}
           onLeave={handleLeave}
           onChat={selectedMentor.userId ? () => setActiveChatId(selectedMentor.userId!) : undefined}
         />
 
-      {selectedMentor.isAvailable && currentUserId && connectionStatus === 'active' && (
-        <div className="calendar-container">
-          <SlotSelector 
-            mentorId={schedulerMentorId || '0'}
-            menteeId={schedulerMenteeId || '0'}
-            connectionId={connectionId}
-            onBooked={() => setSessionRefreshKey(k => k + 1)}
-          />
-        </div>
-      )}
+      {/* Calendar always visible; booking controls only when connected */}
+      <div className="calendar-container">
+        <SlotSelector
+          connected={connectionStatus === 'active'} 
+          mentorId={schedulerMentorId || '0'}
+          menteeId={schedulerMenteeId || '0'}
+          connectionId={connectionId}
+          onBooked={() => setSessionRefreshKey(k => k + 1)}
+        />
+      </div>
 
       <div className="calendar-container">
         <SessionList 
