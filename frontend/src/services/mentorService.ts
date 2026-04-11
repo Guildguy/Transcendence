@@ -1,7 +1,5 @@
 import { apiFetch } from './api'; // Seu wrapper customizado
 
-const PYTHON_API_URL = "/api/python";
-
 export interface MentorCardData {
   id: number;
   name: string;
@@ -23,6 +21,29 @@ export interface MentorDetailData extends MentorCardData {
 }
 
 class MentorService {
+
+  private normalizeSkills(rawSkills: any[]): Array<{ id: string; name: string }> {
+    if (!Array.isArray(rawSkills)) return [];
+
+    const seen = new Set<string>();
+    const normalized: Array<{ id: string; name: string }> = [];
+
+    rawSkills.forEach((skill, index) => {
+      const name = (typeof skill === 'string' ? skill : skill?.name)?.trim();
+      if (!name) return;
+
+      const key = name.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      normalized.push({
+        id: `skill-${key}-${index}`,
+        name
+      });
+    });
+
+    return normalized;
+  }
 
   private async fetchMentorRating(profileId: number): Promise<number> {
     try {
@@ -66,16 +87,14 @@ class MentorService {
   }
 
   /**
-   * Busca as stacks/habilidades no backend Python (8000)
+   * Busca as stacks/habilidades via backend Java (proxy do Python)
    */
-  private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
+  private async fetchSkillsFromJava(profileId: string | number): Promise<string[]> {
     try {
-      // Como o Python costuma rodar em porta diferente, usamos o fetch nativo 
-      // ou garantimos que o apiFetch aceite URLs completas.
-      const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
+      const response = await apiFetch(`/profiles/${profileId}/stacks`);
       if (response.ok) {
         const data = await response.json();
-        return data.stacks || [];
+        return Array.isArray(data?.stacks) ? data.stacks : [];
       }
       return [];
     } catch {
@@ -147,7 +166,7 @@ class MentorService {
         // Executa as chamadas de imagem, skills e disponibilidade em paralelo
         const [finalAvatar, pythonStacks, isAvailable] = await Promise.all([
           this.fetchProfileImage(profile.id),
-          this.fetchSkillsFromPython(profile.id),
+          this.fetchSkillsFromJava(profile.id),
           this.fetchAvailability(user.id)
         ]);
 
@@ -296,9 +315,15 @@ class MentorService {
         }
       }
 
-      const [mentorRating, profileImage] = await Promise.all([
+      const [mentorRating, profileImage, pythonStacks] = await Promise.all([
         this.fetchMentorRating(profileData.id),
-        this.fetchProfileImage(profileData.id)
+        this.fetchProfileImage(profileData.id),
+        this.fetchSkillsFromJava(profileData.id)
+      ]);
+
+      const mergedSkills = this.normalizeSkills([
+        ...(Array.isArray(profileData.skills) ? profileData.skills : []),
+        ...pythonStacks
       ]);
 
       const result: MentorDetailData = {
@@ -307,10 +332,7 @@ class MentorService {
         profileId: profileData.id,
         name: userName,
         position: profileData.position || 'Pessoa Mentora',
-        skills: (profileData.skills || []).map((s: any, i: number) => ({
-          id: `skill-${profileData.id}-${i}`,
-          name: typeof s === 'string' ? s : s.name
-        })),
+        skills: mergedSkills,
         anosExperiencia: profileData.anosExperiencia || 0,
         isActive: userActive,
         isAvailable: true,
