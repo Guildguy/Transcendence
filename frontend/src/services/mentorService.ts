@@ -104,36 +104,50 @@ class MentorService {
 
   /**
    * Verifica a disponibilidade (capacidade) do mentor no Java
+   * @param mentorProfileId - The profile ID of the mentor (not user ID)
    */
-  private async fetchAvailability(mentorUserId: number): Promise<boolean> {
+  private async fetchAvailability(mentorProfileId: number): Promise<boolean> {
     try {
-      // Endpoint que mapeia para o MentorshipConnectionService.getMentorCapacity
-      const response = await apiFetch(`/connections/capacity/${mentorUserId}`);
+      // Use the same endpoint as HomeLogged: /mentorship-connections/mentor/{profileId}/capacity
+      const response = await apiFetch(`/mentorship-connections/mentor/${mentorProfileId}/capacity`);
+      console.log(`[fetchAvailability] Requesting /mentorship-connections/mentor/${mentorProfileId}/capacity, status: ${response.status}`);
+      
       if (!response.ok) {
-        console.warn(`Availability check failed for mentor ${mentorUserId}: ${response.status}`, response.statusText);
+        console.warn(`Availability check failed for mentor profile ${mentorProfileId}: ${response.status}`, response.statusText);
         return true; // Default to true (has vagas) instead of false
       }
       const data = await response.json();
-      console.log(`Availability data for mentor ${mentorUserId}:`, data);
+      console.log(`[fetchAvailability] Response data for mentor profile ${mentorProfileId}:`, data);
       
       // Handle different possible response structures
       if (typeof data === 'boolean') {
+        console.log(`[fetchAvailability] Data is boolean: ${data}`);
         return data;
       }
       if (typeof data.isAvailable === 'boolean') {
+        console.log(`[fetchAvailability] Data.isAvailable: ${data.isAvailable}`);
         return data.isAvailable;
       }
       if (typeof data.available === 'boolean') {
+        console.log(`[fetchAvailability] Data.available: ${data.available}`);
         return data.available;
       }
       if (typeof data.hasCapacity === 'boolean') {
+        console.log(`[fetchAvailability] Data.hasCapacity: ${data.hasCapacity}`);
         return data.hasCapacity;
       }
       
-      console.warn(`Unexpected availability response structure for mentor ${mentorUserId}:`, data);
+      // Check if it's a capacity object with currentMentees and maxMentees
+      if (typeof data.currentMentees === 'number' && typeof data.maxMentees === 'number') {
+        const isAvail = data.currentMentees < data.maxMentees;
+        console.log(`[fetchAvailability] Capacity object: currentMentees=${data.currentMentees}, maxMentees=${data.maxMentees}, isAvailable=${isAvail}`);
+        return isAvail;
+      }
+      
+      console.warn(`Unexpected availability response structure for mentor profile ${mentorProfileId}:`, data);
       return true; // Default to true if structure is unexpected
     } catch (error) {
-      console.error(`Error fetching availability for mentor ${mentorUserId}:`, error);
+      console.error(`Error fetching availability for mentor profile ${mentorProfileId}:`, error);
       return true; // Default to true (has vagas) on error
     }
   }
@@ -164,10 +178,11 @@ class MentorService {
 
       return await Promise.all(mentorProfiles.map(async (profile: any) => {
         // Executa as chamadas de imagem, skills e disponibilidade em paralelo
+        // NOTE: fetchAvailability now receives profileId, not userId
         const [finalAvatar, pythonStacks, isAvailable] = await Promise.all([
           this.fetchProfileImage(profile.id),
           this.fetchSkillsFromJava(profile.id),
-          this.fetchAvailability(user.id)
+          this.fetchAvailability(profile.id) // CHANGED: Pass profileId instead of userId
         ]);
 
         const mentorCard = {
