@@ -1,16 +1,20 @@
 package com.ft.trans.service;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import com.ft.trans.dto.ProfileImageDTO;
+import com.ft.trans.dto.ProfileStacksDTO;
+import com.ft.trans.dto.ProfileStacksResponseDTO;
 import com.ft.trans.dto.UpdateProfileDTO;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.repository.ProfileRepository;
@@ -172,6 +176,107 @@ public class ProfileService {
 
 		} catch (Exception e) {
 			result.addError("global", "Ocorreu um erro ao buscar a imagem do perfil: " + e.getMessage());
+			return new Result(null, result);
+		}
+	}
+
+	public Result getProfileStacks(Long profileId)
+	{
+		ValidationResult result = new ValidationResult();
+
+		if (profileId == null) {
+			result.addError("profileId", "ID do perfil é obrigatório.");
+			return new Result(null, result);
+		}
+
+		try {
+			Profile profile = this.profileRepository.findById(profileId).orElse(null);
+			if (profile == null) {
+				result.addError("Profile", "Perfil não encontrado.");
+				return new Result(null, result);
+			}
+
+			Map<?, ?> pythonResponse = restTemplate.getForObject(
+				PYTHON_SERVICE_URL + "/profile/" + profileId,
+				Map.class
+			);
+
+			ProfileStacksResponseDTO response = new ProfileStacksResponseDTO();
+			response.profile_id = profileId.toString();
+			List<String> stacks = new ArrayList<>();
+
+			if (pythonResponse != null) {
+				Object rawStacks = pythonResponse.get("stacks");
+				if (rawStacks instanceof List<?> list) {
+					for (Object item : list) {
+						if (item == null) {
+							continue;
+						}
+						String value = String.valueOf(item).trim();
+						if (!value.isBlank()) {
+							stacks.add(value);
+						}
+					}
+				}
+			}
+
+			response.stacks = stacks;
+
+			return new Result(response, result);
+		} catch (HttpClientErrorException.NotFound e) {
+			ProfileStacksResponseDTO empty = new ProfileStacksResponseDTO();
+			empty.profile_id = profileId.toString();
+			empty.stacks = List.of();
+			return new Result(empty, result);
+		} catch (Exception e) {
+			result.addError("global", "Ocorreu um erro ao buscar as skills do perfil: " + e.getMessage());
+			return new Result(null, result);
+		}
+	}
+
+	public Result saveProfileStacks(Long profileId, ProfileStacksDTO dto)
+	{
+		ValidationResult result = new ValidationResult();
+
+		if (profileId == null) {
+			result.addError("profileId", "ID do perfil é obrigatório.");
+			return new Result(null, result);
+		}
+
+		if (dto == null || dto.stacks == null) {
+			result.addError("stacks", "Lista de skills é obrigatória.");
+			return new Result(null, result);
+		}
+
+		try {
+			Profile profile = this.profileRepository.findById(profileId).orElse(null);
+			if (profile == null) {
+				result.addError("Profile", "Perfil não encontrado.");
+				return new Result(null, result);
+			}
+
+			Map<String, Object> payload = new HashMap<>();
+			payload.put("profile_id", profileId.toString());
+			payload.put("stacks", dto.stacks);
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+			String pythonResponse = restTemplate.postForObject(
+				PYTHON_SERVICE_URL + "/profile",
+				entity,
+				String.class
+			);
+
+			if (pythonResponse == null || pythonResponse.isBlank()) {
+				result.addError("global", "Erro ao salvar skills no serviço Python.");
+				return new Result(null, result);
+			}
+
+			return getProfileStacks(profileId);
+		} catch (Exception e) {
+			result.addError("global", "Ocorreu um erro ao salvar as skills do perfil: " + e.getMessage());
 			return new Result(null, result);
 		}
 	}

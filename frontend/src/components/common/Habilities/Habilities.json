@@ -249,6 +249,7 @@
     { "id": "sk_247", "name": "Eslint" },
     { "id": "sk_248", "name": "Prettier" },
     { "id": "sk_249", "name": "Storybook" },
-    { "id": "sk_250", "name": "Lighthouse" }
+    { "id": "sk_250", "name": "Lighthouse" },
+    { "id": "sk_251", "name": "Html" }
   ]
 }
