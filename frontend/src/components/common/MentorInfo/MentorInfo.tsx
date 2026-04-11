@@ -68,8 +68,6 @@ const MentorCard: React.FC<MentorCardProps> = ({
 
     setIsSubmitting(true);
     try {
-      console.log(`Submitting rating for mentor ${mentorId}: ${selectedRating}`);
-      
       const response = await apiFetch(`/mentors/${mentorId}/rating`, {
         method: 'POST',
         body: JSON.stringify({ rating: selectedRating, menteeProfileId })
@@ -80,7 +78,6 @@ const MentorCard: React.FC<MentorCardProps> = ({
       }
       
       const data = await response.json();
-      console.log('Rating submission response:', data);
       
       // Update with backend summary (integer average), fallback to selected value.
       const resolvedRating = typeof data?.averageRating === 'number' ? data.averageRating : selectedRating;

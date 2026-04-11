@@ -114,7 +114,6 @@ useEffect(() => {
         // Find MENTOR profile
         const mentorProfile = profiles.find(p => p.role?.toUpperCase() === 'MENTOR');
         if (mentorProfile) {
-          console.log('[ManageSessionWithMentee] Found Mentor Profile ID:', mentorProfile.id);
           setMentorProfileId(mentorProfile.id);
         }
       }

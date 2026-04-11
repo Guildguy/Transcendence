@@ -38,13 +38,10 @@ export async function apiFetch(
   const { skipAuth = false, ...fetchOptions } = options;
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
 
-  console.log(`>>> Chamando API: ${fetchOptions.method || 'GET'} ${url}`); // LOG DE TESTE
-
   const headers = new Headers(fetchOptions.headers || {});
 
   if (!skipAuth) {
     const token = getAuthToken();
-    console.log(">>> Token recuperado:", token ? "Token encontrado" : "TOKEN VAZIO!"); 
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -53,9 +50,6 @@ export async function apiFetch(
   if (fetchOptions.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
-
-  // Log dos headers finais antes do fetch
-  console.log(">>> Headers enviados:", Object.fromEntries(headers.entries()));
 
   return fetch(url, {
     ...fetchOptions,

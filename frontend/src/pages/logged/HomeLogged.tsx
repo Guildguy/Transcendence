@@ -61,18 +61,14 @@ function HomeLogged() {
       // Carrega solicitações pendentes — agora usa o profileId do mentor
       if (resolvedProfileId) {
         try {
-          console.log(`[HomeLogged] Fetching pending requests for Mentor Profile ID: ${resolvedProfileId}`);
           const incomingRes = await apiFetch(`/mentorship-connections/mentor/${resolvedProfileId}/pending`)
           if (incomingRes.ok) {
             const data: any[] = await incomingRes.json()
-            console.log('[HomeLogged] Raw pending requests data:', data);
             
             if (Array.isArray(data) && data.length > 0) {
               // Fetch details and avatars for each mentee
               const requestsWithDetails = await Promise.all(
                 data.map(async (m) => {
-                  console.log(`[HomeLogged] Processing request ID: ${m.id}, menteeProfileId: ${m.menteeProfileId}`);
-                  
                   let menteeName = `Mentorado #${m.menteeProfileId}`;
                   let menteeAvatar: string | undefined = undefined;
 
@@ -88,30 +84,24 @@ function HomeLogged() {
                   // Fetch mentee profile details using menteeProfileId
                   try {
                     const profileRes = await apiFetch(`/profiles/${m.menteeProfileId}`);
-                    console.log(`[HomeLogged] Profile response status: ${profileRes.status}`);
                     
                     if (profileRes.ok) {
                       const profileData = await profileRes.json();
-                      console.log(`[HomeLogged] Mentee profile data:`, profileData);
                       
                       // Try to get name from profile or user
                       if (profileData.user?.name) {
                         menteeName = profileData.user.name;
-                        console.log(`[HomeLogged] Got mentee name from profile user: ${menteeName}`);
                       } else if (profileData.name) {
                         menteeName = profileData.name;
-                        console.log(`[HomeLogged] Got mentee name from profile: ${menteeName}`);
                       }
                       
                       // Fetch avatar image using the menteeProfileId directly
                       try {
                         const imageRes = await apiFetch(`/profiles/image/${m.menteeProfileId}`);
-                        console.log(`[HomeLogged] Image response status: ${imageRes.status}`);
                         
                         if (imageRes.ok) {
                           const imageData = await imageRes.json();
-                          console.log(`[HomeLogged] Image data:`, imageData);
-                          
+
                           if (imageData?.avatarUrl) {
                             try {
                               const parsed = JSON.parse(imageData.avatarUrl);
@@ -119,13 +109,11 @@ function HomeLogged() {
                               menteeAvatar = avatarUrl.startsWith('data:') 
                                 ? avatarUrl 
                                 : `data:image/png;base64,${avatarUrl}`;
-                              console.log(`[HomeLogged] Avatar set for mentee profile ${m.menteeProfileId}`);
                             } catch {
                               const avatarUrl = String(imageData.avatarUrl);
                               menteeAvatar = avatarUrl.startsWith('data:') 
                                 ? avatarUrl 
                                 : `data:image/png;base64,${avatarUrl}`;
-                              console.log(`[HomeLogged] Avatar set (non-JSON) for mentee profile ${m.menteeProfileId}`);
                             }
                           }
                         }
@@ -144,14 +132,11 @@ function HomeLogged() {
                     name: menteeName,
                     avatar: menteeAvatar,
                   };
-                  console.log(`[HomeLogged] Final request object:`, finalRequest);
                   return finalRequest;
                 })
               );
-              console.log('[HomeLogged] All requests with details:', requestsWithDetails);
               setRequests(requestsWithDetails);
             } else {
-              console.log('[HomeLogged] No pending requests found');
               setRequests([])
             }
           } else {
@@ -163,7 +148,6 @@ function HomeLogged() {
           setRequests([])
         }
       } else {
-        console.log('[HomeLogged] User is not a mentor or mentorProfileId not resolved yet');
         setRequests([])
       }
 
@@ -197,34 +181,27 @@ function HomeLogged() {
   const handleAccept = async (id: number) => {
     const userId = localStorage.getItem('userId')
     if (!userId) return
-
-    console.log(`[HomeLogged] Accepting connection ID: ${id} for mentor user: ${userId}`);
     setRequests(prev => prev.filter(r => r.id !== id))
     try {
       const res = await apiFetch(`/mentorship-connections/${id}/accept?mentorUserId=${userId}`, {
         method: 'PATCH',
       })
       if (res.ok) {
-        console.log('[HomeLogged] Connection accepted successfully');
-
         // Verificar capacidade do mentor após aceitar
         if (mentorProfileId) {
           try {
             const capacityRes = await apiFetch(`/mentorship-connections/mentor/${mentorProfileId}/capacity`)
             if (capacityRes.ok) {
               const capacity = await capacityRes.json()
-              console.log('[HomeLogged] Mentor capacity after accepting:', capacity);
 
               // Se mentor atingiu a capacidade máxima, desativar o mentor
               if (capacity.currentMentees >= capacity.maxMentees) {
-                console.log('[HomeLogged] Mentor reached max capacity, deactivating...');
                 const deactivateRes = await apiFetch(`/profiles/${mentorProfileId}`, {
                   method: 'PUT',
                   body: JSON.stringify({ isActive: false })
                 })
 
                 if (deactivateRes.ok) {
-                  console.log('[HomeLogged] Mentor successfully deactivated');
                   alert(`Parabéns! Você atingiu a capacidade máxima de ${capacity.maxMentees} mentorados. Seu perfil foi desativado automaticamente.`);
                 } else {
                   console.error('[HomeLogged] Failed to deactivate mentor:', deactivateRes.status);
@@ -246,8 +223,6 @@ function HomeLogged() {
   const handleDecline = async (id: number) => {
     const userId = localStorage.getItem('userId')
     if (!userId) return
-
-    console.log(`[HomeLogged] Rejecting connection ID: ${id} for mentor user: ${userId}`);
     setRequests(prev => prev.filter(r => r.id !== id))
     try {
       const res = await apiFetch(`/mentorship-connections/${id}/reject?mentorUserId=${userId}`, {

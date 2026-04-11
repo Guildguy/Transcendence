@@ -303,15 +303,11 @@ function BookSessionContent() {
     );
   }
 
-  console.log('[BookSessionContent] Rendering main content with selectedMentor:', selectedMentor);
-
   // Define Profile IDs for scheduling components
   // If I am the mentor viewing a mentee: mentorId is my Mentor Profile, menteeId is the target profile
   // If I am the mentee viewing a mentor: mentorId is target profile, menteeId is my Mentee Profile
   const schedulerMentorId = (selectedMentor.profileId || selectedMentor.id)?.toString();
   const schedulerMenteeId = (menteeProfileId || myUserId)?.toString();
-  
-  console.log('[BookSessionContent] schedulerMentorId:', schedulerMentorId, 'schedulerMenteeId:', schedulerMenteeId, 'currentUserId:', currentUserId);
 
   // Convert connection status to correct type if needed
   const getConnectionStatusValue = (): 'none' | 'pending' | 'active' | 'loading' => {
