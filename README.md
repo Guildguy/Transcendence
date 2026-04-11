@@ -44,7 +44,6 @@ A real-time mentorship platform where mentors and mentees connect, schedule sess
 - Achievement and XP/level progression system
 - Profile image upload via dedicated Python microservice
 - Google OAuth 2.0 authentication
-- Password recovery via email
 - Privacy Policy and Terms of Service pages
 - Full HTTPS with self-signed certificates via Nginx reverse proxy
 - Infrastructure monitoring with 18 alerting rules across 5 groups
@@ -58,7 +57,7 @@ A real-time mentorship platform where mentors and mentees connect, schedule sess
 | **Giovanna** | `gigardin` | Product Owner / UX Designer / Backend Developer | UX/UI design, feature prioritization, wireframes, user flows, project coordination, documentation |
 | **Adedayo** | `asanni` | Frontend Developer | React components, pages, frontend services, UI implementation, chat interface |
 | **Letícia** | `lsampiet` | Frontend Developer | React components, design system, responsive layouts, gamification UI, accessibility |
-| **Marcelo** | `madias-m` | Backend Developer | Spring Boot API, JPA entities, business logic, WebSocket chat, Google Calendar/Meet integration |
+| **Marcelo** | `madias-m` | Backend Developer | Spring Boot API, JPA entities, business logic
 | **Fábio** | `fleite-j` | Backend Developer / DevOps | Python microservice, MongoDB integration, Prometheus/Grafana monitoring, Docker infrastructure |
 
 ---
@@ -113,7 +112,6 @@ A real-time mentorship platform where mentors and mentees connect, schedule sess
 | **Passay** | 1.6.4 | Password policy validation |
 | **Google Calendar API** | v3-rev20260225 | Google Meet link + Calendar event creation |
 | **Google Auth** | 1.23.0 | OAuth2 credential management |
-| **Spring Boot Mail** | 3.5.3 | Email sending (password recovery) |
 
 **Justification**: Spring Boot was chosen for its enterprise-grade features, built-in security, JPA/Hibernate ORM, WebSocket support, and seamless Actuator integration for monitoring. Java 21 provides modern language features and long-term support.
 
@@ -285,29 +283,28 @@ mentorship_connection (1) ──── (N) mentorship_session
 |---|---------|-------------|----------------|
 | 1 | **User Registration & Login** | Email/password auth with BCrypt hashing, input validation (Passay), JWT tokens | Marcelo, Fábio |
 | 2 | **Google OAuth 2.0** | Sign in with Google account, token validation | Marcelo |
-| 3 | **Password Recovery** | "Forgot password" flow with email token (Mailtrap SMTP) | Marcelo |
-| 4 | **User Profile Management** | Edit name, bio, position, social links (LinkedIn, GitHub, Instagram) | Adedayo, Letícia, Marcelo |
-| 5 | **Profile Avatar Upload** | Image upload and retrieval via Python microservice + MongoDB | Marcelo, Fábio, Adedayo |
-| 6 | **Mentor/Mentee Role System** | Users create profiles as MENTOR or MENTORADO with role-specific views | Marcelo, Giovanna |
-| 7 | **Mentorship Connection Flow** | Request → Approve/Reject → End connection lifecycle with status tracking (PENDING, APPROVED, CANCELLED, ENDED) | Giovanna, Letícia |
-| 8 | **Mentor Availability Management** | Configure weekly availability slots (day, start/end time, duration) | Fábio, Letícia |
-| 9 | **Session Scheduling** | Book mentoring sessions from available slots with date/time selection | Giovanna, Letícia |
-| 10 | **Google Meet Integration** | Automatic Google Meet link generation when scheduling sessions via Google Calendar API | Giovanna |
-| 11 | **Recurring Sessions** | Support for recurrent mentoring sessions with group tracking | Giovanna, Letícia |
-| 12 | **Mentor Rating System** | Mentees can rate their mentors (one rating per pair) | Fábio, Letícia |
-| 13 | **Mentor Dashboard** | Dashboard for mentors to manage their mentees, sessions and availability | Letícia, Giovanna |
-| 14 | **Real-time Chat** | WebSocket/STOMP-based messaging between users with read status and history persistence | Giovanna, Adedayo |
-| 15 | **Online User Status** | Real-time tracking of online/offline users via WebSocket connection | Giovanna, Adedayo |
-| 16 | **Gamification — XP & Levels** | Earn XP for actions (sessions, logins, connections); level up with progression | Fábio, Letícia |
-| 17 | **Gamification — Achievements** | Unlock achievements for milestones; persistent tracking with visual feedback | Fábio, Letícia |
-| 18 | **Gamification — Streaks** | Daily login streak tracking with best streak record | Fábio |
-| 19 | **Custom Design System** | 27+ reusable components: Button, IconButton, Badge, Avatar, Dialog, Toast, Select, Switch, ProgressBar, Rating, InputGroup, Label, MentorCard, MenteeInfo, CalendarCard, TimeSlot, etc. | Letícia, Adedayo, Giovanna |
-| 20 | **Responsive Layout** | Sidebar navigation, header, footer — responsive across devices | Letícia, Adedayo |
-| 21 | **Privacy Policy & Terms of Service** | Legal pages with relevant content accessible from footer links | Giovanna |
-| 22 | **Prometheus Monitoring** | 7 scrape targets collecting metrics from all services and infrastructure | Giovanna |
-| 23 | **Grafana Dashboards** | 3 pre-built dashboards: Application Overview, Infrastructure, JVM Metrics | Giovanna |
-| 24 | **Alerting Rules** | 18 alerts across 5 groups (services, Spring Boot, PostgreSQL, MongoDB, infrastructure) | Giovanna |
-| 25 | **Notification System** | Toast notifications for connection requests, session bookings, achievements, and CRUD operations | Letícia, Adedayo |
+| 3 | **User Profile Management** | Edit name, bio, position, social links (LinkedIn, GitHub, Instagram) | Adedayo, Letícia, Marcelo |
+| 4 | **Profile Avatar Upload** | Image upload and retrieval via Python microservice + MongoDB | Marcelo, Fábio, Adedayo |
+| 5 | **Mentor/Mentee Role System** | Users create profiles as MENTOR or MENTORADO with role-specific views | Marcelo, Giovanna |
+| 6 | **Mentorship Connection Flow** | Request → Approve/Reject → End connection lifecycle with status tracking (PENDING, APPROVED, CANCELLED, ENDED) | Giovanna, Letícia |
+| 7 | **Mentor Availability Management** | Configure weekly availability slots (day, start/end time, duration) | Fábio, Letícia |
+| 8 | **Session Scheduling** | Book mentoring sessions from available slots with date/time selection | Giovanna, Letícia |
+| 9 | **Google Meet Integration** | Automatic Google Meet link generation when scheduling sessions via Google Calendar API | Giovanna |
+| 10 | **Recurring Sessions** | Support for recurrent mentoring sessions with group tracking | Giovanna, Letícia |
+| 11 | **Mentor Rating System** | Mentees can rate their mentors (one rating per pair) | Fábio, Letícia |
+| 12 | **Mentor Dashboard** | Dashboard for mentors to manage their mentees, sessions and availability | Letícia, Giovanna |
+| 13 | **Real-time Chat** | WebSocket/STOMP-based messaging between users with read status and history persistence | Giovanna, Adedayo |
+| 14 | **Online User Status** | Real-time tracking of online/offline users via WebSocket connection | Giovanna, Adedayo |
+| 15 | **Gamification — XP & Levels** | Earn XP for actions (sessions, logins, connections); level up with progression | Fábio, Letícia |
+| 16 | **Gamification — Achievements** | Unlock achievements for milestones; persistent tracking with visual feedback | Fábio, Letícia |
+| 17 | **Gamification — Streaks** | Daily login streak tracking with best streak record | Fábio |
+| 18 | **Custom Design System** | 27+ reusable components: Button, IconButton, Badge, Avatar, Dialog, Toast, Select, Switch, ProgressBar, Rating, InputGroup, Label, MentorCard, MenteeInfo, CalendarCard, TimeSlot, etc. | Letícia, Adedayo, Giovanna |
+| 19 | **Responsive Layout** | Sidebar navigation, header, footer — responsive across devices | Letícia, Adedayo |
+| 20 | **Privacy Policy & Terms of Service** | Legal pages with relevant content accessible from footer links | Giovanna |
+| 21 | **Prometheus Monitoring** | 7 scrape targets collecting metrics from all services and infrastructure | Giovanna |
+| 22 | **Grafana Dashboards** | 3 pre-built dashboards: Application Overview, Infrastructure, JVM Metrics | Giovanna |
+| 23 | **Alerting Rules** | 18 alerts across 5 groups (services, Spring Boot, PostgreSQL, MongoDB, infrastructure) | Giovanna |
+| 24 | **Notification System** | Toast notifications for connection requests, session bookings, achievements, and CRUD operations | Letícia, Adedayo |
 
 ---
 
@@ -321,9 +318,48 @@ mentorship_connection (1) ──── (N) mentorship_session
 | 2 | **Standard User Management & Authentication** | 2 | Profile updates, avatar upload, friends/online status, profile page | Email/password auth with BCrypt + Passay validation, JWT tokens, profile CRUD, avatar upload via Python microservice to MongoDB, online status via WebSocket registry | Marcelo, Fábio, Adedayo, Letícia |
 | 3 | **Monitoring with Prometheus & Grafana** | 2 | Prometheus metrics, exporters, Grafana dashboards, alerting rules, secure access | Prometheus scrapes 7 targets (Spring Boot Actuator, FastAPI, PostgreSQL, MongoDB, Node, cAdvisor, self); 3 Grafana dashboards provisioned automatically; 18 alerting rules across 5 groups; Grafana secured with admin credentials from `.env` | Giovanna |
 | 4 | **Backend as Microservices** | 2 | Loosely-coupled services with clear interfaces, REST APIs, single responsibility | Spring Boot API (core business logic, auth, chat, scheduling) + FastAPI Python service (profile images, skill stacks) + Nginx reverse proxy routing; each service has its own database (PostgreSQL / MongoDB); inter-service communication via REST through Nginx | Marcelo, Fábio |
-| 5 | **Mentorship Session Scheduling System** *(Module of Choice)* | 2 | Automated scheduling with Google Meet integration, calendar sync, recurring sessions | Mentor availability slot configuration (day/time/duration); session booking with conflict detection; automatic Google Meet link generation via Google Calendar API; recurring session support with group tracking; session status management (SCHEDULED → COMPLETED / NO_SHOW / CANCELLED); email notifications. This module demonstrates significant technical complexity through external API integration (Google Calendar + Meet), recurrence logic, and real-time availability management. | Giovanna, Fábio, Letícia |
+| 5 | **Mentorship Session Scheduling System** *(Module of Choice)* | 2 | Automated scheduling with Google Meet integration, calendar sync, recurring sessions, availability management, and full session lifecycle | See dedicated section below. | Giovanna, Fábio, Letícia |
 
 **Major Total: 5 × 2 = 10 points**
+
+---
+
+### Module of Choice — Mentorship Session Scheduling System
+
+#### Why we chose this module
+
+The core purpose of our platform is to connect 42 school students with experienced mentors. Without a reliable scheduling system, that connection has no structured outcome — users could chat but never commit to a session. We designed a complete session lifecycle from scratch: mentors define their availability, mentees pick a slot, the system validates conflicts, generates a Google Meet link, and syncs everything to Google Calendar automatically. This module is the backbone that turns informal mentor-mentee connections into structured, recurring professional mentorship sessions.
+
+#### Technical challenges addressed
+
+| Challenge | Solution |
+|-----------|----------|
+| **External API integration** | We integrated the Google Calendar API v3 with OAuth 2.0 service-account credentials to create calendar events and generate Google Meet conference links programmatically. This required handling token refresh, scopes, and serialised credential management in a containerised environment. |
+| **Conflict detection** | Each scheduling request is validated against the mentor's `mentor_availability` table (day-of-week, start/end time, slot duration) and the existing `mentorship_session` records. A unique constraint on `(connection_id, scheduled_date)` at the database level enforces integrity. |
+| **Recurrence logic** | Recurring sessions are not simple cron jobs — each occurrence is a distinct `mentorship_session` row sharing a `recurrenceGroupId` UUID and an incrementing `recurrenceIndex`. This allows individual cancellation without affecting sibling sessions, and full group retrieval for reschedule flows. |
+| **Session state machine** | Sessions transition through a well-defined state machine: `SCHEDULED → COMPLETED`, `SCHEDULED → NO_SHOW`, `SCHEDULED → CANCELLED`. The backend enforces valid transitions and triggers gamification events (XP, achievements, streak updates) on completion. |
+| **Availability slot resolution** | The frontend booking calendar resolves displayable slots by cross-referencing the mentor's `mentor_availability` entries against already-booked sessions in real time, preventing double-booking on the UI layer before the request even hits the backend. |
+| **Duration-aware scheduling** | Sessions carry a configurable `durationMinutes` field (60–240 min). The slot picker aligns selections to the mentor's declared slot duration so sessions never overlap with each other or bleed outside the declared availability window. |
+
+#### Value added to the project
+
+- **Automation**: Mentors never need to manually share a meeting link — the system creates and attaches a unique Google Meet URL to every session automatically.
+- **Calendar-native UX**: Sessions appear in both the mentor's and mentee's Google Calendars, integrating with existing workflows outside the platform.
+- **Accountability**: The `NO_SHOW` and `CANCELLED` statuses feed into the gamification system: a completed session awards XP to both parties; a no-show triggers a mentor notes prompt and logs the absence.
+- **Scalability**: The recurrence model allows a single booking action to create weeks of sessions, dramatically reducing friction for ongoing mentorship relationships.
+- **Observability**: Every session state change is logged and exposed via Spring Actuator metrics, which are visible in the Grafana dashboards.
+
+#### Why it qualifies as a Major Module
+
+This module goes well beyond a CRUD endpoint:
+
+1. **External service dependency** — integrates with a third-party API (Google Calendar + Meet) requiring OAuth 2.0, credential lifecycle management, and error handling for quota limits and token expiry.
+2. **Domain complexity** — implements a multi-step availability model (weekly slots → booked sessions → conflict resolution) with database-level integrity constraints.
+3. **State machine** — enforces a non-trivial lifecycle with side effects (gamification triggers, Google Calendar mutations) on each transition.
+4. **Recurrence engine** — custom recurrence logic (weekly intervals, group IDs, individual cancellation) built without a third-party scheduling library.
+5. **Full-stack scope** — spans the booking calendar React component, the availability service, the session service, the Google API wrapper, PostgreSQL schema, and Grafana observability. Every layer of the stack is involved.
+
+This is not a trivial feature. It required design across multiple system layers, coordination of two external services, and custom business logic that cannot be replaced by a library or framework default.
 
 ### Minor Modules (1 point each)
 
@@ -356,13 +392,65 @@ mentorship_connection (1) ──── (N) mentorship_session
 
 ### Giovanna (`gigardin`) — Product Owner / UX Designer / Backend Developer
 
+- **Mentorship Connection Flow** (#6) — connection request lifecycle (PENDING → APPROVED → ENDED), accept/reject UI, capacity enforcement
+- **Session Scheduling** (#8) — booking calendar UI, slot resolution against availability, session creation flow
+- **Google Meet Integration** (#9) — Google Calendar API wrapper, OAuth 2.0 credential management, automatic Meet link generation
+- **Recurring Sessions** (#10) — recurrence group model, UI for recurring booking, individual cancellation support
+- **Mentor Dashboard** (#12) — mentor overview page: active mentees, upcoming sessions, session management actions
+- **Real-time Chat** (#13) — WebSocket/STOMP configuration, chat UI architecture, ChatContext and message persistence coordination
+- **Online User Status** (#14) — WebSocket presence registry, online/offline status propagation to frontend
+- **Mentor/Mentee Role System** (#5) — role-based profile creation, role-aware UI routing and view differentiation
+- **Prometheus Monitoring** (#21) — Prometheus configuration, 7 scrape targets, alerting rules (18 rules across 5 groups)
+- **Grafana Dashboards** (#22 & #23) — 3 pre-built dashboards (Application Overview, Infrastructure, JVM Metrics), provisioning, alerting
+- **Privacy Policy & Terms of Service** (#20)
+- **Home logged weekly schedule** — day/week toggle on the agenda card, weekly session grouping by day with frontend-only filtering
+
 ### Adedayo (`asanni`) — Frontend Developer
+
+- **Real-time Chat** (#13) — ChatWindow, Chatbar, ChatContext components, message list, send flow
+- **Online User Status** (#14) — online indicator UI in chat and user lists
+- **User Profile Management** (#3) — profile edit page components and service integration
+- **Profile Avatar Upload** (#4) — avatar upload UI, preview, and api integration
+- **Custom Design System** (#18) — Button, IconButton, Avatar, Badge, InputGroup, and related components
+- **Notification System** (#24) — toast integration across CRUD operations and chat events
+- **Responsive Layout** (#19) — sidebar navigation, header layout, mobile responsiveness
 
 ### Letícia (`lsampiet`) — Frontend Developer
 
+- **Custom Design System** (#18) — CalendarCard, TimeSlot, MentorCard, MenteeInfo, ProgressBar, Rating, Dialog, Select, Switch, Label, BookingCalendar, DailySchedule, and related components
+- **Mentor Availability Management** (#7) — availability slot configuration UI, day/time picker
+- **Session Scheduling** (#8) — booking flow UI, slot display calendar, session confirmation
+- **Recurring Sessions** (#10) — recurrence toggle and UI feedback in booking form
+- **Mentor Dashboard** (#12) — layout, mentee list, session cards
+- **Mentor Rating System** (#11) — star rating component, submit flow
+- **Mentorship Connection Flow** (#6) — pending requests UI, accept/decline actions, connection status display
+- **Gamification — XP & Levels** (#15) — XP bar, level badge, progress display
+- **Gamification — Achievements** (#16) — achievement cards, unlock animation, achievements page
+- **Notification System** (#24) — toast system wiring for session and connection events
+- **Responsive Layout** (#19) — responsive grid layouts, media queries across pages
+- **Additional Browser Support** (#6 minor) — cross-browser CSS testing and fixes
+
 ### Marcelo (`madias-m`) — Backend Developer
 
+- **User Registration & Login** (#1) — email/password auth, BCrypt hashing, Passay validation, JWT generation and filter chain
+- **Google OAuth 2.0** (#2) — frontend token handling, backend validation via Google Auth library
+- **User Profile Management** (#3) — profile CRUD endpoints, JPA entities (users, profiles, limit_mentee)
+- **Profile Avatar Upload** (#4) — `/profiles/image` endpoints, coordination with Python microservice
+- **ORM for Database** (minor #3) — 15 JPA entities, relationships, lazy/eager loading, cascade config
+- **OAuth 2.0 Authentication** (minor #7) — backend token validation, user upsert on OAuth login
+- **Backend Framework** (minor #2) — Spring Boot project structure, security config, CORS, exception handling
+- **Backend as Microservices** (major #4) — Docker Compose service topology, Nginx routing between Spring Boot and FastAPI
+
 ### Fábio (`fleite-j`) — Backend Developer / DevOps
+
+- **Profile Avatar Upload** (#4) — Python microservice (FastAPI), MongoDB integration, base64 image storage and retrieval
+- **Mentor Availability Management** (#7) — `MentorAvailability` entity, availability CRUD endpoints, slot duration logic
+- **Gamification — XP & Levels** (#15) — XP award service, level threshold logic, XP history table, `xp_history` and `levels` entities
+- **Gamification — Achievements** (#16) — achievement definitions, unlock trigger service, `achievements` and `user_achievements` entities
+- **Gamification — Streaks** (#17) — daily check-in logic, `user_streak` entity, streak reset on missed days
+- **Mentor Rating System** (#11) — rating repository, average calculation, unique-per-pair enforcement
+- **Monitoring with Prometheus & Grafana** (major #3) — Prometheus config, all exporters (Node, cAdvisor, Postgres, MongoDB), Grafana provisioning
+- **Backend Framework** (minor #2) — FastAPI service structure, Motor async driver, Prometheus FastAPI Instrumentator
 
 ---
 
