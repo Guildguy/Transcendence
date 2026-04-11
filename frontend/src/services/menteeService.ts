@@ -1,7 +1,5 @@
 import { apiFetch } from './api';
 
-const PYTHON_API_URL = "/api/python";
-
 export interface MenteeCardData {
   id: number;
   name: string;
@@ -23,9 +21,6 @@ export interface MenteeDetailData extends MenteeCardData {
 }
 
 class MenteeService {
-  /**
-   * Busca a imagem de perfil no backend Java (8080)
-   */
   async fetchProfileImage(profileId: number): Promise<string> {
     try {
       const response = await apiFetch(`/profiles/image/${profileId}`);
@@ -49,15 +44,13 @@ class MenteeService {
     }
   }
 
-  /**
-   * Busca as stacks/habilidades no backend Python (8000)
-   */
-  private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
+
+  private async fetchSkillsFromJava(profileId: string | number): Promise<string[]> {
     try {
-      const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
+      const response = await apiFetch(`/profiles/${profileId}/stacks`);
       if (response.ok) {
         const data = await response.json();
-        return data.stacks || [];
+        return Array.isArray(data?.stacks) ? data.stacks : [];
       }
       return [];
     } catch {
@@ -65,15 +58,10 @@ class MenteeService {
     }
   }
 
-  /**
-   * Busca detalhes completos de um mentorado incluindo bio e contagem de mentores
-   * APENAS retorna dados se o perfil tiver role MENTORADO
-   */
   async getMenteeDetails(profileId: number): Promise<MenteeDetailData | null> {
     try {
       console.log(`[getMenteeDetails] Starting fetch for profileId: ${profileId}`);
 
-      // Fetch user data - profile might be associated with a user
       const usersResponse = await apiFetch(`/users`);
       if (!usersResponse.ok) {
         console.warn(`[getMenteeDetails] Could not fetch users: HTTP ${usersResponse.status}`);
@@ -83,7 +71,6 @@ class MenteeService {
       const allUsers = await usersResponse.json();
       console.log(`[getMenteeDetails] All users:`, allUsers);
 
-      // Find the user that has a MENTORADO profile with the given profileId
       let profileData: any = null;
       let userId: number | null = null;
       let userName = 'Mentorado';
@@ -115,7 +102,6 @@ class MenteeService {
 
       const userActive = true;
 
-      // Busca contagem de mentores (conexões ativas)
       let mentorCount = 0;
       if (userId) {
         try {
@@ -130,10 +116,9 @@ class MenteeService {
         }
       }
 
-      // Busca imagem e skills em paralelo
       const [finalAvatar, pythonStacks] = await Promise.all([
         this.fetchProfileImage(profileData.id),
-        this.fetchSkillsFromPython(profileData.id)
+        this.fetchSkillsFromJava(profileData.id)
       ]);
 
       const result: MenteeDetailData = {
@@ -166,10 +151,6 @@ class MenteeService {
     }
   }
 
-  /**
-   * Retorna a lista de todos os mentorados para a vitrine
-   * APENAS retorna usuários que possuem um perfil com role MENTORADO
-   */
   async getAllMenteesForCards(): Promise<MenteeCardData[]> {
     try {
       const response = await apiFetch(`/users`);
@@ -184,7 +165,6 @@ class MenteeService {
           const detailRes = await apiFetch(`/users/${user.id}`);
           const fullData = await detailRes.json();
 
-          // Filtra apenas perfis com role MENTORADO (case-insensitive)
           const menteeProfiles = (fullData.profiles || []).filter(
             (p: any) => p.role?.toUpperCase() === 'MENTORADO'
           );
@@ -194,7 +174,7 @@ class MenteeService {
           for (const profile of menteeProfiles) {
             const [finalAvatar, pythonStacks] = await Promise.all([
               this.fetchProfileImage(profile.id),
-              this.fetchSkillsFromPython(profile.id)
+              this.fetchSkillsFromJava(profile.id)
             ]);
 
             const menteeCard: MenteeCardData = {
@@ -228,12 +208,8 @@ class MenteeService {
     }
   }
 
-  /**
-   * Busca as conexões atuais do mentorado (Meus Mentores)
-   */
   async getMyMentors(menteeProfileId: number): Promise<any[]> {
     try {
-      // Chama o endpoint de conexões aprovadas para o mentorado
       const response = await apiFetch(`/mentorship-connections/mentee/${menteeProfileId}`);
       if (!response.ok) return [];
       return await response.json();
