@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.ft.trans.dto.ProfileImageDTO;
+import com.ft.trans.dto.ProfileStacksDTO;
 import com.ft.trans.dto.UpdateProfileDTO;
 import com.ft.trans.entity.Profile;
 import com.ft.trans.service.ProfileService;
@@ -82,6 +83,36 @@ public class ProfileController {
         {
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(result.validationResult().getErrors());
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(result.entity());
+    }
+
+    @GetMapping("/{profileId}/stacks")
+    public ResponseEntity<?> getProfileStacks(@PathVariable Long profileId) {
+        Result result = this.profileService.getProfileStacks(profileId);
+
+        if (result.validationResult().hasErrors())
+        {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(result.validationResult().getErrors());
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(result.entity());
+    }
+
+    @PostMapping("/{profileId}/stacks")
+    public ResponseEntity<?> saveProfileStacks(@PathVariable Long profileId, @RequestBody ProfileStacksDTO dto) {
+        Result result = this.profileService.saveProfileStacks(profileId, dto);
+
+        if (result.validationResult().hasErrors())
+        {
+            return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(result.validationResult().getErrors());
         }
         return ResponseEntity
