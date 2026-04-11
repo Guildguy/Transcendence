@@ -41,7 +41,6 @@ function BookSessionContent() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('none');
   const [connectionId, setConnectionId] = useState<number | null>(null);
   const [menteeProfileId, setMenteeProfileId] = useState<number | null>(null);
-  const [myMentorProfileId, setMyMentorProfileId] = useState<number | null>(null);
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
   const { setActiveChatId } = useChat();
   
@@ -153,11 +152,6 @@ function BookSessionContent() {
             setMenteeProfileId(mProfile.id);
           }
           
-          // Find MENTOR profile
-          const mentorP = profiles.find(p => p.role?.toUpperCase() === 'MENTOR');
-          if (mentorP) {
-            setMyMentorProfileId(mentorP.id);
-          }
         }
       } catch (err) {
         console.error('[BookSessionWithMentor] Error loading user profiles:', err);
