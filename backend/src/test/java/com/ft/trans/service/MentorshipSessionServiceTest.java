@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ft.trans.controller.dto.GamificationEventRequest;
+import com.ft.trans.dto.CreateSessionDTO;
+import com.ft.trans.entity.DayOfWeekEnum;
+import com.ft.trans.entity.MentorAvailability;
 import com.ft.trans.dto.UpdateSessionDTO;
 import com.ft.trans.entity.MentorshipConnection;
 import com.ft.trans.entity.MentorshipSession;
@@ -49,6 +53,88 @@ public class MentorshipSessionServiceTest
 
     @InjectMocks
     private MentorshipSessionService sessionService;
+
+    @Test
+    void shouldAllowCreateSessionWhenOnlyCancelledExistsAtSameTime()
+    {
+        LocalDateTime scheduled = LocalDateTime.now().plusDays(1).withHour(21).withMinute(0).withSecond(0).withNano(0);
+
+        CreateSessionDTO dto = new CreateSessionDTO();
+        dto.connectionId = 77L;
+        dto.scheduledDate = scheduled;
+        dto.durationMinutes = 60;
+        dto.createdBy = 100L;
+
+        MentorshipConnection connection = buildConnection(77L, 100L, 200L);
+
+        MentorAvailability slot = new MentorAvailability();
+        slot.dayOfWeek = switch (scheduled.getDayOfWeek()) {
+            case MONDAY -> DayOfWeekEnum.MONDAY;
+            case TUESDAY -> DayOfWeekEnum.TUESDAY;
+            case WEDNESDAY -> DayOfWeekEnum.WEDNESDAY;
+            case THURSDAY -> DayOfWeekEnum.THURSDAY;
+            case FRIDAY -> DayOfWeekEnum.FRIDAY;
+            case SATURDAY -> DayOfWeekEnum.SATURDAY;
+            case SUNDAY -> DayOfWeekEnum.SUNDAY;
+        };
+        slot.startTime = LocalTime.of(20, 0);
+        slot.endTime = LocalTime.of(22, 0);
+
+        when(connectionRepository.findByIdFull(77L)).thenReturn(Optional.of(connection));
+        when(sessionRepository.findByConnectionIdAndScheduledDate(77L, scheduled)).thenReturn(Optional.empty());
+        when(mentorAvailabilityRepository.findByMentor_IdOrderByDayOfWeekAscStartTimeAsc(11L)).thenReturn(List.of(slot));
+        when(sessionRepository.save(any(MentorshipSession.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Result result = sessionService.createSession(dto);
+
+        assertFalse(result.validationResult().hasErrors());
+        assertTrue(result.entity() instanceof MentorshipSession);
+    }
+
+    @Test
+    void shouldReuseCancelledSessionWhenRebookingSameTime()
+    {
+        LocalDateTime scheduled = LocalDateTime.now().plusDays(1).withHour(8).withMinute(0).withSecond(0).withNano(0);
+
+        CreateSessionDTO dto = new CreateSessionDTO();
+        dto.connectionId = 2L;
+        dto.scheduledDate = scheduled;
+        dto.durationMinutes = 60;
+        dto.createdBy = 200L;
+
+        MentorshipConnection connection = buildConnection(2L, 100L, 200L);
+
+        MentorAvailability slot = new MentorAvailability();
+        slot.dayOfWeek = switch (scheduled.getDayOfWeek()) {
+            case MONDAY -> DayOfWeekEnum.MONDAY;
+            case TUESDAY -> DayOfWeekEnum.TUESDAY;
+            case WEDNESDAY -> DayOfWeekEnum.WEDNESDAY;
+            case THURSDAY -> DayOfWeekEnum.THURSDAY;
+            case FRIDAY -> DayOfWeekEnum.FRIDAY;
+            case SATURDAY -> DayOfWeekEnum.SATURDAY;
+            case SUNDAY -> DayOfWeekEnum.SUNDAY;
+        };
+        slot.startTime = LocalTime.of(8, 0);
+        slot.endTime = LocalTime.of(9, 0);
+
+        MentorshipSession cancelled = new MentorshipSession();
+        cancelled.id = 99L;
+        cancelled.connectionId = 2L;
+        cancelled.scheduledDate = scheduled;
+        cancelled.durationMinutes = 60;
+        cancelled.status = MentorshipSession.SessionStatus.CANCELLED;
+
+        when(connectionRepository.findByIdFull(2L)).thenReturn(Optional.of(connection));
+        when(sessionRepository.findByConnectionIdAndScheduledDate(2L, scheduled)).thenReturn(Optional.of(cancelled));
+        when(mentorAvailabilityRepository.findByMentor_IdOrderByDayOfWeekAscStartTimeAsc(11L)).thenReturn(List.of(slot));
+        when(sessionRepository.save(any(MentorshipSession.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Result result = sessionService.createSession(dto);
+
+        assertFalse(result.validationResult().hasErrors());
+        assertTrue(result.entity() instanceof MentorshipSession saved && saved.id.equals(99L));
+        assertTrue(((MentorshipSession) result.entity()).status == MentorshipSession.SessionStatus.SCHEDULED);
+    }
 
     @Test
     void shouldTriggerSessionCompletedForMentorAndMentee()
@@ -135,6 +221,7 @@ public class MentorshipSessionServiceTest
 
         MentorshipConnection connection = new MentorshipConnection();
         connection.id = id;
+        connection.status = MentorshipConnection.ConnectionStatus.APPROVED;
         connection.mentor = mentorProfile;
         connection.mentee = menteeProfile;
 

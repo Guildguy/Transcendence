@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by gigardin, asanni, mdias-ma, lsampiet, fleite-j.*
+*This project has been created as part of the 42 curriculum by gigardin, asanni, madias-m, lsampiet, fleite-j.*
 
 # ft_bridge mentorias
 
@@ -58,7 +58,7 @@ A real-time mentorship platform where mentors and mentees connect, schedule sess
 | **Giovanna** | `gigardin` | Product Owner / UX Designer / Backend Developer | UX/UI design, feature prioritization, wireframes, user flows, project coordination, documentation |
 | **Adedayo** | `asanni` | Frontend Developer | React components, pages, frontend services, UI implementation, chat interface |
 | **Letícia** | `lsampiet` | Frontend Developer | React components, design system, responsive layouts, gamification UI, accessibility |
-| **Marcelo** | `mdias-ma` | Backend Developer | Spring Boot API, JPA entities, business logic, WebSocket chat, Google Calendar/Meet integration |
+| **Marcelo** | `madias-m` | Backend Developer | Spring Boot API, JPA entities, business logic, WebSocket chat, Google Calendar/Meet integration |
 | **Fábio** | `fleite-j` | Backend Developer / DevOps | Python microservice, MongoDB integration, Prometheus/Grafana monitoring, Docker infrastructure |
 
 ---
@@ -360,7 +360,7 @@ mentorship_connection (1) ──── (N) mentorship_session
 
 ### Letícia (`lsampiet`) — Frontend Developer
 
-### Marcelo (`mdias-ma`) — Backend Developer
+### Marcelo (`madias-m`) — Backend Developer
 
 ### Fábio (`fleite-j`) — Backend Developer / DevOps
 
