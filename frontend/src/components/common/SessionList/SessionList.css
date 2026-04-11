@@ -26,7 +26,7 @@
 .session-list-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-medium); /* Darker text */
+  color: var(--text-dark); /* Darker text */
 }
 
 .session-list-badge {
