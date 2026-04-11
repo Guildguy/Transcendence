@@ -28,8 +28,7 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
-    @UniqueConstraint(name = "email", columnNames = "email"),
-    @UniqueConstraint(name = "phoneNumber", columnNames = "phoneNumber")
+    @UniqueConstraint(name = "email", columnNames = "email")
 })
 public class User implements IEntity{
 	@Id
