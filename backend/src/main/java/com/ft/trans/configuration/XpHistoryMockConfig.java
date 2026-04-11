@@ -22,13 +22,6 @@ public class XpHistoryMockConfig
     {
         return args ->
         {
-
-            if (repo.count() > 0)
-            {
-                System.out.println("XP history already loaded");
-                return;
-            }
-
             if (userRepo.count() == 0)
             {
                 System.out.println("No users for xp history");
@@ -37,36 +30,41 @@ public class XpHistoryMockConfig
 
             for (User u : userRepo.findAll())
             {
+                addXpIfMissing(repo, u.id, "PROFILE_COMPLETED", 50);
+                addXpIfMissing(repo, u.id, "MATCH_ACCEPTED", 150);
+                addXpIfMissing(repo, u.id, "SESSION_COMPLETED", 50);
 
-                XpHistory x1 = new XpHistory();
-                x1.userId = u.id;
-                x1.xp = 50;
-                x1.reason = "PROFILE_COMPLETED";
-                x1.createdAt = new Date(System.currentTimeMillis());
-
-                repo.save(x1);
-
-
-                XpHistory x2 = new XpHistory();
-                x2.userId = u.id;
-                x2.xp = 150;
-                x2.reason = "MATCH_ACCEPTED";
-                x2.createdAt = new Date(System.currentTimeMillis());
-
-                repo.save(x2);
-
-
-                XpHistory x3 = new XpHistory();
-                x3.userId = u.id;
-                x3.xp = 50;
-                x3.reason = "SESSION_COMPLETED";
-                x3.createdAt = new Date(System.currentTimeMillis());
-
-                repo.save(x3);
+                if (isPrisonMike(u))
+                    addXpIfMissing(repo, u.id, "MOCK_MAX_LEVEL", 5000);
 
             }
 
             System.out.println("XP history mock loaded");
         };
+    }
+
+    private void addXpIfMissing(XpHistoryRepository repo, Long userId, String reason, int xp)
+    {
+        if (repo.countByUserIdAndReason(userId, reason) > 0)
+            return;
+
+        XpHistory xpHistory = new XpHistory();
+        xpHistory.userId = userId;
+        xpHistory.xp = xp;
+        xpHistory.reason = reason;
+        xpHistory.createdAt = new Date(System.currentTimeMillis());
+
+        repo.save(xpHistory);
+    }
+
+    private boolean isPrisonMike(User user)
+    {
+        if (user == null)
+            return false;
+
+        if (user.email != null && user.email.equalsIgnoreCase("mike@gmail.com"))
+            return true;
+
+        return user.name != null && user.name.equalsIgnoreCase("Prison Mike");
     }
 }

@@ -27,17 +27,20 @@ public class UserMockConfig
                 return;
             }
 
-            for (int i = 1; i <= 3; i++)
+            String[] mentorNames = {"Prison Mike", "Carminha", "Jirafales"};
+            String[] mentorEmail = {"mike@gmail.com", "carminha@gmail.com", "jirafales@gmail.com"};
+
+            for (int i = 0; i < mentorNames.length; i++)
             {
                 User u = new User();
 
-                u.name = "Zezin " + i;
+                u.name = mentorNames[i];
 
-                u.email = "ze" + i + "@mail.com";
+                u.email = mentorEmail[i];
 
-                u.phoneNumber = "1199999999" + i;
+                u.phoneNumber = "1199999999" + (i + 1);
 
-                u.password = "Aa@12345";
+                u.password = "Mentor123!";
                 u.encodePassword();
 
                 u.status = true;

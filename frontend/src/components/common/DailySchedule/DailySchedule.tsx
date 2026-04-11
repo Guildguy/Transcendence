@@ -79,58 +79,25 @@ export const DailySchedule = ({ userRole, profileId }: DailyScheduleProps) => {
           ? `/mentorship-connections/mentor/${profileId}`
           : `/mentorship-connections/mentee/${profileId}`
 
-        const [sessionsRes, connectionsRes] = await Promise.all([
-          apiFetch(sessionsEndpoint),
-          apiFetch(connectionsEndpoint),
-        ])
+        const response = await apiFetch(endpoint)
 
-        const sessions: any[] = sessionsRes.ok ? await sessionsRes.json() : []
-        const connections: any[] = connectionsRes.ok ? await connectionsRes.json() : []
-
-        // Map connectionId to partner name and profileId
-        const nameMap = new Map<number, string>()
-        const profileIdMap = new Map<number, number>()
-        connections.forEach((c: any) => {
-          if (c.id != null) {
-            const partnerName = userRole === 'MENTOR'
-              ? (c.menteeName || 'Mentorado')
-              : (c.mentorName || 'Mentor')
-            nameMap.set(c.id, partnerName)
-            const partnerProfileId = userRole === 'MENTOR' ? c.menteeProfileId : c.mentorProfileId
-            profileIdMap.set(c.id, partnerProfileId)
+        if (response.ok) {
+          const data: any[] = await response.json()
+          if (Array.isArray(data) && data.length > 0) {
+            setDailySchedule(data.map((session: any) => ({
+              id: session.id || session.connectionId,
+              time: session.time || session.scheduledTime || '00:00h',
+              date: '',
+              mentee: session.menteeName || session.mentorName || 'Mentoria',
+              mentor: session.mentorName,
+              connectionId: session.connectionId || session.id,
+            })))
+          } else {
+            setDailySchedule([])
           }
-        })
-
-        const now = new Date()
-        const todayYear = now.getFullYear()
-        const todayMonth = now.getMonth()
-        const todayDate = now.getDate()
-
-        const todaySessions = sessions.filter((s: any) => {
-          if (s.status === 'CANCELLED') return false
-          const raw = s.scheduledDate || s.scheduledTime
-          if (!raw) return false
-          const d = new Date(raw)
-          return d.getFullYear() === todayYear && d.getMonth() === todayMonth && d.getDate() === todayDate
-        })
-
-        const mappedDaily = todaySessions.map((session: any) => {
-          const dateObj = new Date(session.scheduledDate || session.scheduledTime)
-          const timeStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h'
-          const partnerName = nameMap.get(session.connectionId) || 'Mentoria'
-
-          return {
-            id: session.id,
-            time: timeStr,
-            date: dateObj.toISOString().split('T')[0],
-            mentee: partnerName,
-            mentor: partnerName,
-            connectionId: session.connectionId,
-            partnerProfileId: profileIdMap.get(session.connectionId),
-          }
-        }).sort((a, b) => a.time.localeCompare(b.time))
-
-        setDailySchedule(mappedDaily)
+        } else {
+          setDailySchedule([])
+        }
       } catch (error) {
         console.warn('Error loading daily schedule:', error)
         setDailySchedule([])

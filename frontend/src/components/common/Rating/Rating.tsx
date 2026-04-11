@@ -10,8 +10,11 @@ interface RatingProps {
 const Rating: React.FC<RatingProps> = ({ rating, size = 16 }) => {
   const parsedRating = Number(rating);
   const normalizedRating = Number.isFinite(parsedRating)
-    ? Math.max(1, Math.min(5, Math.ceil(parsedRating)))
+    ? Math.max(1, Math.min(5, parsedRating))
     : 0;
+  const displayRating = Number.isFinite(normalizedRating)
+    ? (Number.isInteger(normalizedRating) ? `${normalizedRating}` : normalizedRating.toFixed(1))
+    : '0';
   
   return (
     <div className="rating">
@@ -21,7 +24,7 @@ const Rating: React.FC<RatingProps> = ({ rating, size = 16 }) => {
         color="transparent" 
         className="rating-star" 
       />
-      <span className="rating-text">{normalizedRating}</span>
+      <span className="rating-text">{displayRating}</span>
     </div>
   );
 };
