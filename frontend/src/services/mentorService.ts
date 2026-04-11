@@ -294,9 +294,10 @@ class MentorService {
               console.warn(`[getMentorDetails] Error fetching mentee count:`, error);
             }
           }
-        } catch (error) {
-        }
-      }
+        })()
+      ]).catch((error) => {
+        console.error(`[getMentorDetails] Error in Promise.all:`, error);
+      });
 
       const [mentorRating, profileImage, pythonStacks] = await Promise.all([
         this.fetchMentorRating(profileData.id),
@@ -337,6 +338,5 @@ class MentorService {
     }
   }
 }
-
 
 export default new MentorService();

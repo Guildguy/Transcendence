@@ -11,5 +11,3 @@ COPY . .
 ENV NODE_ENV=production
 
 CMD ["npm", "run", "build"]
-
-# RUN npm run build
