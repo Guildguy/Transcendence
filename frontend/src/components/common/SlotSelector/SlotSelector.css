@@ -118,6 +118,16 @@
   background-color: rgba(99, 102, 241, 0.1);
 }
 
+.slot-selector-block-button.readonly {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.slot-selector-block-button.readonly:hover {
+  border-color: #e5e7eb;
+  background-color: #ffffff;
+}
+
 .slot-selector-block-button-info p:first-child {
   font-size: 0.875rem;
   font-weight: 500;
@@ -211,6 +221,16 @@
   color: #6b7280;
   padding: 1rem;
   text-align: center;
+}
+
+.slot-selector-readonly-hint {
+  font-size: 0.875rem;
+  color: #92400e;
+  background-color: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .slot-selector-dialog-description {
