@@ -259,3 +259,28 @@
   font-size: 0.75rem;
   margin-top: 0.5rem;
 }
+
+/* Calendar availability marker */
+.slot-selector-calendar-container .slot-selector-available-day {
+  position: relative;
+  font-weight: 600;
+  color: #4f46e5;
+  background-color: rgba(99, 102, 241, 0.12);
+  border-radius: 9999px;
+}
+
+.slot-selector-calendar-container .slot-selector-available-day::after {
+  content: '';
+  position: absolute;
+  bottom: 0.28rem;
+  left: 50%;
+  width: 0.22rem;
+  height: 0.22rem;
+  background-color: #4f46e5;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.slot-selector-calendar-container .slot-selector-available-day:hover {
+  background-color: rgba(99, 102, 241, 0.2);
+}
