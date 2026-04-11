@@ -20,6 +20,8 @@ services:
     build: ./backend
     ports:
       - "8080:8080"
+    volumes:
+      - ./profiles:/app/profiles:ro
     environment:
       TZ: America/Sao_Paulo
       JAVA_TOOL_OPTIONS: -Duser.timezone=America/Sao_Paulo

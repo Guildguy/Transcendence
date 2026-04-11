@@ -42,12 +42,29 @@ public class ProfileMockConfig
             {
                 User user = users.get(index);
 
-                boolean hasMentorProfile = profileRepository
+                Profile existingMentorProfile = profileRepository
                     .findByUserIdAndRole(user.id, ProfileType.MENTOR)
-                    .isPresent();
+                    .orElse(null);
 
-                if (hasMentorProfile)
+                if (existingMentorProfile != null)
                 {
+                    if (isPrisonMike(user))
+                    {
+                        existingMentorProfile.level = 5;
+                        existingMentorProfile.xp = 5000L;
+                        System.out.println("Prison Mike profile updated to level 5 for userId=" + user.id);
+                    }
+                    else
+                    {
+                        existingMentorProfile.level = 1;
+                        existingMentorProfile.xp = 0L;
+                        System.out.println("Basic profile enforced for userId=" + user.id);
+                    }
+
+                    existingMentorProfile.lastUpdateAt = now;
+                    existingMentorProfile.lastUpdateBy = user.id;
+                    profileRepository.save(existingMentorProfile);
+
                     System.out.println("Mentor profile already loaded for userId=" + user.id);
                     continue;
                 }
@@ -63,8 +80,8 @@ public class ProfileMockConfig
         Profile profile = new Profile();
         profile.user = user;
         profile.role = ProfileType.MENTOR;
-        profile.level = 1;
-        profile.xp = 0L;
+        profile.level = isPrisonMike(user) ? 5 : 1;
+        profile.xp = isPrisonMike(user) ? 5000L : 0L;
         profile.createdAt = now;
         profile.createdBy = user.id;
         profile.lastUpdateAt = now;
@@ -90,5 +107,16 @@ public class ProfileMockConfig
         }
 
         return profile;
+    }
+
+    private boolean isPrisonMike(User user)
+    {
+        if (user == null)
+            return false;
+
+        if (user.email != null && user.email.equalsIgnoreCase("mike@gmail.com"))
+            return true;
+
+        return user.name != null && user.name.equalsIgnoreCase("Prison Mike");
     }
 }
