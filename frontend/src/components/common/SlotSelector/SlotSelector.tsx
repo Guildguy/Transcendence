@@ -342,7 +342,7 @@ export function SlotSelector({ connected, mentorId, menteeId, connectionId, onBo
                 resetSelection(); 
               }}
               modifiers={{ available: isDayAvailable }}
-              modifiersClassNames={{ available: 'bg-primary/15 font-semibold text-primary' }}
+              modifiersClassNames={{ available: 'slot-selector-available-day' }}
             />
           </div>
 
