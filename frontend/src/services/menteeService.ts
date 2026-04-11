@@ -218,6 +218,28 @@ class MenteeService {
       return [];
     }
   }
+
+  async getMyMentorsByUserId(userId: string | number): Promise<any[]> {
+    try {
+      const userRes = await apiFetch(`/users/${userId}`);
+      if (!userRes.ok) return [];
+      const userData = await userRes.json();
+      
+      const menteeProfile = (userData.profiles || []).find(
+        (p: any) => p.role?.toUpperCase() === 'MENTORADO'
+      );
+      
+      if (!menteeProfile) {
+        console.warn("Perfil MENTORADO não encontrado para o usuário logado.");
+        return [];
+      }
+      
+      return await this.getMyMentors(menteeProfile.id);
+    } catch (error) {
+      console.error('Erro ao buscar mentores por usuário:', error);
+      return [];
+    }
+  }
 }
 
 export default new MenteeService();

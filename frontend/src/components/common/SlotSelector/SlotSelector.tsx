@@ -18,6 +18,7 @@ import './SlotSelector.css';
 
 
 interface SlotSelectorProps {
+  connected: boolean;
   mentorId: string;
   menteeId: string;
   connectionId: number | null;
@@ -39,8 +40,8 @@ interface BackendSession {
   endTime: string;
 }
 
-export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, context }: SlotSelectorProps) {
-  const { bookCustomSlot, getBackendAvailability, getAvailableBlocksForDate } = useMentoring();
+export function SlotSelector({ connected, mentorId, menteeId, connectionId, onBooked }: SlotSelectorProps) {
+  const { bookCustomSlot, getBackendAvailability } = useMentoring();
 
   const [availabilityBlocks, setAvailabilityBlocks] = useState<TimeBlock[]>([]);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
@@ -53,6 +54,16 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
   const [selectedDuration, setSelectedDuration] = useState<number>(60);
   const [isRecurring, setIsRecurring] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // If connection is lost while interacting, keep the component in read-only mode.
+  useEffect(() => {
+    if (connected) return;
+    setShowConfirm(false);
+    setSelectedBlockIdx(null);
+    setSelectedStartTime(null);
+    setSelectedDuration(60);
+    setIsRecurring(false);
+  }, [connected]);
 
   // Load booked sessions whenever connectionId changes
   useEffect(() => {
@@ -87,11 +98,13 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
   useEffect(() => {
     const fetchAvailability = async () => {
       try {
+        console.log(`[SlotSelector] Fetching availability for mentorId: ${mentorId}`);
         setLoadingAvailability(true);
         setAvailabilityError(null);
-        const { blocks } = await getBackendAvailability(mentorId);
+        const result = await getBackendAvailability(mentorId);
+        const blocks = result?.blocks || [];
         setAvailabilityBlocks(blocks);
-        console.log(`[SlotSelector] Loaded ${blocks.length} availability block(s) for mentor ${mentorId}`);
+        console.log(`[SlotSelector] Loaded ${blocks.length} availability block(s) for mentor ${mentorId}`, blocks);
       } catch (error) {
         console.error('[SlotSelector] Error loading availability:', error);
         setAvailabilityError('Não conseguimos carregar a disponibilidade do mentor. Tente novamente mais tarde.');
@@ -101,8 +114,12 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
       }
     };
 
-    if (mentorId) {
+    if (mentorId && mentorId !== '0') {
       fetchAvailability();
+    } else {
+      console.warn(`[SlotSelector] Invalid mentorId: ${mentorId}`);
+      setLoadingAvailability(false);
+      setAvailabilityError('ID do mentor inválido.');
     }
   }, [mentorId, getBackendAvailability]);
 
@@ -187,7 +204,7 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
   }, [availabilityBlocks]);
 
   const isDayAvailable = (date: Date) => availableDates.has(format(date, 'yyyy-MM-dd'));
-
+  
   const resetSelection = () => {
     setSelectedBlockIdx(null);
     setSelectedStartTime(null);
@@ -286,7 +303,8 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
             </div>
           )}
 
-          {!loadingAvailability && availabilityBlocks.length === 0 && !availabilityError && (
+          {!loadingAvailability && availabilityBlocks.length === 0 && 
+            !availabilityError && (
             <div style={{
               display: 'flex',
               gap: '0.75rem',
@@ -299,142 +317,152 @@ export function SlotSelector({ mentorId, menteeId, connectionId, onBooked, conte
             }}>
               <AlertCircle size={20} style={{ flexShrink: 0 }} />
               <div>
-                <strong>{context === 'mentee' 
-                    ? 'Nenhuma sessão agendada.' 
-                    : 'Nenhuma disponibilidade.'}</strong>
+                <strong>Sem disponibilidade configurada</strong>
                 <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                  {context === 'mentee' 
-                    ? 'O mentorado ainda não tem nenhuma sessão de mentoria agendada' 
-                    : 'O mentor ainda não configurou sua disponibilidade.'}
+                  O mentor ainda não configurou sua disponibilidade.
                 </p>
               </div>
             </div>
           )}
 
-          {!loadingAvailability && (
+          {/* Calendar - ALWAYS visible (regardless of loading state, errors, or availability blocks) */}
           <div className="slot-selector-calendar-container">
+            {!loadingAvailability && !availabilityError && (
+              <></>
+            )}
             <BookingCalendar
               mentorId={mentorId}
               mode="single"
               selected={selectedDate}
-              onSelect={(d: Date | undefined) => { setSelectedDate(d); resetSelection(); }}
+              onSelect={(d: Date | undefined) => { 
+                console.log('[SlotSelector] Selected date:', d);
+                setSelectedDate(d); 
+                resetSelection(); 
+              }}
               modifiers={{ available: isDayAvailable }}
-              modifiersClassNames={{ available: 'bg-primary/15 font-semibold text-primary' }}
+              modifiersClassNames={{ available: 'slot-selector-available-day' }}
             />
           </div>
-          )}
 
-          {/* Block & Time Selection */}
+          {/* Block & Time Selection - always visible, read-only when disconnected */}
           <div className="slot-selector-selection-container">
             {selectedDate ? (
               <div className="slot-selector-selection-header">
                 <h4 className="slot-selector-selection-title">Horários Disponíveis</h4>
                 <p className="slot-selector-selection-subtitle">
-                  {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
-                </p>
-              </div>
-            ) : (
-              <div className="slot-selector-placeholder">
-                <p>Selecione uma data no calendário</p>
-              </div>
-            )}
-            
-            {selectedDate && (
-              <div className="slot-selector-blocks-container">
-                {blocks.length > 0 ? (
-                  <>
-                    {/* Available Blocks */}
-                    <div className="slot-selector-block-list">
-                      {blocks.map((block, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => { setSelectedBlockIdx(idx); setSelectedStartTime(null); setSelectedDuration(60); }}
-                          className={`slot-selector-block-button ${selectedBlockIdx === idx ? 'selected' : ''}`}
-                        >
-                          <Clock color="var(--purple-primary)"/>
-                          <div className="slot-selector-block-button-info">
-                            <p>{block.startTime} – {block.endTime}</p>
-                            <p>
-                              {formatDuration(toMinutes(block.endTime) - toMinutes(block.startTime))} disponível
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Start Time & Duration pickers */}
-                    {selectedBlock && (
-                      <div className="slot-selector-pickers">
-                        <div className="slot-selector-pickers-grid">
-                          <div>
-                            <Label className="slot-selector-picker-label">Início</Label>
-                            <Select
-                              value={selectedStartTime || ''}
-                              onValueChange={(v: string) => { setSelectedStartTime(v); setSelectedDuration(60); }}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Horário" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {startTimeOptions.map(t => (
-                                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label className="slot-selector-picker-label">Duração</Label>
-                            <Select
-                              value={String(selectedDuration)}
-                              onValueChange={(v: string) => setSelectedDuration(Number(v))}
-                              disabled={!selectedStartTime}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Duração" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {durationOptions.map(d => (
-                                  <SelectItem key={d} value={String(d)}>{formatDuration(d)}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        {selectedStartTime && (
-                          <p className="slot-selector-session-info">
-                            Sessão: <strong>{selectedStartTime} – {endTime}</strong> ({formatDuration(selectedDuration)})
+                {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+              </p>
+            </div>
+          ) : (
+            <div className="slot-selector-placeholder">
+              <p>Selecione uma data no calendário</p>
+            </div>
+          )}
+          
+          {selectedDate && (
+            <div className="slot-selector-blocks-container">
+              {blocks.length > 0 ? (
+                <>
+                  {/* Available Blocks */}
+                  <div className="slot-selector-block-list">
+                    {blocks.map((block, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={connected ? () => { setSelectedBlockIdx(idx); setSelectedStartTime(null); setSelectedDuration(60); } : undefined}
+                        disabled={!connected}
+                        className={`slot-selector-block-button ${connected && selectedBlockIdx === idx ? 'selected' : ''} ${!connected ? 'readonly' : ''}`}
+                      >
+                        <Clock color="var(--purple-primary)"/>
+                        <div className="slot-selector-block-button-info">
+                          <p>{block.startTime} – {block.endTime}</p>
+                          <p>
+                            {formatDuration(toMinutes(block.endTime) - toMinutes(block.startTime))} disponível
                           </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Recurring + Confirm */}
-                    {selectedStartTime && (
-                      <div className="slot-selector-actions">
-                        <div className="slot-selector-recurring-option">
-                          <RefreshCw className="slot-selector-recurring-icon" />
-                          <div className="slot-selector-recurring-text">
-                            <Label htmlFor="recurring" className="slot-selector-recurring-label">
-                              Repetir semanalmente
-                            </Label>
-                            <p className="slot-selector-recurring-description">Máx. 10 encontros</p>
-                          </div>
-                          <Switch id="recurring" checked={isRecurring} onCheckedChange={setIsRecurring} />
                         </div>
-                        <Button className="slot-selector-confirm-button" onClick={() => setShowConfirm(true)}>
-                          <Video className="slot-selector-confirm-button-icon" />
-                          Confirmar Agendamento
-                        </Button>
+                      </button>
+                    ))}
+                  </div>
+
+                  {!connected && (
+                    <p className="slot-selector-readonly-hint">
+                      Conecte-se com o mentor para escolher horário e confirmar o agendamento.
+                    </p>
+                  )}
+
+                  {/* Start Time & Duration pickers */}
+                  {connected && selectedBlock && (
+                    <div className="slot-selector-pickers">
+                      <div className="slot-selector-pickers-grid">
+                        <div>
+                          <Label className="slot-selector-picker-label">Início</Label>
+                          <Select
+                            value={selectedStartTime || ''}
+                            onValueChange={(v: string) => { setSelectedStartTime(v); setSelectedDuration(60); }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Horário" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {startTimeOptions.map(t => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="slot-selector-picker-label">Duração</Label>
+                          <Select
+                            value={String(selectedDuration)}
+                            onValueChange={(v: string) => setSelectedDuration(Number(v))}
+                            disabled={!selectedStartTime}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Duração" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {durationOptions.map(d => (
+                                <SelectItem key={d} value={String(d)}>{formatDuration(d)}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="slot-selector-no-slots">Nenhum horário disponível nesta data.</p>
-                )}
-              </div>
-            )}
-          </div>
+
+                      {selectedStartTime && (
+                        <p className="slot-selector-session-info">
+                          Sessão: <strong>{selectedStartTime} – {endTime}</strong> ({formatDuration(selectedDuration)})
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Recurring + Confirm */}
+                  {connected && selectedStartTime && (
+                    <div className="slot-selector-actions">
+                      <div className="slot-selector-recurring-option">
+                        <RefreshCw className="slot-selector-recurring-icon" />
+                        <div className="slot-selector-recurring-text">
+                          <Label htmlFor="recurring" className="slot-selector-recurring-label">
+                            Repetir semanalmente
+                          </Label>
+                          <p className="slot-selector-recurring-description">Máx. 10 encontros</p>
+                        </div>
+                        <Switch id="recurring" checked={isRecurring} onCheckedChange={setIsRecurring} />
+                      </div>
+                      <Button className="slot-selector-confirm-button" onClick={() => setShowConfirm(true)}>
+                        <Video className="slot-selector-confirm-button-icon" />
+                        Confirmar Agendamento
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="slot-selector-no-slots">Nenhum horário disponível nesta data.</p>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Confirmation Dialog */}
         <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
