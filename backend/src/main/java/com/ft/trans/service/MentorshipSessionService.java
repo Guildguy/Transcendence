@@ -65,16 +65,18 @@ public class MentorshipSessionService
 		if (entityValidation.hasErrors())
 			return new Result(null, entityValidation);
 
-		if (sessionRepository.existsByConnectionIdAndScheduledDate(dto.connectionId, dto.scheduledDate))
+		Long mentorId = connection.mentor.id;
+		LocalDateTime truncatedDate = dto.scheduledDate.withSecond(0).withNano(0);
+
+		MentorshipSession targetSession = sessionRepository
+			.findByConnectionIdAndScheduledDate(dto.connectionId, truncatedDate)
+			.orElse(null);
+
+		if (targetSession != null && targetSession.status != SessionStatus.CANCELLED)
 		{
 			result.addError("scheduledDate", "Já existe uma sessão agendada neste horário para esta conexão.");
 			return new Result(null, result);
 		}
-
-		Long mentorId = connection.mentor.id;
-		// Truncate seconds and nanoseconds to prevent precision errors
-		dto.scheduledDate = dto.scheduledDate.withSecond(0).withNano(0);
-		LocalDateTime truncatedDate = dto.scheduledDate;
 		
 		if (!_isWithinMentorAvailability(mentorId, truncatedDate, dto.durationMinutes))
 		{
@@ -87,9 +89,22 @@ public class MentorshipSessionService
 			return new Result(null, result);
 		}
 
-		baseSession.scheduledDate = truncatedDate;
-		baseSession.meetUrl = _getMeetUrl(connection, truncatedDate, dto.durationMinutes);
-		return _persistSession(baseSession);
+		if (targetSession == null)
+			targetSession = baseSession;
+
+		targetSession.connectionId = dto.connectionId;
+		targetSession.scheduledDate = truncatedDate;
+		targetSession.durationMinutes = dto.durationMinutes;
+		targetSession.isRecurrent = dto.isRecurrent != null && dto.isRecurrent;
+		targetSession.recurrenceGroupId = null;
+		targetSession.recurrenceIndex = null;
+		targetSession.status = SessionStatus.SCHEDULED;
+		targetSession.menteeMissed = false;
+		targetSession.meetUrl = _getMeetUrl(connection, truncatedDate, dto.durationMinutes);
+		targetSession.lastUpdateAt = LocalDateTime.now();
+		targetSession.lastUpdateBy = dto.createdBy;
+
+		return _persistSession(targetSession);
 	}
 
 	public RecurrenceResult createRecurring(CreateSessionDTO dto)
@@ -118,7 +133,11 @@ public class MentorshipSessionService
 		{
 			LocalDateTime sessionDate = dto.scheduledDate.plusWeeks(i);
 
-			if (sessionRepository.existsByConnectionIdAndScheduledDate(dto.connectionId, sessionDate))
+			if (sessionRepository.existsByConnectionIdAndScheduledDateAndStatus(
+				dto.connectionId,
+				sessionDate,
+				SessionStatus.SCHEDULED
+			))
 			{
 				result.addError("scheduledDate",
 					"Conflito de horário na semana " + (i + 1) + " (" + sessionDate.toLocalDate() + ").");
@@ -230,7 +249,11 @@ public class MentorshipSessionService
 
 		if (dto.scheduledDate != null)
 		{
-			if (sessionRepository.existsByConnectionIdAndScheduledDate(session.connectionId, dto.scheduledDate)
+			if (sessionRepository.existsByConnectionIdAndScheduledDateAndStatus(
+				session.connectionId,
+				dto.scheduledDate,
+				SessionStatus.SCHEDULED
+			)
 				&& !dto.scheduledDate.equals(session.scheduledDate))
 			{
 				result.addError("scheduledDate", "Já existe uma sessão neste horário para esta conexão.");
