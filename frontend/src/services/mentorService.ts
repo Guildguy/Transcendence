@@ -1,7 +1,5 @@
 import { apiFetch } from './api'; // Seu wrapper customizado
 
-const PYTHON_API_URL = 'http://localhost:8000';
-
 export interface MentorCardData {
   id: number;
   name: string;
@@ -23,6 +21,44 @@ export interface MentorDetailData extends MentorCardData {
 }
 
 class MentorService {
+
+  private normalizeSkills(rawSkills: any[]): Array<{ id: string; name: string }> {
+    if (!Array.isArray(rawSkills)) return [];
+
+    const seen = new Set<string>();
+    const normalized: Array<{ id: string; name: string }> = [];
+
+    rawSkills.forEach((skill, index) => {
+      const name = (typeof skill === 'string' ? skill : skill?.name)?.trim();
+      if (!name) return;
+
+      const key = name.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      normalized.push({
+        id: `skill-${key}-${index}`,
+        name
+      });
+    });
+
+    return normalized;
+  }
+
+  private async fetchMentorRating(profileId: number): Promise<number> {
+    try {
+      const response = await apiFetch(`/mentors/${profileId}/rating`);
+      if (!response.ok) return 5;
+
+      const data = await response.json();
+      const parsed = Number(data?.averageRating);
+      if (!Number.isFinite(parsed)) return 5;
+
+      return Math.max(1, Math.min(5, Math.ceil(parsed)));
+    } catch {
+      return 5;
+    }
+  }
   
   /**
    * Busca a imagem de perfil no backend Java (8080)
@@ -51,16 +87,14 @@ class MentorService {
   }
 
   /**
-   * Busca as stacks/habilidades no backend Python (8000)
+   * Busca as stacks/habilidades via backend Java (proxy do Python)
    */
-  private async fetchSkillsFromPython(profileId: string | number): Promise<string[]> {
+  private async fetchSkillsFromJava(profileId: string | number): Promise<string[]> {
     try {
-      // Como o Python costuma rodar em porta diferente, usamos o fetch nativo 
-      // ou garantimos que o apiFetch aceite URLs completas.
-      const response = await fetch(`${PYTHON_API_URL}/profile/${profileId}`);
+      const response = await apiFetch(`/profiles/${profileId}/stacks`);
       if (response.ok) {
         const data = await response.json();
-        return data.stacks || [];
+        return Array.isArray(data?.stacks) ? data.stacks : [];
       }
       return [];
     } catch {
@@ -123,7 +157,7 @@ class MentorService {
         // Executa as chamadas de imagem, skills e disponibilidade em paralelo
         const [finalAvatar, pythonStacks, isAvailable] = await Promise.all([
           this.fetchProfileImage(profile.id),
-          this.fetchSkillsFromPython(profile.id),
+          this.fetchSkillsFromJava(profile.id),
           this.fetchAvailability(user.id)
         ]);
 
@@ -260,15 +294,19 @@ class MentorService {
               console.warn(`[getMentorDetails] Error fetching mentee count:`, error);
             }
           }
-        })(),
-        (async () => {
-          try {
-            pythonSkills = await this.fetchSkillsFromPython(profileId);
-            console.log(`[getMentorDetails] Python skills for profile ${profileId}:`, pythonSkills);
-          } catch (error) {
-            console.warn(`[getMentorDetails] Error fetching skills from Python:`, error);
-          }
-        })()
+        } catch (error) {
+        }
+      }
+
+      const [mentorRating, profileImage, pythonStacks] = await Promise.all([
+        this.fetchMentorRating(profileData.id),
+        this.fetchProfileImage(profileData.id),
+        this.fetchSkillsFromJava(profileData.id)
+      ]);
+
+      const mergedSkills = this.normalizeSkills([
+        ...(Array.isArray(profileData.skills) ? profileData.skills : []),
+        ...pythonStacks
       ]);
 
       // Monta o objeto com detalhes expandidos
@@ -278,10 +316,7 @@ class MentorService {
         profileId: profileData.id,
         name: userName,
         position: profileData.position || 'Pessoa Mentora',
-        skills: pythonSkills.map((s: string, i: number) => ({
-          id: `py_${profileId}_${i}`,
-          name: s
-        })),
+        skills: mergedSkills,
         anosExperiencia: profileData.anosExperiencia || 0,
         isActive: userActive,
         isAvailable: true,

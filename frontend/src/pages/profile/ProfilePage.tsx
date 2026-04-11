@@ -10,8 +10,6 @@ import { normalizeGamificationState } from "../../utils/gamificationLevels";
 import DropdownList from "../../components/common/Dropdown/Dropdown";
 import professionsData from "../../components/common/Dropdown/Profession.json";
 
-const PYTHON_API_URL = "/api/python";
-
 interface UserData {
   id?: number;
   profile_id?: number;
@@ -84,7 +82,6 @@ export const ProfilePage = () => {
           let xp = profile.xp || 0;
           let nextLevelXp: number | null = null;
 
-          // Fetch gamification data for more accurate XP and level
           try {
             const gamificationRes = await apiFetch(`/gamification/users/${loggedUserId}/summary`);
             if (gamificationRes.ok) {
@@ -207,7 +204,6 @@ export const ProfilePage = () => {
     return;
   }
 
-  // Montando o objeto com todos os campos para o Backend
   const payload = {
     user_id: userData.id,
     profile_id: userData.profile_id,
@@ -222,14 +218,12 @@ export const ProfilePage = () => {
     xp: userData.xp || 0
   };
 
-  // Payload para o Python API (skills/habilidades)
-  const pythonPayload = {
-    profile_id: userData.profile_id?.toString() || userData.id.toString(),
+  const stacksPayload = {
     stacks: userSkills.map(skill => skill.name)
   };
 
   console.log("Enviando payload completo:", payload);
-  console.log("Enviando skills para Python API:", pythonPayload);
+  console.log("Enviando skills via Java API:", stacksPayload);
 
   try {
     const userPayload = {
@@ -238,23 +232,21 @@ export const ProfilePage = () => {
       email: userData.email,
       phoneNumber: userData.telefone
     };
-    // Requisição 0: Salvar dados do user no Backend principal
     const userRes = await apiFetch(`/users`, {
       method: 'PUT',
       body: JSON.stringify(userPayload)
     });
 
-    // Requisição 1: Salvar dados do perfil no Backend principal
     const res = await apiFetch('/profiles', {
       method: 'PUT',
       body: JSON.stringify(payload)
     });
 
-    // Requisição 2: Salvar skills no Python API
-    const resPython = await fetch(`${PYTHON_API_URL}/profile`, {
+    // Requisição 2: Salvar skills (Java -> proxy Python)
+    const profileIdForSkills = userData.profile_id ?? userData.id;
+    const resPython = await apiFetch(`/profiles/${profileIdForSkills}/stacks`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(pythonPayload)
+      body: JSON.stringify(stacksPayload)
     });
 
     if (res.ok && resPython.ok && userRes.ok) {
@@ -265,7 +257,6 @@ export const ProfilePage = () => {
       setBackupSkills(userSkills);
 
     } else {
-      // Caso alguma requisição falhe
       const errorData = await res.json().catch(() => ({}));
       const errorDataPython = await resPython.json().catch(() => ({}));
 
@@ -407,7 +398,7 @@ useEffect(() => {
     console.log("Buscando skills para o ID consolidado:", idParaBusca);
 
     try {
-      const response = await fetch(`${PYTHON_API_URL}/profile/${idParaBusca}`);
+      const response = await apiFetch(`/profiles/${idParaBusca}/stacks`);
       if (response.ok) {
         const data = await response.json();
         const stacks = Array.isArray(data.stacks) ? data.stacks : [];
@@ -428,14 +419,12 @@ useEffect(() => {
       }
     } catch (err) {
       console.error("Erro ao conectar com o Python API:", err);
-      // Continue mesmo se não conseguir carregar skills do Python
     }
   };
 
   loadSkills();
 }, [userData.id, userData.profile_id]);
 
-// Sincronizar dados de gamification com as badges
 useEffect(() => {
   const loadGamificationData = async () => {
     const loggedUserId = localStorage.getItem('userId');
@@ -470,10 +459,8 @@ useEffect(() => {
     }
   };
 
-  // Carregar gamification data a cada 30 segundos para manter badges atualizadas
   const interval = setInterval(loadGamificationData, 30000);
 
-  // Carregar também ao montar o componente
   loadGamificationData();
 
   return () => clearInterval(interval);
