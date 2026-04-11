@@ -24,6 +24,7 @@ function HomeLogged() {
   const [requests, setRequests] = useState<PendingRequest[]>([])
   const [achievements, setAchievements] = useState<AchievementsData[]>([])
   const [mentorProfileId, setMentorProfileId] = useState<number | null>(null)
+  const [activeProfileId, setActiveProfileId] = useState<number | null>(null)
   const [userRole, setUserRole] = useState<'MENTOR' | 'MENTEE'>('MENTEE')
   const [loading, setLoading] = useState(true)
 
@@ -46,9 +47,12 @@ function HomeLogged() {
           const data = await userRes.json()
           const profiles: any[] = Array.isArray(data.profiles) ? data.profiles : []
           const mentorProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTOR')
+          const menteeProfile = profiles.find(p => p?.role?.toUpperCase() === 'MENTORADO')
           resolvedProfileId = mentorProfile?.id ?? null
           setMentorProfileId(resolvedProfileId)
-          setUserRole(resolvedProfileId !== null ? 'MENTOR' : 'MENTEE')
+          const isMentor = resolvedProfileId !== null
+          setUserRole(isMentor ? 'MENTOR' : 'MENTEE')
+          setActiveProfileId(isMentor ? resolvedProfileId : (menteeProfile?.id ?? null))
         }
       } catch {
         // segue para fallback
@@ -202,7 +206,7 @@ function HomeLogged() {
       })
       if (res.ok) {
         console.log('[HomeLogged] Connection accepted successfully');
-        
+
         // Verificar capacidade do mentor após aceitar
         if (mentorProfileId) {
           try {
@@ -210,17 +214,15 @@ function HomeLogged() {
             if (capacityRes.ok) {
               const capacity = await capacityRes.json()
               console.log('[HomeLogged] Mentor capacity after accepting:', capacity);
-              
-              // Se menutor atingiu a capacidade máxima, desativar o mentor
+
+              // Se mentor atingiu a capacidade máxima, desativar o mentor
               if (capacity.currentMentees >= capacity.maxMentees) {
                 console.log('[HomeLogged] Mentor reached max capacity, deactivating...');
                 const deactivateRes = await apiFetch(`/profiles/${mentorProfileId}`, {
                   method: 'PUT',
-                  body: JSON.stringify({
-                    isActive: false
-                  })
+                  body: JSON.stringify({ isActive: false })
                 })
-                
+
                 if (deactivateRes.ok) {
                   console.log('[HomeLogged] Mentor successfully deactivated');
                   alert(`Parabéns! Você atingiu a capacidade máxima de ${capacity.maxMentees} mentorados. Seu perfil foi desativado automaticamente.`);
@@ -274,7 +276,7 @@ function HomeLogged() {
 
           <DailySchedule
             userRole={userRole}
-            profileId={mentorProfileId}
+            profileId={activeProfileId}
           />
 
         </section>
